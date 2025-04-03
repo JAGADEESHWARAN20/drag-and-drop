@@ -1,3 +1,4 @@
+// PropertyEditors.tsx
 import React from 'react';
 import { HeadingEditor } from './properties/HeadingEditor';
 import { ParagraphEditor } from './properties/ParagraphEditor';
@@ -13,7 +14,7 @@ import { TableEditor } from './properties/TableEditor';
 import { VideoEditor } from './properties/VideoEditor';
 import { DividerEditor } from './properties/DividerEditor';
 import { Breakpoint } from '../store/WebsiteStore';
-
+import { ButtonEditor, ButtonProps } from './properties/ButtonEditor';
 
 export type OnChangeHandler = (key: string, value: unknown) => void;
 
@@ -24,16 +25,19 @@ interface PropertyEditorProps {
   isResponsive?: boolean;
 }
 
-// Ensure ButtonEditorProps extends PropertyEditorProps and specifies ButtonProps for 'props'
+// Correctly narrows props and extends PropertyEditorProps
+interface ButtonEditorProps extends Omit<PropertyEditorProps, 'props'> {
+  props: ButtonProps;
+}
 
-
+// Explicitly type PropertyEditors using ButtonEditorProps
 export const PropertyEditors: {
   [key: string]: React.ComponentType<PropertyEditorProps>;
 } = {
   Heading: HeadingEditor,
   Paragraph: ParagraphEditor,
   Image: ImageEditor,
-  
+  Button: ButtonEditor as React.ComponentType<PropertyEditorProps>, // Explicit type casting
   Link: LinkEditor,
   Container: ContainerEditor,
   Section: SectionEditor,
