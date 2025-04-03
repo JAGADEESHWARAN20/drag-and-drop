@@ -1,8 +1,17 @@
-
-import React from 'react';
-
+import React, { FC } from 'react';
+import * as Components from './components';
 // Basic Components
-export const Heading = ({ text, level, textAlign, color, className, children, isPreviewMode }: any) => {
+interface HeadingProps {
+  text?: string;
+  level?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+  textAlign?: 'left' | 'center' | 'right';
+  color?: string;
+  className?: string;
+  children?: React.ReactNode;
+  isPreviewMode?: boolean;
+}
+
+export const Heading: FC<HeadingProps> = ({ text, level, textAlign, color, className, children, isPreviewMode }) => {
   const Tag = level || 'h2';
 
   return React.createElement(
@@ -11,13 +20,22 @@ export const Heading = ({ text, level, textAlign, color, className, children, is
       className: `${className || ''} text-${textAlign}`,
       style: { color },
       contentEditable: !isPreviewMode,
-      suppressContentEditableWarning: true
+      suppressContentEditableWarning: true,
     },
     text || children
   );
 };
 
-export const Paragraph = ({ text, textAlign, color, className, children, isPreviewMode }: any) => {
+interface ParagraphProps {
+  text?: string;
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
+  color?: string;
+  className?: string;
+  children?: React.ReactNode;
+  isPreviewMode?: boolean;
+}
+
+export const Paragraph: FC<ParagraphProps> = ({ text, textAlign, color, className, children, isPreviewMode }) => {
   return (
     <p
       className={`${className || ''} text-${textAlign}`}
@@ -30,7 +48,15 @@ export const Paragraph = ({ text, textAlign, color, className, children, isPrevi
   );
 };
 
-export const Image = ({ src, alt, width, height, className }: any) => {
+interface ImageProps {
+  src?: string;
+  alt?: string;
+  width?: string;
+  height?: string;
+  className?: string;
+}
+
+export const Image: FC<ImageProps> = ({ src, alt, width, height, className }) => {
   return (
     <img
       src={src}
@@ -38,21 +64,30 @@ export const Image = ({ src, alt, width, height, className }: any) => {
       className={className || ''}
       style={{
         width: width || '100%',
-        height: height || 'auto'
+        height: height || 'auto',
       }}
     />
   );
 };
 
-export const Button = ({ text, variant, url, textAlign, className, isPreviewMode }: any) => {
-  const baseClass = "px-4 py-2 rounded";
+interface ButtonProps {
+  text?: string;
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'outline';
+  url?: string;
+  textAlign?: 'left' | 'center' | 'right';
+  className?: string;
+  isPreviewMode?: boolean;
+}
+
+export const Button: FC<ButtonProps> = ({ text, variant, url, textAlign, className, isPreviewMode }) => {
+  const baseClass = 'px-4 py-2 rounded';
 
   const variantClasses: Record<string, string> = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700",
-    secondary: "bg-gray-200 text-gray-800 hover:bg-gray-300",
-    success: "bg-green-600 text-white hover:bg-green-700",
-    danger: "bg-red-600 text-white hover:bg-red-700",
-    outline: "border border-blue-600 text-blue-600 hover:bg-blue-50"
+    primary: 'bg-blue-600 text-white hover:bg-blue-700',
+    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300',
+    success: 'bg-green-600 text-white hover:bg-green-700',
+    danger: 'bg-red-600 text-white hover:bg-red-700',
+    outline: 'border border-blue-600 text-blue-600 hover:bg-blue-50',
   };
 
   return (
@@ -69,7 +104,15 @@ export const Button = ({ text, variant, url, textAlign, className, isPreviewMode
   );
 };
 
-export const Link = ({ text, url, color, className, isPreviewMode }: any) => {
+interface LinkProps {
+  text?: string;
+  url?: string;
+  color?: string;
+  className?: string;
+  isPreviewMode?: boolean;
+}
+
+export const Link: FC<LinkProps> = ({ text, url, color, className, isPreviewMode }) => {
   return (
     <a
       href={isPreviewMode ? url : '#'}
@@ -84,15 +127,17 @@ export const Link = ({ text, url, color, className, isPreviewMode }: any) => {
 };
 
 // Layout Components
-export const Container = ({
-  children,
-  padding,
-  margin,
-  backgroundColor,
-  borderRadius,
-  maxWidth,
-  className
-}: any) => {
+interface ContainerProps {
+  children?: React.ReactNode;
+  padding?: string;
+  margin?: string;
+  backgroundColor?: string;
+  borderRadius?: string;
+  maxWidth?: string;
+  className?: string;
+}
+
+export const Container: FC<ContainerProps> = ({ children, padding, margin, backgroundColor, borderRadius, maxWidth, className }) => {
   return (
     <div
       className={`mx-auto ${className || ''}`}
@@ -101,7 +146,7 @@ export const Container = ({
         margin,
         backgroundColor,
         borderRadius,
-        maxWidth
+        maxWidth,
       }}
     >
       {children}
@@ -109,7 +154,14 @@ export const Container = ({
   );
 };
 
-export const Section = ({ children, backgroundColor, padding, className }: any) => {
+interface SectionProps {
+  children?: React.ReactNode;
+  backgroundColor?: string;
+  padding?: string;
+  className?: string;
+}
+
+export const Section: FC<SectionProps> = ({ children, backgroundColor, padding, className }) => {
   return (
     <section
       className={`w-full ${className || ''}`}
@@ -120,14 +172,22 @@ export const Section = ({ children, backgroundColor, padding, className }: any) 
   );
 };
 
-export const Row = ({ children, gap, alignItems, justifyContent, className }: any) => {
+interface RowProps {
+  children?: React.ReactNode;
+  gap?: string;
+  alignItems?: 'stretch' | 'flex-start' | 'center' | 'flex-end';
+  justifyContent?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly';
+  className?: string;
+}
+
+export const Row: FC<RowProps> = ({ children, gap, alignItems, justifyContent, className }) => {
   return (
     <div
       className={`flex flex-wrap ${className || ''}`}
       style={{
         gap,
         alignItems,
-        justifyContent
+        justifyContent,
       }}
     >
       {children}
@@ -135,8 +195,14 @@ export const Row = ({ children, gap, alignItems, justifyContent, className }: an
   );
 };
 
-export const Column = ({ children, width, padding, className }: any) => {
-  // Convert fractional width to flex basis percentage
+interface ColumnProps {
+  children?: React.ReactNode;
+  width?: string; // e.g., '1', '1/2', '1/3', etc.
+  padding?: string;
+  className?: string;
+}
+
+export const Column: FC<ColumnProps> = ({ children, width, padding, className }) => {
   const getFlexBasis = (width: string) => {
     if (!width || width === '1') return '100%';
 
@@ -153,7 +219,7 @@ export const Column = ({ children, width, padding, className }: any) => {
       className={`${className || ''}`}
       style={{
         flexBasis: getFlexBasis(width),
-        padding
+        padding,
       }}
     >
       {children}
@@ -162,7 +228,15 @@ export const Column = ({ children, width, padding, className }: any) => {
 };
 
 // Advanced Components
-export const Form = ({ children, submitText, method, action, className }: any) => {
+interface FormProps {
+  children?: React.ReactNode;
+  submitText?: string;
+  method?: 'GET' | 'POST';
+  action?: string;
+  className?: string;
+}
+
+export const Form: FC<FormProps> = ({ children, submitText, method, action, className }) => {
   return (
     <form
       className={`${className || ''}`}
@@ -180,7 +254,14 @@ export const Form = ({ children, submitText, method, action, className }: any) =
   );
 };
 
-export const List = ({ items, type, className, isPreviewMode }: any) => {
+interface ListProps {
+  items: string[];
+  type?: 'ul' | 'ol';
+  className?: string;
+  isPreviewMode?: boolean;
+}
+
+export const List: FC<ListProps> = ({ items, type, className, isPreviewMode }) => {
   const ListType = type === 'ol' ? 'ol' : 'ul';
   const listClass = type === 'ol' ? 'list-decimal' : 'list-disc';
 
@@ -201,7 +282,13 @@ export const List = ({ items, type, className, isPreviewMode }: any) => {
   );
 };
 
-export const Table = ({ headers, rows, className }: any) => {
+interface TableProps {
+  headers: string[];
+  rows: string[][];
+  className?: string;
+}
+
+export const Table: FC<TableProps> = ({ headers, rows, className }) => {
   return (
     <div className="overflow-x-auto">
       <table className={`min-w-full bg-white border border-gray-200 ${className || ''}`}>
@@ -230,7 +317,14 @@ export const Table = ({ headers, rows, className }: any) => {
   );
 };
 
-export const Video = ({ url, width, height, className }: any) => {
+interface VideoProps {
+  url?: string;
+  width?: string;
+  height?: string;
+  className?: string;
+}
+
+export const Video: FC<VideoProps> = ({ url, width, height, className }) => {
   return (
     <div className={className || ''}>
       <iframe
@@ -245,7 +339,14 @@ export const Video = ({ url, width, height, className }: any) => {
   );
 };
 
-export const Divider = ({ thickness, color, margin, className }: any) => {
+interface DividerProps {
+  thickness?: string;
+  color?: string;
+  margin?: string;
+  className?: string;
+}
+
+export const Divider: FC<DividerProps> = ({ thickness, color, margin, className }) => {
   return (
     <hr
       className={className || ''}
@@ -253,26 +354,26 @@ export const Divider = ({ thickness, color, margin, className }: any) => {
         height: thickness,
         backgroundColor: color,
         margin,
-        border: 'none'
+        border: 'none',
       }}
     />
   );
 };
 
 // Export all components as a registry
-export const ComponentRegistry: Record<string, React.FC<any>> = {
-  Heading,
-  Paragraph,
-  Image,
-  Button,
-  Link,
-  Container,
-  Section,
-  Row,
-  Column,
-  Form,
-  List,
-  Table,
-  Video,
-  Divider
+export const ComponentRegistry: Record<string, FC<any>> = {
+  Heading: Components.Heading,
+  Paragraph: Components.Paragraph,
+  Image: Components.Image,
+  Button: Components.Button,
+  Link: Components.Link,
+  Container: Components.Container,
+  Section: Components.Section,
+  Row: Components.Row,
+  Column: Components.Column,
+  Form: Components.Form,
+  List: Components.List,
+  Table: Components.Table,
+  Video: Components.Video,
+  Divider: Components.Divider,
 };

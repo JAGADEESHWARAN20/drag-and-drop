@@ -10,23 +10,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PositionType } from './DroppableContainer';
 
+interface Position {
+     type: PositionType;
+     top?: string;
+     left?: string;
+     right?: string;
+     bottom?: string;
+     zIndex?: string;
+}
+
 const PositionEditor = ({
      position,
      onChange,
 }: {
-     position:
-     | {
-          type: PositionType;
-          top?: string;
-          left?: string;
-          right?: string;
-          bottom?: string;
-          zIndex?: string;
-     }
-     | undefined;
-     onChange: (newPosition: any) => void;
+     position: Position | undefined;
+     onChange: (newPosition: Position) => void;
 }) => {
-     const defaultPosition = position || { type: 'relative' };
+     const defaultPosition: Position = position || { type: 'relative' };
 
      const handlePositionTypeChange = (value: string) => {
           onChange({
@@ -42,7 +42,7 @@ const PositionEditor = ({
           });
      };
 
-     return ( // Add this return statement with JSX
+     return (
           <div className="space-y-4">
                <div className="space-y-2">
                     <Label>Position Type</Label>

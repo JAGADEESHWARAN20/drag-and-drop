@@ -2,14 +2,14 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
-import { useWebsiteStore } from '../store/WebsiteStore';
+import { useWebsiteStore, Component } from '../store/WebsiteStore';
 import { X, Move } from 'lucide-react';
 import { PositionType } from './DroppableContainer';
 import { ComponentRegistry } from '../utils/ComponentRegistry';
 
 interface ElementRendererProps {
      id: string;
-     componentData: any;
+     componentData: Component;
      isSelected: boolean;
      onSelect: () => void;
      isPreviewMode: boolean;
@@ -34,7 +34,7 @@ const ElementRenderer = ({
           },
      });
 
-     const getComponentPositionStyles = (component: any) => {
+     const getComponentPositionStyles = (component: Component) => {
           const position = component.props.position as
                | {
                     type: PositionType;
@@ -57,7 +57,7 @@ const ElementRenderer = ({
           };
      };
 
-     const style = {
+     const style: React.CSSProperties = {
           transform: CSS.Transform.toString(transform),
           transition,
           opacity: isDragging ? 0.5 : 1,
@@ -111,14 +111,21 @@ const ElementRenderer = ({
           return component?.type || '';
      };
 
-     const handlePositionChange = (newPosition: any) => {
+     const handlePositionChange = (newPosition: {
+          type: PositionType;
+          top?: string;
+          left?: string;
+          right?: string;
+          bottom?: string;
+          zIndex?: string;
+     }) => {
           updateComponentProps(id, { position: newPosition });
      };
 
      return (
           <motion.div
                ref={setNodeRef}
-               style={{ ...(style as any), ...getComponentPositionStyles(componentData) }}
+               style={{ ...style, ...getComponentPositionStyles(componentData) }}
                {...attributes}
                {...listeners}
                className={`component-wrapper mb-2 ${isSelected ? 'outline outline-2 outline-blue-500' : 'hover:outline hover:outline-1 hover:outline-blue-300'

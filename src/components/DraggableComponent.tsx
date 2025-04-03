@@ -1,17 +1,20 @@
-
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { v4 as uuidv4 } from 'uuid';
 import { useWebsiteStore } from '../store/WebsiteStore';
-import { toast } from "@/components/ui/use-toast";
+import { toast } from '@/components/ui/use-toast';
+import { ComponentType, SVGProps } from 'react';
+
+// Define the LibraryComponent type (or import from a shared types file)
+interface LibraryComponent {
+  type: string;
+  label: string;
+  icon: ComponentType<SVGProps<SVGSVGElement> & { size?: string | number }>;
+  defaultProps: Record<string, unknown>;
+}
 
 interface DraggableComponentProps {
-  component: {
-    type: string;
-    label: string;
-    icon: any;
-    defaultProps: Record<string, any>;
-  };
+  component: LibraryComponent;
 }
 
 const DraggableComponent = ({ component }: DraggableComponentProps) => {
@@ -21,14 +24,14 @@ const DraggableComponent = ({ component }: DraggableComponentProps) => {
     data: {
       type: 'COMPONENT',
       componentType: component.type,
-      defaultProps: component.defaultProps
-    }
+      defaultProps: component.defaultProps,
+    },
   });
 
   const handleClick = () => {
     const currentPageId = useWebsiteStore.getState().currentPageId;
     const newComponentId = uuidv4();
-    
+
     addComponent({
       id: newComponentId,
       pageId: currentPageId,
@@ -39,12 +42,12 @@ const DraggableComponent = ({ component }: DraggableComponentProps) => {
       responsiveProps: {
         desktop: {},
         tablet: {},
-        mobile: {}
-      }
+        mobile: {},
+      },
     });
-    
+
     toast({
-      title: "Component Added",
+      title: 'Component Added',
       description: `Added ${component.type} to canvas. You can now drag it to position.`,
     });
   };
@@ -55,15 +58,14 @@ const DraggableComponent = ({ component }: DraggableComponentProps) => {
       {...listeners}
       {...attributes}
       onClick={handleClick}
-      className={`p-2 border rounded cursor-pointer bg-white flex flex-col items-center justify-center text-sm ${
-        isDragging ? 'opacity-50 cursor-grabbing' : ''
-      } hover:bg-gray-50 hover:border-blue-300 transition-colors`}
+      className={`p-2 border rounded cursor-pointer bg-white flex flex-col items-center justify-center text-sm ${isDragging ? 'opacity-50 cursor-grabbing' : ''
+        } hover:bg-gray-50 hover:border-blue-300 transition-colors`}
       style={{
-        touchAction: 'none' // This prevents touch events from being captured by browser
+        touchAction: 'none', // This prevents touch events from being captured by browser
       }}
     >
       <div className="text-blue-500 mb-1">
-        {React.createElement(component.icon as any, { size: 20 })}
+        <component.icon size={20} />
       </div>
       <span>{component.label}</span>
     </div>

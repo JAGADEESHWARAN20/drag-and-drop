@@ -17,7 +17,7 @@ const SortableItem = ({ id, children }: SortableItemProps) => {
     },
   });
 
-  const style = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
@@ -28,7 +28,7 @@ const SortableItem = ({ id, children }: SortableItemProps) => {
   return (
     <motion.div
       ref={setNodeRef}
-      style={style as any}
+      style={style}
       {...attributes}
       {...listeners}
       className="component-wrapper mb-2"
