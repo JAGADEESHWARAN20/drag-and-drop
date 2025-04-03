@@ -1,8 +1,6 @@
-
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { useWebsiteStore } from '../store/WebsiteStore';
-import { v4 as uuidv4 } from 'uuid';
 import { X, Move } from 'lucide-react';
 
 export type PositionType = 'relative' | 'absolute' | 'fixed' | 'sticky';
@@ -21,24 +19,24 @@ interface DroppableContainerProps {
   children: React.ReactNode;
   isPreviewMode: boolean;
   isSelected: boolean;
-  onSelect: () => void;
+  onSelect: (event: React.MouseEvent) => void; // Updated to accept MouseEvent
 }
 
-const DroppableContainer = ({ 
-  id, 
-  children, 
-  isPreviewMode, 
-  isSelected, 
-  onSelect 
-}: DroppableContainerProps) => {
+const DroppableContainer: React.FC<DroppableContainerProps> = ({
+  id,
+  children,
+  isPreviewMode,
+  isSelected,
+  onSelect,
+}) => {
   const { addComponent, removeComponent, updateComponentProps } = useWebsiteStore();
 
   const { isOver, setNodeRef } = useDroppable({
     id: `droppable-${id}`,
     data: {
       accepts: 'COMPONENT',
-      containerId: id
-    }
+      containerId: id,
+    },
   });
 
   if (isPreviewMode) {
@@ -52,28 +50,28 @@ const DroppableContainer = ({
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onSelect();
+    onSelect(e); // Pass the event to onSelect
   };
 
   const getComponentType = () => {
-    const component = useWebsiteStore.getState().components.find(c => c.id === id);
+    const component = useWebsiteStore.getState().components.find((c) => c.id === id);
     return component?.type || '';
   };
 
   const getPositionStyles = () => {
-    const component = useWebsiteStore.getState().components.find(c => c.id === id);
+    const component = useWebsiteStore.getState().components.find((c) => c.id === id);
     if (!component) return {};
-    
+
     const position = component.props.position as PositionProps | undefined;
     if (!position) return {};
-    
+
     return {
       position: position.type || 'relative',
       top: position.top,
       left: position.left,
       right: position.right,
       bottom: position.bottom,
-      zIndex: position.zIndex
+      zIndex: position.zIndex,
     };
   };
 
@@ -82,9 +80,8 @@ const DroppableContainer = ({
   return (
     <div
       ref={setNodeRef}
-      className={`component-container ${isOver ? 'bg-blue-100' : ''} ${
-        isSelected ? 'outline outline-2 outline-blue-500' : 'hover:outline hover:outline-1 hover:outline-blue-300'
-      } cursor-move`}
+      className={`component-container ${isOver ? 'bg-blue-100' : ''} ${isSelected ? 'outline outline-2 outline-blue-500' : 'hover:outline hover:outline-1 hover:outline-blue-300'
+        } cursor-move`}
       onClick={handleClick}
       style={positionStyles}
       data-component-id={id}

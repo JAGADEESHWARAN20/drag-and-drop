@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -10,19 +9,12 @@ interface SortableItemProps {
 }
 
 const SortableItem = ({ id, children }: SortableItemProps) => {
-  const { 
-    attributes, 
-    listeners, 
-    setNodeRef, 
-    transform, 
-    transition,
-    isDragging
-  } = useSortable({ 
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
     data: {
       type: 'SORTABLE_ITEM',
       componentId: id,
-    }
+    },
   });
 
   const style = {
@@ -34,11 +26,11 @@ const SortableItem = ({ id, children }: SortableItemProps) => {
   };
 
   return (
-    <motion.div 
-      ref={setNodeRef} 
-      style={style} 
-      {...attributes} 
-      {...listeners} 
+    <motion.div
+      ref={setNodeRef}
+      style={style as any}
+      {...attributes}
+      {...listeners}
       className="component-wrapper mb-2"
       layout
       layoutId={id}
