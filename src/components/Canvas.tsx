@@ -10,7 +10,10 @@ import {
   DragOverlay,
   DragEndEvent,
   DragStartEvent,
-  DragOverEvent
+  DragOverEvent,
+  MouseSensor,
+  TouchSensor,
+  useDroppable
 } from '@dnd-kit/core';
 import { 
   SortableContext, 
@@ -23,11 +26,27 @@ import DroppableContainer from './DroppableContainer';
 import SortableItem from './SortableItem';
 import { v4 as uuidv4 } from 'uuid';
 import { motion } from 'framer-motion';
+import { toast } from "@/components/ui/use-toast";
 
 interface CanvasProps {
   isPreviewMode: boolean;
   currentBreakpoint: Breakpoint;
 }
+
+const CanvasDroppable = ({ children }: { children: React.ReactNode }) => {
+  const { setNodeRef } = useDroppable({
+    id: 'canvas-droppable',
+    data: {
+      type: 'CANVAS'
+    }
+  });
+
+  return (
+    <div ref={setNodeRef} className="min-h-[calc(100vh-80px)] w-full">
+      {children}
+    </div>
+  );
+};
 
 const Canvas = ({ isPreviewMode, currentBreakpoint }: CanvasProps) => {
   const {
@@ -53,7 +72,19 @@ const Canvas = ({ isPreviewMode, currentBreakpoint }: CanvasProps) => {
   );
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(MouseSensor, {
+      // Require the mouse to move by 10 pixels before activating
+      activationConstraint: {
+        distance: 10,
+      },
+    }),
+    useSensor(TouchSensor, {
+      // Press delay of 250ms, with tolerance of 5px of movement
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
     useSensor(KeyboardSensor, { 
       coordinateGetter: sortableKeyboardCoordinates 
     })
@@ -62,12 +93,14 @@ const Canvas = ({ isPreviewMode, currentBreakpoint }: CanvasProps) => {
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     setActiveId(active.id as string);
+    console.log('Drag started:', active.id, active.data.current);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    console.log('Drag ended:', { active, over });
     
-    if (over && active.id !== over.id) {
+    if (over) {
       // If we're reordering existing components
       if (active.id.toString().startsWith('sortable-')) {
         const oldIndex = rootComponents.findIndex(c => c.id === active.id);
@@ -83,9 +116,8 @@ const Canvas = ({ isPreviewMode, currentBreakpoint }: CanvasProps) => {
         // If dropping into a container
         if (over.data?.current?.accepts === 'COMPONENT') {
           const containerId = over.data.current.containerId;
-          const container = components.find(c => c.id === containerId);
           
-          if (container) {
+          if (containerId) {
             const newComponentId = uuidv4();
             addComponent({
               id: newComponentId,
@@ -100,10 +132,15 @@ const Canvas = ({ isPreviewMode, currentBreakpoint }: CanvasProps) => {
                 mobile: {}
               }
             });
+            
+            toast({
+              title: "Component Added",
+              description: `Added ${componentType} inside container`,
+            });
           }
         } 
         // If dropping directly on the canvas
-        else {
+        else if (over.id === 'canvas-droppable' || over.data?.current?.type === 'CANVAS') {
           const newComponentId = uuidv4();
           addComponent({
             id: newComponentId,
@@ -118,6 +155,11 @@ const Canvas = ({ isPreviewMode, currentBreakpoint }: CanvasProps) => {
               mobile: {}
             }
           });
+          
+          toast({
+            title: "Component Added",
+            description: `Added ${componentType} to canvas`,
+          });
         }
       }
     }
@@ -127,8 +169,6 @@ const Canvas = ({ isPreviewMode, currentBreakpoint }: CanvasProps) => {
 
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
-    
-    // Additional logic for drag over if needed
     console.log("Drag over:", { active, over });
   };
 
@@ -177,34 +217,36 @@ const Canvas = ({ isPreviewMode, currentBreakpoint }: CanvasProps) => {
       onDragOver={handleDragOver}
     >
       <div className={`min-h-full mx-auto bg-white ${getCanvasWidth()} transition-all duration-300`}>
-        <div
-          className={`min-h-[calc(100vh-80px)] ${
-            isPreviewMode ? 'bg-white' : 'bg-gray-50 border-dashed border-2 border-gray-300'
-          } ${!isPreviewMode ? 'hover:bg-blue-50 transition-colors' : ''}`}
-        >
-          <SortableContext 
-            items={rootComponents.map(c => c.id)} 
-            strategy={verticalListSortingStrategy}
+        <CanvasDroppable>
+          <div
+            className={`min-h-[calc(100vh-80px)] ${
+              isPreviewMode ? 'bg-white' : 'bg-gray-50 border-dashed border-2 border-gray-300'
+            } ${!isPreviewMode ? 'hover:bg-blue-50 transition-colors' : ''}`}
           >
-            {rootComponents.length === 0 && !isPreviewMode ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="h-full flex items-center justify-center text-gray-500 text-lg p-6"
-              >
-                Drag components here to start building
-              </motion.div>
-            ) : (
-              <div className="p-6">
-                {rootComponents.map(component => (
-                  <SortableItem key={component.id} id={component.id}>
-                    {renderComponent(component)}
-                  </SortableItem>
-                ))}
-              </div>
-            )}
-          </SortableContext>
-        </div>
+            <SortableContext 
+              items={rootComponents.map(c => c.id)} 
+              strategy={verticalListSortingStrategy}
+            >
+              {rootComponents.length === 0 && !isPreviewMode ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="h-full flex items-center justify-center text-gray-500 text-lg p-6"
+                >
+                  Drag components here to start building
+                </motion.div>
+              ) : (
+                <div className="p-6">
+                  {rootComponents.map(component => (
+                    <SortableItem key={component.id} id={component.id}>
+                      {renderComponent(component)}
+                    </SortableItem>
+                  ))}
+                </div>
+              )}
+            </SortableContext>
+          </div>
+        </CanvasDroppable>
       </div>
     </DndContext>
   );

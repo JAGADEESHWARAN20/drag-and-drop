@@ -47,7 +47,7 @@ const DroppableContainer = ({
   return (
     <div
       ref={setNodeRef}
-      className={`relative ${isOver ? 'bg-blue-50' : ''} ${
+      className={`relative ${isOver ? 'bg-blue-100' : ''} ${
         isSelected ? 'outline outline-2 outline-blue-500' : 'hover:outline hover:outline-1 hover:outline-blue-300'
       }`}
       onClick={(e) => {

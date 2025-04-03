@@ -1,6 +1,5 @@
 
 import { useState } from 'react';
-import { DndContext } from '@dnd-kit/core';
 import DraggableComponent from './DraggableComponent';
 import { ComponentLibrary } from '../data/ComponentLibrary';
 import { Search } from 'lucide-react';

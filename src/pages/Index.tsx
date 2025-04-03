@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DndContext } from '@dnd-kit/core';
 import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
@@ -32,7 +33,6 @@ const Index = () => {
     if (typeof newPageId === 'string') {
       setCurrentPageId(newPageId);
     } else {
-      // Consider logging the error for debugging purposes.
       console.error('Failed to add page. Returned value was not a string:', newPageId);
 
       toast({
@@ -80,39 +80,37 @@ const Index = () => {
   };
 
   return (
-    <DndContext>
-      <div className="flex flex-col h-screen bg-gray-50">
-        <Navbar
-          pages={pages}
-          currentPageId={currentPageId}
-          onChangePage={handlePageChange}
-          onAddPage={handleAddPage}
-          onPreviewToggle={handlePreviewToggle}
-          isPreviewMode={isPreviewMode}
-          onExportCode={handleExportCode}
-          breakpoint={breakpoint}
-          setBreakpoint={handleBreakpointChange}
-        />
+    <div className="flex flex-col h-screen bg-gray-50">
+      <Navbar
+        pages={pages}
+        currentPageId={currentPageId}
+        onChangePage={handlePageChange}
+        onAddPage={handleAddPage}
+        onPreviewToggle={handlePreviewToggle}
+        isPreviewMode={isPreviewMode}
+        onExportCode={handleExportCode}
+        breakpoint={breakpoint}
+        setBreakpoint={handleBreakpointChange}
+      />
 
-        <div className="flex flex-1 overflow-hidden">
-          {!isPreviewMode && (
-            <div className="w-64 bg-white shadow-sm overflow-y-auto">
-              <ComponentPanel />
-            </div>
-          )}
-
-          <div className="flex-1 overflow-y-auto flex justify-center">
-            <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
+      <div className="flex flex-1 overflow-hidden">
+        {!isPreviewMode && (
+          <div className="w-64 bg-white shadow-sm overflow-y-auto">
+            <ComponentPanel />
           </div>
+        )}
 
-          {!isPreviewMode && (
-            <div className="w-72 bg-white shadow-sm overflow-y-auto">
-              <PropertyPanel />
-            </div>
-          )}
+        <div className="flex-1 overflow-y-auto flex justify-center">
+          <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
         </div>
+
+        {!isPreviewMode && (
+          <div className="w-72 bg-white shadow-sm overflow-y-auto">
+            <PropertyPanel />
+          </div>
+        )}
       </div>
-    </DndContext>
+    </div>
   );
 };
 

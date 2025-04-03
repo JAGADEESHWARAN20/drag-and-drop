@@ -27,9 +27,12 @@ const DraggableComponent = ({ component }: DraggableComponentProps) => {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`p-2 border rounded cursor-move bg-white flex flex-col items-center justify-center text-sm ${
-        isDragging ? 'opacity-50' : ''
+      className={`p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm ${
+        isDragging ? 'opacity-50 cursor-grabbing' : ''
       } hover:bg-gray-50 hover:border-blue-300 transition-colors`}
+      style={{
+        touchAction: 'none' // This prevents touch events from being captured by browser
+      }}
     >
       <div className="text-blue-500 mb-1">
         {React.createElement(component.icon as any, { size: 20 })}
