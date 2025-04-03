@@ -15,12 +15,22 @@ const SortableItem = ({ id, children }: SortableItemProps) => {
     listeners, 
     setNodeRef, 
     transform, 
-    transition 
-  } = useSortable({ id });
+    transition,
+    isDragging
+  } = useSortable({ 
+    id,
+    data: {
+      type: 'SORTABLE_ITEM',
+      componentId: id,
+    }
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative',
+    zIndex: isDragging ? 50 : 'auto',
   };
 
   return (
@@ -29,7 +39,10 @@ const SortableItem = ({ id, children }: SortableItemProps) => {
       style={style} 
       {...attributes} 
       {...listeners} 
-      className="mb-2"
+      className="component-wrapper mb-2"
+      layout
+      layoutId={id}
+      whileDrag={{ scale: 1.02 }}
     >
       {children}
     </motion.div>
