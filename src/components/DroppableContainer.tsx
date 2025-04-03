@@ -39,6 +39,11 @@ const DroppableContainer = ({
     removeComponent(id);
   };
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSelect();
+  };
+
   const getComponentType = () => {
     const component = useWebsiteStore.getState().components.find(c => c.id === id);
     return component?.type || '';
@@ -49,11 +54,8 @@ const DroppableContainer = ({
       ref={setNodeRef}
       className={`relative ${isOver ? 'bg-blue-100' : ''} ${
         isSelected ? 'outline outline-2 outline-blue-500' : 'hover:outline hover:outline-1 hover:outline-blue-300'
-      }`}
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelect();
-      }}
+      } cursor-move`}
+      onClick={handleClick}
     >
       {isSelected && (
         <div className="absolute -top-6 right-0 flex bg-blue-500 text-white text-xs z-10">

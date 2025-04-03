@@ -1,7 +1,9 @@
 
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { Icon } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
+import { useWebsiteStore } from '../store/WebsiteStore';
+import { toast } from "@/components/ui/use-toast";
 
 interface DraggableComponentProps {
   component: {
@@ -13,6 +15,7 @@ interface DraggableComponentProps {
 }
 
 const DraggableComponent = ({ component }: DraggableComponentProps) => {
+  const { addComponent } = useWebsiteStore();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `draggable-${component.type}`,
     data: {
@@ -22,12 +25,37 @@ const DraggableComponent = ({ component }: DraggableComponentProps) => {
     }
   });
 
+  const handleClick = () => {
+    const currentPageId = useWebsiteStore.getState().currentPageId;
+    const newComponentId = uuidv4();
+    
+    addComponent({
+      id: newComponentId,
+      pageId: currentPageId,
+      parentId: null,
+      type: component.type,
+      props: { ...component.defaultProps },
+      children: [],
+      responsiveProps: {
+        desktop: {},
+        tablet: {},
+        mobile: {}
+      }
+    });
+    
+    toast({
+      title: "Component Added",
+      description: `Added ${component.type} to canvas. You can now drag it to position.`,
+    });
+  };
+
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm ${
+      onClick={handleClick}
+      className={`p-2 border rounded cursor-pointer bg-white flex flex-col items-center justify-center text-sm ${
         isDragging ? 'opacity-50 cursor-grabbing' : ''
       } hover:bg-gray-50 hover:border-blue-300 transition-colors`}
       style={{

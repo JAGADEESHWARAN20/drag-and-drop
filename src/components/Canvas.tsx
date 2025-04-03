@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { 
   DndContext, 
@@ -57,6 +56,7 @@ const Canvas = ({ isPreviewMode, currentBreakpoint }: CanvasProps) => {
     selectedComponentId,
     setSelectedComponentId,
     reorderComponents,
+    moveComponent,
   } = useWebsiteStore();
 
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -73,15 +73,15 @@ const Canvas = ({ isPreviewMode, currentBreakpoint }: CanvasProps) => {
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
-      // Require the mouse to move by 10 pixels before activating
+      // Require the mouse to move by 5 pixels before activating for better control
       activationConstraint: {
-        distance: 10,
+        distance: 5,
       },
     }),
     useSensor(TouchSensor, {
-      // Press delay of 250ms, with tolerance of 5px of movement
+      // Lower delay for more responsive mobile experience
       activationConstraint: {
-        delay: 250,
+        delay: 150,
         tolerance: 5,
       },
     }),
@@ -109,58 +109,10 @@ const Canvas = ({ isPreviewMode, currentBreakpoint }: CanvasProps) => {
           reorderComponents(currentPage.id, oldIndex, newIndex);
         }
       } 
-      // If we're dropping a new component from the library
-      else if (active.data?.current?.type === 'COMPONENT') {
-        const { componentType, defaultProps } = active.data.current;
-        
-        // If dropping into a container
-        if (over.data?.current?.accepts === 'COMPONENT') {
-          const containerId = over.data.current.containerId;
-          
-          if (containerId) {
-            const newComponentId = uuidv4();
-            addComponent({
-              id: newComponentId,
-              pageId: currentPage.id,
-              parentId: containerId,
-              type: componentType,
-              props: { ...defaultProps },
-              children: [],
-              responsiveProps: {
-                desktop: {},
-                tablet: {},
-                mobile: {}
-              }
-            });
-            
-            toast({
-              title: "Component Added",
-              description: `Added ${componentType} inside container`,
-            });
-          }
-        } 
-        // If dropping directly on the canvas
-        else if (over.id === 'canvas-droppable' || over.data?.current?.type === 'CANVAS') {
-          const newComponentId = uuidv4();
-          addComponent({
-            id: newComponentId,
-            pageId: currentPage.id,
-            parentId: null,
-            type: componentType,
-            props: { ...defaultProps },
-            children: [],
-            responsiveProps: {
-              desktop: {},
-              tablet: {},
-              mobile: {}
-            }
-          });
-          
-          toast({
-            title: "Component Added",
-            description: `Added ${componentType} to canvas`,
-          });
-        }
+      // If we're moving a component within the canvas
+      else if (active.id.toString() && over.id.toString()) {
+        // Handle component positioning logic here
+        console.log(`Moving component ${active.id} to position near ${over.id}`);
       }
     }
     
@@ -170,6 +122,15 @@ const Canvas = ({ isPreviewMode, currentBreakpoint }: CanvasProps) => {
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
     console.log("Drag over:", { active, over });
+
+    // Handle container drops here if needed
+    if (over && active.id !== over.id) {
+      // Check if dropping into a container
+      if (over.data?.current?.accepts === 'COMPONENT' && 
+          over.data.current.containerId !== active.id.toString()) {
+        console.log(`Hovering component ${active.id} over container ${over.data.current.containerId}`);
+      }
+    }
   };
 
   const renderComponent = (componentData: Component) => {
@@ -222,6 +183,7 @@ const Canvas = ({ isPreviewMode, currentBreakpoint }: CanvasProps) => {
             className={`min-h-[calc(100vh-80px)] ${
               isPreviewMode ? 'bg-white' : 'bg-gray-50 border-dashed border-2 border-gray-300'
             } ${!isPreviewMode ? 'hover:bg-blue-50 transition-colors' : ''}`}
+            onClick={() => !isPreviewMode && setSelectedComponentId(null)}
           >
             <SortableContext 
               items={rootComponents.map(c => c.id)} 
@@ -233,7 +195,7 @@ const Canvas = ({ isPreviewMode, currentBreakpoint }: CanvasProps) => {
                   animate={{ opacity: 1 }}
                   className="h-full flex items-center justify-center text-gray-500 text-lg p-6"
                 >
-                  Drag components here to start building
+                  Click components to add them to the canvas
                 </motion.div>
               ) : (
                 <div className="p-6">

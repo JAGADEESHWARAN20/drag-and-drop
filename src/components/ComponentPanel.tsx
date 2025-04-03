@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import DraggableComponent from './DraggableComponent';
 import { ComponentLibrary } from '../data/ComponentLibrary';
-import { Search } from 'lucide-react';
+import { Search, MousePointer, MousePointerClick } from 'lucide-react';
 
 const ComponentPanel = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,6 +18,15 @@ const ComponentPanel = () => {
   return (
     <div className="p-6 h-full overflow-y-auto">
       <h2 className="text-xl font-semibold mb-4 text-blue-900">Component Library</h2>
+      
+      <div className="mb-4 p-3 bg-blue-50 rounded-md">
+        <div className="flex items-center mb-2 text-blue-700">
+          <MousePointerClick size={16} className="mr-2" />
+          <span className="text-sm font-medium">Click to add</span>
+        </div>
+        <p className="text-xs text-blue-600">Click any component to add it to the canvas</p>
+      </div>
+      
       <div className="mb-4">
         <div className="relative">
           <input

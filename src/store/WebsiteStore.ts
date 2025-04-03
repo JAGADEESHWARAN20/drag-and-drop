@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -40,6 +39,7 @@ interface WebsiteState {
   updateResponsiveProps: (id: string, breakpoint: Breakpoint, props: Record<string, any>) => void;
   setSelectedComponentId: (id: string | null) => void;
   reorderComponents: (pageId: string, oldIndex: number, newIndex: number) => void;
+  moveComponent: (id: string, targetId: string | null, isContainer?: boolean) => void;
   setIsPreviewMode: (isPreview: boolean) => void;
   setBreakpoint: (breakpoint: Breakpoint) => void;
 }
@@ -63,7 +63,8 @@ export const useWebsiteStore = create<WebsiteState>((set, get) => ({
   },
   
   addComponent: (component) => set((state) => ({ 
-    components: [...state.components, component] 
+    components: [...state.components, component],
+    selectedComponentId: component.id
   })),
   
   removeComponent: (id) => {
@@ -120,6 +121,19 @@ export const useWebsiteStore = create<WebsiteState>((set, get) => ({
         ...state.components.filter(c => c.pageId !== pageId || c.parentId), 
         ...sortedComponents
       ] 
+    };
+  }),
+  
+  moveComponent: (id, targetId, isContainer = false) => set((state) => {
+    const component = state.components.find(c => c.id === id);
+    if (!component) return state;
+    
+    return {
+      components: state.components.map(c => 
+        c.id === id 
+          ? { ...c, parentId: isContainer ? targetId : c.parentId } 
+          : c
+      )
     };
   }),
   
