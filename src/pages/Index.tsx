@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DndContext } from '@dnd-kit/core';
 import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
@@ -20,7 +19,7 @@ const Index = () => {
     setIsPreviewMode,
     breakpoint,
     setBreakpoint,
-    components
+    components,
   } = useWebsiteStore();
 
   const handlePageChange = (pageId: string) => {
@@ -29,7 +28,19 @@ const Index = () => {
 
   const handleAddPage = (name: string) => {
     const newPageId = addPage(name);
-    setCurrentPageId(newPageId);
+
+    if (typeof newPageId === 'string') {
+      setCurrentPageId(newPageId);
+    } else {
+      // Consider logging the error for debugging purposes.
+      console.error('Failed to add page. Returned value was not a string:', newPageId);
+
+      toast({
+        title: 'Error adding page',
+        description: 'Could not create new page. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handlePreviewToggle = () => {
@@ -40,26 +51,26 @@ const Index = () => {
     try {
       if (components.length === 0) {
         toast({
-          title: "No Components",
-          description: "Add some components before exporting",
-          variant: "destructive"
+          title: 'No Components',
+          description: 'Add some components before exporting',
+          variant: 'destructive',
         });
         return;
       }
 
       await generateCode(pages, components);
-      
+
       toast({
-        title: "Export Successful",
-        description: "Your code has been exported as a ZIP file",
-        variant: "success"
+        title: 'Export Successful',
+        description: 'Your code has been exported as a ZIP file',
+        variant: 'default',
       });
     } catch (error) {
       console.error('Error exporting code:', error);
       toast({
-        title: "Export Failed",
-        description: "There was an error exporting your code",
-        variant: "destructive"
+        title: 'Export Failed',
+        description: 'There was an error exporting your code',
+        variant: 'destructive',
       });
     }
   };
@@ -82,21 +93,18 @@ const Index = () => {
           breakpoint={breakpoint}
           setBreakpoint={handleBreakpointChange}
         />
-        
+
         <div className="flex flex-1 overflow-hidden">
           {!isPreviewMode && (
             <div className="w-64 bg-white shadow-sm overflow-y-auto">
               <ComponentPanel />
             </div>
           )}
-          
+
           <div className="flex-1 overflow-y-auto flex justify-center">
-            <Canvas 
-              isPreviewMode={isPreviewMode} 
-              currentBreakpoint={breakpoint} 
-            />
+            <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
           </div>
-          
+
           {!isPreviewMode && (
             <div className="w-72 bg-white shadow-sm overflow-y-auto">
               <PropertyPanel />
