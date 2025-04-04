@@ -109,7 +109,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               </SheetTrigger>
                               <SheetContent
                                    side="top"
-                                   className={`w-full h-auto max-h-96 p-4 flex flex-col ${isMobile ? 'w-[100vw]' : 'min-w-[300px]'}`}
+                                   className={`w-full h-auto max-h-96 p-4 flex flex-col overflow-x-scroll scrollbar-hidden ${isMobile ? 'min-w-[100vw]' : 'min-w-[300px]'}`}
                               >
                                    <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-2">
                                         Component Library
@@ -117,7 +117,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                    <div className="relative">
                                         <div
                                              ref={componentPanelScrollRef}
-                                             className="pb-2 scroll-componentcontainer"
+                                             className="pb-2 scroll-componentcontainer overflow-x-scroll"
                                         >
                                              <ComponentPanel ref={componentPanelRef} />
                                         </div>
