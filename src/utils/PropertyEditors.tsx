@@ -39,10 +39,10 @@ export const PropertyEditors: {
   Image: ImageEditor,
   Button: ButtonEditor as React.ComponentType<PropertyEditorProps>, // Explicit type casting
   Link: LinkEditor,
-  Container: ContainerEditor,
+  Container: ContainerEditor as React.ComponentType<PropertyEditorProps>,
   Section: SectionEditor,
   Row: RowEditor,
-  Column: ColumnEditor,
+  Column: ColumnEditor as React.ComponentType<PropertyEditorProps>,
   Form: FormEditor,
   List: ListEditor,
   Table: TableEditor,
