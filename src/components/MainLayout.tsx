@@ -56,8 +56,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      const componentPanelRef = useRef<HTMLDivElement>(null);
      const componentPanelScrollRef = useRef<HTMLDivElement>(null);
 
-  
-
      // Toggle dark mode by adding/removing the 'dark' class on the root element
      useEffect(() => {
           if (isDarkMode) {
@@ -95,6 +93,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           setIsPageSheetOpen(false);
      };
 
+     // Determine if the device is mobile based on breakpoint or window width
+     const isMobile = breakpoint === 'mobile';
+
      return (
           <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
                {/* Navbar */}
@@ -106,15 +107,20 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                         <Menu size={20} />
                                    </Button>
                               </SheetTrigger>
-                              <SheetContent side="top" className="w-full h-auto max-h-96 p-4 flex flex-col">
+                              <SheetContent 
+                                   side="top" 
+                                   className={`w-full h-auto max-h-96 p-4 flex flex-col ${isMobile ? 'min-w-[100vw]' : 'min-w-[600px]'}`}
+                              >
                                    <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-2">
                                         Component Library
                                    </h2>
                                    <div className="relative">
-                                        <div ref={componentPanelScrollRef} className="flex overflow-x-auto scroll-smooth gap-2 pb-2">
+                                        <div 
+                                             ref={componentPanelScrollRef} 
+                                             className="overflow-x-auto scroll-smooth pb-2"
+                                        >
                                              <ComponentPanel ref={componentPanelRef} />
                                         </div>
-                                        
                                    </div>
                               </SheetContent>
                          </Sheet>
@@ -233,7 +239,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               className={`flex items-center space-x-2 data-[state=pressed]:bg-blue-600 text-gray-600 dark:text-gray-300 rounded-md px-3 py-1`}
                          >
                               {isPreviewMode ? <Pen size={16} /> : <Code size={16} />}
-                              <span>{isPreviewMode ? 'Preview' : 'Edit'}</span>
+                              
                          </Toggle>
 
                          {/* Export Code (Icon on Mobile, Button on Desktop) */}
