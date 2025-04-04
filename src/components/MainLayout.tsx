@@ -6,7 +6,7 @@ import ComponentPanel from './ComponentPanel';
 import Canvas from './Canvas';
 import PropertyPanel from './PropertyPanel';
 import ElementHierarchyViewer from './ElementHierarchyViewer';
-import { Menu, ChevronDown, ChevronRight, ChevronLeft, X, Download, Smartphone, Tablet, Monitor, Layers } from 'lucide-react';
+import { Menu, ChevronDown, ChevronLeft, ChevronRight,X, Download, Smartphone, Tablet, Monitor, Layers } from 'lucide-react';
 import  Button  from '@/components/ui/button';
 import {
      Select,
@@ -19,7 +19,6 @@ import { Switch } from '@/components/ui/switch';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface MainLayoutProps {
@@ -45,7 +44,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      breakpoint,
      setBreakpoint,
 }) => {
-     const { components, selectedComponentId, removePage } = useWebsiteStore();
+     const { components, selectedComponentId } = useWebsiteStore();
 
      const [isComponentPanelOpen, setIsComponentPanelOpen] = useState(false);
      const [isPropertyPanelOpen, setIsPropertyPanelOpen] = useState(false);
@@ -80,7 +79,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                toast({ title: 'Cannot Delete', description: 'At least one page must exist' });
                return;
           }
-          removePage(pageId);
+          useWebsiteStore.getState().removePage(pageId);
           if (currentPageId === pageId) {
                onChangePage(pages[0].id);
           }
@@ -99,18 +98,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                    </Button>
                               </SheetTrigger>
                               <SheetContent side="left" className="w-64 p-4">
-                                   <div className="flex justify-between items-center mb-4">
-                                        <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300">
-                                             Component Library
-                                        </h2>
-                                        <Button
-                                             variant="ghost"
-                                             onClick={() => setIsComponentPanelOpen(false)}
-                                             className="text-gray-600 dark:text-gray-300"
-                                        >
-                                             <X size={24} />
-                                        </Button>
-                                   </div>
+                                   <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">
+                                        Component Library
+                                   </h2>
                                    <ComponentPanel />
                               </SheetContent>
                          </Sheet>
@@ -127,18 +117,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                         </Button>
                                    </SheetTrigger>
                                    <SheetContent side="top" className="w-full p-4">
-                                        <div className="flex justify-between items-center mb-4">
-                                             <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300">
-                                                  Pages
-                                             </h2>
-                                             <Button
-                                                  variant="ghost"
-                                                  onClick={() => setIsComponentPanelOpen(false)}
-                                                  className="text-gray-600 dark:text-gray-300"
-                                             >
-                                                  <X size={24} />
-                                             </Button>
-                                        </div>
+                                        <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">
+                                             Pages
+                                        </h2>
                                         <div className="space-y-2 mb-4">
                                              {pages.map((page) => (
                                                   <div key={page.id} className="flex items-center justify-between">
@@ -222,6 +203,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               </ToggleGroupItem>
                          </ToggleGroup>
 
+                         {/* Preview/Edit Mode Toggle */}
+                         <Button
+                              variant={isPreviewMode ? 'default' : 'outline'}
+                              onClick={onPreviewToggle}
+                              className="text-black"
+                         >
+                              {isPreviewMode ? 'Edit Mode' : 'Preview Mode'}
+                         </Button>
+
                          {/* Export Code (Icon on Mobile, Button on Desktop) */}
                          <div className="block md:hidden">
                               <Button
@@ -256,97 +246,52 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     </div>
                </nav>
 
-               {/* Main Content with Tabs for Editor/Preview Mode */}
-               <Tabs
-                    value={isPreviewMode ? 'preview' : 'editor'}
-                    onValueChange={(value) => {
-                         if (value === 'preview') {
-                              onPreviewToggle();
-                         } else {
-                              onPreviewToggle();
-                         }
-                    }}
-                    className="flex-1 flex flex-col"
-               >
-                    <TabsList className="w-full bg-gray-100 dark:bg-gray-700">
-                         <TabsTrigger value="editor" className="flex-1">
-                              Editor
-                         </TabsTrigger>
-                         <TabsTrigger value="preview" className="flex-1">
-                              Preview
-                         </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="editor" className="flex-1 flex overflow-hidden">
-                         <div className="flex-1 overflow-auto">
-                              <div className="relative">
-                                   {/* Property Panel Toggle Button */}
-                                   {!isPreviewMode && (selectedComponentId || components.length > 0) && (
-                                        <Sheet open={isPropertyPanelOpen} onOpenChange={setIsPropertyPanelOpen}>
-                                             <SheetTrigger asChild>
-                                                  <Button
-                                                       variant="ghost"
-                                                       className="absolute top-4 right-12 z-50 text-gray-600 dark:text-gray-300"
-                                                  >
-                                                       {isPropertyPanelOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
-                                                  </Button>
-                                             </SheetTrigger>
-                                             <SheetContent side="right" className="w-80 p-4">
-                                                  <div className="flex justify-between items-center mb-4">
-                                                       <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300">
-                                                            Properties
-                                                       </h2>
-                                                       <Button
-                                                            variant="ghost"
-                                                            onClick={() => setIsPropertyPanelOpen(false)}
-                                                            className="text-gray-600 dark:text-gray-300"
-                                                       >
-                                                            <X size={24} />
-                                                       </Button>
-                                                  </div>
-                                                  <PropertyPanel />
-                                             </SheetContent>
-                                        </Sheet>
-                                   )}
+               {/* Main Content (Canvas Takes Full Screen) */}
+               <div className="flex-1 flex overflow-hidden">
+                    <div className="flex-1 overflow-auto relative">
+                         {/* Property Panel Toggle Button */}
+                         {!isPreviewMode && (selectedComponentId || components.length > 0) && (
+                              <Sheet open={isPropertyPanelOpen} onOpenChange={setIsPropertyPanelOpen}>
+                                   <SheetTrigger asChild>
+                                        <Button
+                                             variant="ghost"
+                                             className="absolute top-4 right-12 z-50 text-gray-600 dark:text-gray-300"
+                                        >
+                                             {isPropertyPanelOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
+                                        </Button>
+                                   </SheetTrigger>
+                                   <SheetContent side="right" className="w-80 p-4">
+                                        <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">
+                                             Properties
+                                        </h2>
+                                        <PropertyPanel />
+                                   </SheetContent>
+                              </Sheet>
+                         )}
 
-                                   {/* Element Hierarchy Toggle Button */}
-                                   {!isPreviewMode && (
-                                        <Sheet open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen}>
-                                             <SheetTrigger asChild>
-                                                  <Button
-                                                       variant="ghost"
-                                                       className="absolute top-4 right-4 z-50 text-gray-600 dark:text-gray-300"
-                                                  >
-                                                       <Layers size={24} />
-                                                  </Button>
-                                             </SheetTrigger>
-                                             <SheetContent side="right" className="w-80 p-4">
-                                                  <div className="flex justify-between items-center mb-4">
-                                                       <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300">
-                                                            Element Hierarchy
-                                                       </h2>
-                                                       <Button
-                                                            variant="ghost"
-                                                            onClick={() => setIsHierarchyOpen(false)}
-                                                            className="text-gray-600 dark:text-gray-300"
-                                                       >
-                                                            <X size={24} />
-                                                       </Button>
-                                                  </div>
-                                                  <ElementHierarchyViewer />
-                                             </SheetContent>
-                                        </Sheet>
-                                   )}
+                         {/* Element Hierarchy Toggle Button */}
+                         {!isPreviewMode && (
+                              <Sheet open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen}>
+                                   <SheetTrigger asChild>
+                                        <Button
+                                             variant="ghost"
+                                             className="absolute top-4 right-4 z-50 text-gray-600 dark:text-gray-300"
+                                        >
+                                             <Layers size={24} />
+                                        </Button>
+                                   </SheetTrigger>
+                                   <SheetContent side="right" className="w-80 p-4">
+                                        <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">
+                                             Element Hierarchy
+                                        </h2>
+                                        <ElementHierarchyViewer />
+                                   </SheetContent>
+                              </Sheet>
+                         )}
 
-                                   <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
-                              </div>
-                         </div>
-                    </TabsContent>
-                    <TabsContent value="preview" className="flex-1 flex overflow-hidden">
-                         <div className="flex-1 overflow-auto">
-                              <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
-                         </div>
-                    </TabsContent>
-               </Tabs>
+                         <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
+                    </div>
+               </div>
           </div>
      );
 };
