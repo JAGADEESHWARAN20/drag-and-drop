@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useWebsiteStore, Breakpoint, Page } from '../store/WebsiteStore';
 import ComponentPanel from './ComponentPanel';
 import Canvas from './Canvas';
@@ -53,6 +53,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      const [isHierarchyOpen, setIsHierarchyOpen] = useState(false);
      const [isDarkMode, setIsDarkMode] = useState(false);
      const [isPageSheetOpen, setIsPageSheetOpen] = useState(false);
+     const componentPanelRef = useRef<HTMLDivElement>(null);
 
      // Toggle dark mode by adding/removing the 'dark' class on the root element
      useEffect(() => {
@@ -102,11 +103,20 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                         <Menu size={20} />
                                    </Button>
                               </SheetTrigger>
-                              <SheetContent side="left" className="w-64 p-4">
+                              <SheetContent side="top" className="w-full h-auto max-h-96 p-4">
                                    <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">
                                         Component Library
                                    </h2>
-                                   <ComponentPanel />
+                                   <div ref={componentPanelRef} className="overflow-x-auto">
+                                        <div className="inline-block py-2 pr-4 min-w-full">
+                                             <ComponentPanel />
+                                        </div>
+                                   </div>
+                                   <div className="mt-4">
+                                        <Button variant="outline" onClick={() => componentPanelRef.current?.scrollIntoView({ behavior: 'smooth' })}>
+                                             Scroll to Components
+                                        </Button>
+                                   </div>
                               </SheetContent>
                          </Sheet>
                          <h1 className="text-lg font-bold text-black dark:text-white">WebBuilder</h1>
@@ -224,7 +234,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               className={`flex items-center space-x-2 data-[state=pressed]:bg-blue-600 text-gray-600 dark:text-gray-300 rounded-md px-3 py-1`}
                          >
                               {isPreviewMode ? <Pen size={16} /> : <Code size={16} />}
-                              
+                              <span>{isPreviewMode ? 'Preview' : 'Edit'}</span>
                          </Toggle>
 
                          {/* Export Code (Icon on Mobile, Button on Desktop) */}
