@@ -7,7 +7,7 @@ import Canvas from './Canvas';
 import PropertyPanel from './PropertyPanel';
 import ElementHierarchyViewer from './ElementHierarchyViewer';
 import { Menu, ChevronRight, ChevronLeft, X, Download, Smartphone, Tablet, Monitor, Layers, Code, Pen, Plus } from 'lucide-react';
-import  Button  from '@/components/ui/button';
+import Button from '@/components/ui/button';
 import {
      Select,
      SelectContent,
@@ -21,6 +21,7 @@ import { toast } from '@/components/ui/use-toast';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Toggle } from '@/components/ui/toggle';
 
 interface MainLayoutProps {
      pages: Page[];
@@ -215,23 +216,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               </ToggleGroupItem>
                          </ToggleGroup>
 
-                         {/* Preview/Edit Mode Toggle (Switch with Icons) */}
-                         <div className="flex items-center">
-                              <Switch
-                                   id="preview-mode"
-                                   checked={isPreviewMode}
-                                   onCheckedChange={onPreviewToggle}
-                                   className="data-[state=checked]:bg-blue-600"
-                              >
-                                   <span className="flex items-center justify-center w-5 h-5">
-                                        {isPreviewMode ? (
-                                             <Pen size={16} className="text-gray-600 dark:text-gray-300" />
-                                        ) : (
-                                             <Code size={16} className="text-gray-600 dark:text-gray-300" />
-                                        )}
-                                   </span>
-                              </Switch>
-                         </div>
+                         {/* Preview/Edit Mode Toggle (Shadcn Toggle Button) */}
+                         <Toggle
+                              aria-label="Toggle Preview Mode"
+                              pressed={isPreviewMode}
+                              onPressedChange={onPreviewToggle}
+                              className={`flex items-center space-x-2 data-[state=pressed]:bg-blue-600 text-gray-600 dark:text-gray-300 rounded-md px-3 py-1`}
+                         >
+                              {isPreviewMode ? <Pen size={16} /> : <Code size={16} />}
+                              <span>{isPreviewMode ? 'Preview' : 'Edit'}</span>
+                         </Toggle>
 
                          {/* Export Code (Icon on Mobile, Button on Desktop) */}
                          <div className="block md:hidden">
