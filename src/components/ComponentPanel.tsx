@@ -57,7 +57,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ }, ref
       </div>
 
       {/* Component Categories */}
-      <div className="space-x-2 flex flex-row overflow-x-scroll scroll-componentcontainer scrollbar-hidden">
+      <div className="space-x-2 flex flex-row overflow-x-scroll  scrollbar-hidden">
         {Object.entries(filteredComponents).map(([category, components]) => (
           <div key={category} className="mb-4 flex flex-col gap-2">
             <h3 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-400 uppercase">
