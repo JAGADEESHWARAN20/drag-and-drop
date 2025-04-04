@@ -117,7 +117,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                    <div className="relative">
                                         <div
                                              ref={componentPanelScrollRef}
-                                             className="overflow-x-scroll scroll-smooth pb-2"
+                                             className="pb-2"
                                         >
                                              <ComponentPanel ref={componentPanelRef} />
                                         </div>
