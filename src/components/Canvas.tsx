@@ -21,7 +21,7 @@ import DroppableContainer from './DroppableContainer';
 import SortableItem from './SortableItem';
 import { toast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
+import  Button  from '@/components/ui/button';
 import SelectionManager from './SelectionManager';
 import ContextMenu from './ContextMenu';
 
@@ -177,8 +177,9 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
   };
 
   const renderComponent = useCallback((componentData: Component) => {
-    const Component = ComponentRegistry[componentData.type];
-    if (!Component) return null;
+    const DynamicComponent = ComponentRegistry[componentData.type] as React.ComponentType<any>; // ✅ Fix type
+
+    if (!DynamicComponent) return null;
 
     const responsiveProps = componentData.responsiveProps?.[currentBreakpoint] || {};
     const mergedProps = { ...componentData.props, ...responsiveProps };
@@ -193,7 +194,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
         isSelected={isSelected}
         onSelect={(e) => handleComponentClick(componentData.id, e)}
       >
-        <Component {...mergedProps} id={componentData.id} isPreviewMode={isPreviewMode}>
+        <DynamicComponent {...mergedProps} id={componentData.id} isPreviewMode={isPreviewMode}>
           {childComponents.length > 0 && (
             <SortableContext items={childComponents.map((c) => c.id)} strategy={verticalListSortingStrategy}>
               {childComponents.map((child) => (
@@ -210,7 +211,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
               style={{ height: '50px' }}
             />
           )}
-        </Component>
+        </DynamicComponent>
         {componentData.type === 'Container' && !isPreviewMode && (
           <div className="mt-2">
             <Button
@@ -224,6 +225,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
       </DroppableContainer>
     );
   }, [isPreviewMode, selectedIds, components, currentBreakpoint, setAllowChildren, handleComponentClick]);
+
 
   const getCanvasWidth = useCallback(() => {
     switch (currentBreakpoint) {

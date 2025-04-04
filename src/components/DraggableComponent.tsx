@@ -5,12 +5,15 @@ import { useWebsiteStore } from '../store/WebsiteStore';
 import { toast } from '@/components/ui/use-toast';
 import { ComponentType, SVGProps } from 'react';
 
-// Define the LibraryComponent type (or import from a shared types file)
+// Create a unified type for component props
+type ValidProp = string | number | boolean | string[] | string[][] | { [key: string]: string | number };
+export type ComponentProps = Record<string, ValidProp>;
+
 interface LibraryComponent {
   type: string;
   label: string;
   icon: ComponentType<SVGProps<SVGSVGElement> & { size?: string | number }>;
-  defaultProps: Record<string, unknown>;
+  defaultProps: ComponentProps;
 }
 
 interface DraggableComponentProps {
@@ -61,7 +64,7 @@ const DraggableComponent = ({ component }: DraggableComponentProps) => {
       className={`p-2 border rounded cursor-pointer bg-white flex flex-col items-center justify-center text-sm ${isDragging ? 'opacity-50 cursor-grabbing' : ''
         } hover:bg-gray-50 hover:border-blue-300 transition-colors`}
       style={{
-        touchAction: 'none', // This prevents touch events from being captured by browser
+        touchAction: 'none',
       }}
     >
       <div className="text-blue-500 mb-1">
