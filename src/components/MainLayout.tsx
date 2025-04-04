@@ -6,8 +6,8 @@ import ComponentPanel from './ComponentPanel';
 import Canvas from './Canvas';
 import PropertyPanel from './PropertyPanel';
 import ElementHierarchyViewer from './ElementHierarchyViewer';
-import { Menu, ChevronDown, ChevronRight, X, Download, Smartphone, Tablet, Monitor, Layers } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Menu, ChevronDown, ChevronRight, ChevronLeft, X, Download, Smartphone, Tablet, Monitor, Layers } from 'lucide-react';
+import  Button  from '@/components/ui/button';
 import {
      Select,
      SelectContent,
@@ -19,7 +19,6 @@ import { Switch } from '@/components/ui/switch';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
