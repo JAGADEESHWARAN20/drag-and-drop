@@ -229,10 +229,14 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
 
   const getCanvasWidth = useCallback(() => {
     switch (currentBreakpoint) {
-      case 'mobile': return 'w-full max-w-[375px]';
-      case 'tablet': return 'w-full max-w-[768px]';
-      case 'desktop': return 'w-full';
-      default: return 'w-full';
+      case 'mobile':
+        return 'w-full min-w-[320px] max-w-[375px] mx-auto'; // Ensure minimum width for small screens
+      case 'tablet':
+        return 'w-full min-w-[640px] max-w-[768px] mx-auto';
+      case 'desktop':
+        return 'w-full max-w-[1200px] mx-auto'; // Add a max-width for desktop
+      default:
+        return 'w-full max-w-[1200px] mx-auto';
     }
   }, [currentBreakpoint]);
 
@@ -246,7 +250,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
       <div className={`min-h-full mx-auto bg-white ${getCanvasWidth()} transition-all duration-300`}>
         <div
           ref={setCanvasRef}
-          className={`min-h-[calc(100vh-80px)] relative ${isPreviewMode ? 'bg-white' : 'bg-gray-50 border-dashed border-2 border-gray-300'}`}
+          className={`min-h-[calc(100vh-80px)] relative ${isPreviewMode ? 'bg-white' : 'bg-gray-50 border-dashed border-2 border-gray-300'} overflow-x-auto`} // Add overflow-x-auto
           onClick={() => !isPreviewMode && setSelectedComponentId(null)}
           onContextMenu={handleRightClick}
         >

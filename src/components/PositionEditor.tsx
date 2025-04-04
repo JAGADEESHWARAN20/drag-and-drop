@@ -47,10 +47,10 @@ const PositionEditor = ({
                <div className="space-y-2">
                     <Label>Position Type</Label>
                     <Select value={defaultPosition.type} onValueChange={handlePositionTypeChange}>
-                         <SelectTrigger>
+                         <SelectTrigger className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600">
                               <SelectValue placeholder="Select position type" />
                          </SelectTrigger>
-                         <SelectContent>
+                         <SelectContent className="dark:bg-gray-700 dark:text-gray-100">
                               <SelectItem value="relative">Relative</SelectItem>
                               <SelectItem value="absolute">Absolute</SelectItem>
                               <SelectItem value="fixed">Fixed</SelectItem>
@@ -71,6 +71,7 @@ const PositionEditor = ({
                                              value={defaultPosition.top || ''}
                                              onChange={(e) => handlePositionValueChange('top', e.target.value)}
                                              placeholder="e.g., 10px"
+                                             className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
                                         />
                                    </div>
                                    <div className="space-y-2">
@@ -80,6 +81,7 @@ const PositionEditor = ({
                                              value={defaultPosition.left || ''}
                                              onChange={(e) => handlePositionValueChange('left', e.target.value)}
                                              placeholder="e.g., 10px"
+                                             className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
                                         />
                                    </div>
                               </div>
@@ -92,6 +94,7 @@ const PositionEditor = ({
                                              value={defaultPosition.bottom || ''}
                                              onChange={(e) => handlePositionValueChange('bottom', e.target.value)}
                                              placeholder="e.g., 10px"
+                                             className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
                                         />
                                    </div>
                                    <div className="space-y-2">
@@ -101,6 +104,7 @@ const PositionEditor = ({
                                              value={defaultPosition.right || ''}
                                              onChange={(e) => handlePositionValueChange('right', e.target.value)}
                                              placeholder="e.g., 10px"
+                                             className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
                                         />
                                    </div>
                               </div>
@@ -112,6 +116,7 @@ const PositionEditor = ({
                                         value={defaultPosition.zIndex || ''}
                                         onChange={(e) => handlePositionValueChange('zIndex', e.target.value)}
                                         placeholder="e.g., 10"
+                                        className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
                                    />
                               </div>
                          </>

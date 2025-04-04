@@ -13,7 +13,7 @@ export interface Component {
   pageId: string;
   parentId: string | null;
   type: string;
-  props: Record<string, string | number | boolean | object>;  // Updated
+  props: Record<string, string | number | boolean | object>;
   children: string[];
   responsiveProps: {
     desktop: Record<string, string | number | boolean | object>;
@@ -24,7 +24,6 @@ export interface Component {
   allowChildren?: boolean;
 }
 
-
 interface WebsiteState {
   pages: Page[];
   currentPageId: string;
@@ -34,10 +33,14 @@ interface WebsiteState {
   breakpoint: Breakpoint;
 
   setCurrentPageId: (id: string) => void;
-  addPage: (name: string) => string;
+  addPage: (page: Page) => void; // Updated to accept a Page object
+  removePage: (pageId: string) => void; // Added removePage action
   addComponent: (component: Component) => void;
   removeComponent: (id: string) => void;
-  updateComponentProps: (id: string, props: Record<string, string | number | boolean | object>) => void;
+  updateComponentProps: (
+    id: string,
+    props: Record<string, string | number | boolean | object>
+  ) => void;
   updateResponsiveProps: (
     id: string,
     breakpoint: Breakpoint,
@@ -50,7 +53,7 @@ interface WebsiteState {
   setBreakpoint: (breakpoint: Breakpoint) => void;
   setAllowChildren: (id: string, allow: boolean) => void;
   updateComponentParent: (id: string, parentId: string | null) => void;
-  reorderChildren: (parentId: string, oldIndex: number, newIndex: number) => void; // New action
+  reorderChildren: (parentId: string, oldIndex: number, newIndex: number) => void;
 }
 
 export const useWebsiteStore = create<WebsiteState>((set, get) => ({
@@ -63,17 +66,39 @@ export const useWebsiteStore = create<WebsiteState>((set, get) => ({
 
   setCurrentPageId: (id) => set({ currentPageId: id }),
 
-  addPage: (name) => {
-    const newId = uuidv4();
+  addPage: (page: Page) => {
     set((state) => ({
-      pages: [...state.pages, { id: newId, name }],
+      pages: [...state.pages, page],
     }));
-    return newId;
   },
 
-  addComponent: (component: Omit <Component, 'children' | 'style' | 'allowChildren'>) =>
+  removePage: (pageId: string) => {
     set((state) => {
-      const updatedComponent = { ...component, children: [], style: {}, allowChildren: false };
+      const updatedPages = state.pages.filter((page) => page.id !== pageId);
+      const updatedComponents = state.components.filter(
+        (component) => component.pageId !== pageId
+      );
+      return {
+        pages: updatedPages,
+        components: updatedComponents,
+        currentPageId:
+          state.currentPageId === pageId && updatedPages.length > 0
+            ? updatedPages[0].id
+            : state.currentPageId,
+      };
+    });
+  },
+
+  addComponent: (
+    component: Omit<Component, 'children' | 'style' | 'allowChildren'>
+  ) =>
+    set((state) => {
+      const updatedComponent = {
+        ...component,
+        children: [],
+        style: {},
+        allowChildren: false,
+      };
       const parent = state.components.find((c) => c.id === component.parentId);
       if (parent) {
         parent.children = [...parent.children, component.id];
@@ -85,11 +110,16 @@ export const useWebsiteStore = create<WebsiteState>((set, get) => ({
     }),
 
   removeComponent: (id) => {
-    const removeComponentAndChildren = (componentId: string, allComponents: Component[]): string[] => {
+    const removeComponentAndChildren = (
+      componentId: string,
+      allComponents: Component[]
+    ): string[] => {
       const component = allComponents.find((c) => c.id === componentId);
       if (!component) return [componentId];
 
-      const childComponents = allComponents.filter((c) => c.parentId === componentId);
+      const childComponents = allComponents.filter(
+        (c) => c.parentId === componentId
+      );
       const childIds = childComponents.flatMap((child) =>
         removeComponentAndChildren(child.id, allComponents)
       );
@@ -99,14 +129,19 @@ export const useWebsiteStore = create<WebsiteState>((set, get) => ({
 
     set((state) => {
       const componentIdsToRemove = removeComponentAndChildren(id, state.components);
-      const updatedComponents = state.components.filter((c) => !componentIdsToRemove.includes(c.id));
+      const updatedComponents = state.components.filter(
+        (c) => !componentIdsToRemove.includes(c.id)
+      );
       const parent = updatedComponents.find((c) => c.children.includes(id));
       if (parent) {
-        parent.children = parent.children.filter((childId) => !componentIdsToRemove.includes(childId));
+        parent.children = parent.children.filter(
+          (childId) => !componentIdsToRemove.includes(childId)
+        );
       }
       return {
         components: updatedComponents,
-        selectedComponentId: state.selectedComponentId === id ? null : state.selectedComponentId,
+        selectedComponentId:
+          state.selectedComponentId === id ? null : state.selectedComponentId,
       };
     });
   },
@@ -122,7 +157,6 @@ export const useWebsiteStore = create<WebsiteState>((set, get) => ({
         ),
       };
     }),
-
 
   updateResponsiveProps: (id, breakpoint, props) =>
     set((state) => ({
@@ -143,7 +177,9 @@ export const useWebsiteStore = create<WebsiteState>((set, get) => ({
 
   reorderComponents: (pageId, oldIndex, newIndex) =>
     set((state) => {
-      const pageComponents = state.components.filter((c) => c.pageId === pageId && !c.parentId);
+      const pageComponents = state.components.filter(
+        (c) => c.pageId === pageId && !c.parentId
+      );
       const sortedComponents = [...pageComponents];
       const [moved] = sortedComponents.splice(oldIndex, 1);
       sortedComponents.splice(newIndex, 0, moved);
@@ -166,7 +202,9 @@ export const useWebsiteStore = create<WebsiteState>((set, get) => ({
         oldParent.children = oldParent.children.filter((childId) => childId !== id);
       }
 
-      const newParent = isContainer ? state.components.find((c) => c.id === targetId) : null;
+      const newParent = isContainer
+        ? state.components.find((c) => c.id === targetId)
+        : null;
       if (newParent) {
         newParent.children = [...newParent.children, id];
       }
@@ -199,7 +237,9 @@ export const useWebsiteStore = create<WebsiteState>((set, get) => ({
         oldParent.children = oldParent.children.filter((childId) => childId !== id);
       }
 
-      const newParent = parentId ? state.components.find((c) => c.id === parentId) : null;
+      const newParent = parentId
+        ? state.components.find((c) => c.id === parentId)
+        : null;
       if (newParent) {
         newParent.children = [...newParent.children, id];
       }
