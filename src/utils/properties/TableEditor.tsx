@@ -41,25 +41,27 @@ export const TableEditor = ({ props, onChange }: TableEditorProps) => {
      };
 
      return (
-          <div className="space-y-4">
+          <div className="space-y-4 dark:text-white"> {/* Added dark mode text color to the container */}
                <div>
-                    <Label htmlFor="headers">Headers (comma separated)</Label>
+                    <Label htmlFor="headers" className="dark:text-gray-300">Headers (comma separated)</Label> {/* Added dark mode text color to label */}
                     <Input
                          id="headers"
                          value={(props.headers || []).join(',')}
                          onChange={(e) => handleHeadersChange(e.target.value)}
                          placeholder="Enter headers, separated by commas"
+                         className="bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white" // Added light and dark mode styling
                     />
                </div>
 
                <div>
-                    <Label htmlFor="rows">Rows (one per line, cells comma separated)</Label>
+                    <Label htmlFor="rows" className="dark:text-gray-300">Rows (one per line, cells comma separated)</Label> {/* Added dark mode text color to label */}
                     <Textarea
                          id="rows"
                          value={(props.rows || []).map((row) => row.join(',')).join('\n')}
                          onChange={(e) => handleRowsChange(e.target.value)}
                          placeholder="Enter rows, one per line"
                          rows={5}
+                         className="bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white" // Added light and dark mode styling
                     />
                </div>
           </div>

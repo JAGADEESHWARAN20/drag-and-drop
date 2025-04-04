@@ -25,7 +25,7 @@ export const ColumnEditor: React.FC<ColumnEditorProps> = ({
   const isResponsive = breakpoint !== 'desktop';
 
   return (
-    <div>
+    <div className="dark:text-white"> {/* Added dark mode text color to the container */}
       <SelectInput
         label="Width"
         value={props.width ?? '1'}

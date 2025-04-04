@@ -41,11 +41,12 @@ export const RowEditor = ({
      };
 
      return (
-          <div>
+          <div className="dark:text-white"> {/* Added dark mode text color to the container */}
                <TextInput
                     label="Gap"
                     value={props.gap || '16px'}
                     onChange={(value) => handleChange('gap', value)}
+                    className="bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white" // Added light and dark mode styling
                />
                <SelectInput
                     label="Align Items"
@@ -58,6 +59,7 @@ export const RowEditor = ({
                     ]}
                     onChange={(value) => handleChange('alignItems', value, isResponsive)}
                     isResponsive={isResponsive}
+                    className="bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white" // Added light and dark mode styling
                />
                <SelectInput
                     label="Justify Content"
@@ -72,6 +74,7 @@ export const RowEditor = ({
                     ]}
                     onChange={(value) => handleChange('justifyContent', value, isResponsive)}
                     isResponsive={isResponsive}
+                    className="bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white" // Added light and dark mode styling
                />
           </div>
      );

@@ -30,13 +30,13 @@ export const ParagraphEditor = ({
   };
 
   return (
-    <div>
+    <div className="dark:text-white"> {/* Added dark mode text color to the container */}
       <div className="mb-3">
-        <label className="block text-sm font-medium mb-1 text-gray-700">Text</label>
+        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Text</label> {/* Added dark mode text color to label */}
         <textarea
           value={props.text || ''}
           onChange={(e) => handleChange('text', e.target.value)}
-          className="w-full border rounded px-3 py-2 text-sm"
+          className="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white" // Added light and dark mode styling
           rows={4}
         />
       </div>
@@ -51,6 +51,7 @@ export const ParagraphEditor = ({
           { value: 'justify', label: 'Justify' },
         ]}
         isResponsive={isResponsive}
+        className="bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white" // Added light and dark mode styling
       />
       <ColorPicker
         label="Color"

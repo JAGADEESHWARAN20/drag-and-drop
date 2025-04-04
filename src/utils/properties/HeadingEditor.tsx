@@ -15,7 +15,7 @@ export const HeadingEditor = () => {
   }
 
   return (
-    <div>
+    <div className="dark:text-white"> {/* Added dark mode text color to the container */}
       <TextInput
         label="Text"
         value={String(selectedComponent.props.text || "")} // Ensure it's a string

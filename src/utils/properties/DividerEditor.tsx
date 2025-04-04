@@ -19,7 +19,7 @@ interface DividerEditorProps {
 
 export const DividerEditor = ({ props, onChange }: DividerEditorProps) => {
      return (
-          <div>
+          <div className="dark:text-white"> {/* Added dark mode text color to the container */}
                <TextInput
                     label="Thickness"
                     value={props.thickness || '1px'}

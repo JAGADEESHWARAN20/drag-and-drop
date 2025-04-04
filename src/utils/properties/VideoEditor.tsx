@@ -26,23 +26,26 @@ export const VideoEditor = ({
   const isResponsive = breakpoint !== 'desktop';
 
   return (
-    <div>
+    <div className="dark:text-white"> {/* Added dark mode text color to the container */}
       <TextInput
         label="Video URL"
         value={props.url || ''}
         onChange={(value) => onChange('url', value)}
+        className="bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white" // Added light and dark mode styling
       />
       <TextInput
         label="Width"
         value={props.width || '100%'}
         onChange={(value) => onChange('width', value, isResponsive)}
         isResponsive={isResponsive}
+        className="bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white" // Added light and dark mode styling
       />
       <TextInput
         label="Height"
         value={props.height || '315'}
         onChange={(value) => onChange('height', value, isResponsive)}
         isResponsive={isResponsive}
+        className="bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white" // Added light and dark mode styling
       />
     </div>
   );

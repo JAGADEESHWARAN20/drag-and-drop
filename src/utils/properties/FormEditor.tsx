@@ -17,7 +17,7 @@ interface FormEditorProps {
 
 export const FormEditor = ({ props, onChange }: FormEditorProps) => {
   return (
-    <div>
+    <div className="dark:text-white"> {/* Added dark mode text color to the container */}
       <TextInput
         label="Submit Text"
         value={props.submitText ?? 'Submit'}

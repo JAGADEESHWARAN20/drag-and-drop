@@ -1,8 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface BaseProps {
   label: string;
   isResponsive?: boolean;
+  className?: string;
 }
 
 interface TextInputProps extends BaseProps {
@@ -10,18 +20,18 @@ interface TextInputProps extends BaseProps {
   onChange: (value: string) => void;
 }
 
-export const TextInput: React.FC<TextInputProps> = ({ value, onChange, label, isResponsive = false }) => {
+export const TextInput: React.FC<TextInputProps> = ({ value, onChange, label, isResponsive = false, className = '' }) => {
   return (
-    <div className="mb-3">
-      <label className="block text-sm font-medium mb-1 text-gray-700">
+    <div className="mb-3 dark:text-white">
+      <Label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
         {label}
         {isResponsive && <span className="ml-1 text-xs text-blue-600">(responsive)</span>}
-      </label>
-      <input
+      </Label>
+      <Input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white ${className}`}
       />
     </div>
   );
@@ -32,25 +42,30 @@ interface ColorPickerProps extends BaseProps {
   onChange: (color: string) => void;
 }
 
-export const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange, label, isResponsive = false }) => {
+export const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange, label, isResponsive = false, className = '' }) => {
+  const [color, setColor] = useState(value);
+
+  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setColor(e.target.value);
+    onChange(e.target.value);
+  };
+
   return (
-    <div className="mb-3">
-      <label className="block text-sm font-medium mb-1 text-gray-700">
+    <div className="mb-3 dark:text-white">
+      <Label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
         {label}
         {isResponsive && <span className="ml-1 text-xs text-blue-600">(responsive)</span>}
-      </label>
-      <div className="flex">
-        <input
-          type="color"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+      </Label>
+      <div className="flex items-center">
+        <div
           className="mr-2 h-8 w-8 rounded overflow-hidden"
+          style={{ backgroundColor: color }}
         />
-        <input
+        <Input
           type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="flex-1 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          value={color}
+          onChange={handleColorChange}
+          className={`flex-1 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white ${className}`}
         />
       </div>
     </div>
@@ -63,24 +78,25 @@ interface SelectInputProps extends BaseProps {
   options: { value: string; label: string }[];
 }
 
-export const SelectInput: React.FC<SelectInputProps> = ({ value, onChange, label, options, isResponsive = false }) => {
+export const SelectInput: React.FC<SelectInputProps> = ({ value, onChange, label, options, isResponsive = false, className = '' }) => {
   return (
-    <div className="mb-3">
-      <label className="block text-sm font-medium mb-1 text-gray-700">
+    <div className="mb-3 dark:text-white">
+      <Label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
         {label}
         {isResponsive && <span className="ml-1 text-xs text-blue-600">(responsive)</span>}
-      </label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      </Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white ${className}`}>
+          <SelectValue placeholder="Select an option" />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 };

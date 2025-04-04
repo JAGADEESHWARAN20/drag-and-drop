@@ -37,14 +37,26 @@ export const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) =
 
      return (
           <div>
-               <div className="grid w-full max-w-sm items-center gap-1.5">
+               <div className="grid w-full max-w-sm items-center gap-1.5 dark:text-white ">
                     <Label htmlFor="text">Button Text</Label>
-                    <Input type="text" id="text" value={props.text || ''} onChange={handleTextChange} />
+                    <Input
+                         type="text"
+                         id="text"
+                         className="bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white"
+                         value={props.text || ''}
+                         onChange={handleTextChange}
+                    />
                </div>
 
                <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
                     <Label htmlFor="url">URL</Label>
-                    <Input type="text" id="url" value={props.url || '#'} onChange={handleUrlChange} />
+                    <Input
+                         type="text"
+                         id="url"
+                         value={props.url || '#'}
+                         className="bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white"
+                         onChange={handleUrlChange}
+                    />
                </div>
 
                <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">

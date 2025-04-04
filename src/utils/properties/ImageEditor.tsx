@@ -23,28 +23,32 @@ export const ImageEditor = ({
   isResponsive,
 }: ImageEditorProps) => {
   return (
-    <div>
+    <div className="dark:text-white"> {/* Added dark mode text color to the container */}
       <TextInput
         label="Image URL"
         value={props.src || ''}
         onChange={(value) => onChange('src', value)}
+        className="bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white" // Added light and dark mode styling
       />
       <TextInput
         label="Alt Text"
         value={props.alt || ''}
         onChange={(value) => onChange('alt', value)}
+        className="bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white" // Added light and dark mode styling
       />
       <TextInput
         label="Width"
         value={props.width || '100%'}
         onChange={(value) => onChange('width', value, isResponsive)}
         isResponsive={isResponsive}
+        className="bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white" // Added light and dark mode styling
       />
       <TextInput
         label="Height"
         value={props.height || 'auto'}
         onChange={(value) => onChange('height', value, isResponsive)}
         isResponsive={isResponsive}
+        className="bg-white dark:bg-slate-200 dark:bg-opacity-20 text-black dark:text-white" // Added light and dark mode styling
       />
     </div>
   );
