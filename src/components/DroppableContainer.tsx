@@ -1,5 +1,7 @@
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useWebsiteStore } from '../store/WebsiteStore';
 import { X, Move } from 'lucide-react';
 
@@ -19,7 +21,7 @@ interface DroppableContainerProps {
   children: React.ReactNode;
   isPreviewMode: boolean;
   isSelected: boolean;
-  onSelect: (event: React.MouseEvent) => void; // Updated to accept MouseEvent
+  onSelect: (event: React.MouseEvent) => void;
 }
 
 const DroppableContainer: React.FC<DroppableContainerProps> = ({
@@ -29,15 +31,41 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
   isSelected,
   onSelect,
 }) => {
-  const { addComponent, removeComponent, updateComponentProps } = useWebsiteStore();
+  const { removeComponent } = useWebsiteStore();
 
-  const { isOver, setNodeRef } = useDroppable({
+  // Droppable setup
+  const {
+    isOver,
+    setNodeRef: setDroppableNodeRef,
+  } = useDroppable({
     id: `droppable-${id}`,
     data: {
       accepts: 'COMPONENT',
       containerId: id,
     },
   });
+
+  // Sortable setup
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setSortableNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id,
+    data: {
+      type: 'SORTABLE_ITEM',
+      componentId: id,
+    },
+  });
+
+  // Combine refs for both droppable and sortable
+  const setNodeRef = (element: HTMLElement | null) => {
+    setDroppableNodeRef(element);
+    setSortableNodeRef(element);
+  };
 
   if (isPreviewMode) {
     return <>{children}</>;
@@ -50,7 +78,7 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onSelect(e); // Pass the event to onSelect
+    onSelect(e);
   };
 
   const getComponentType = () => {
@@ -77,14 +105,25 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
 
   const positionStyles = getPositionStyles();
 
+  // Combine sortable transform and transition with position styles
+  const style: React.CSSProperties = {
+    ...positionStyles,
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : positionStyles.zIndex || 'auto',
+  };
+
   return (
     <div
       ref={setNodeRef}
       className={`component-container ${isOver ? 'bg-blue-100' : ''} ${isSelected ? 'outline outline-2 outline-blue-500' : 'hover:outline hover:outline-1 hover:outline-blue-300'
-        } cursor-move`}
+        } ${isDragging ? 'shadow-lg' : ''}`}
       onClick={handleClick}
-      style={positionStyles}
+      style={style}
       data-component-id={id}
+      {...attributes}
+      {...listeners}
     >
       {isSelected && (
         <div className="absolute -top-6 right-0 flex bg-blue-500 text-white text-xs z-50">
