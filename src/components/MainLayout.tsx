@@ -224,7 +224,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               className={`flex items-center space-x-2 data-[state=pressed]:bg-blue-600 text-gray-600 dark:text-gray-300 rounded-md px-3 py-1`}
                          >
                               {isPreviewMode ? <Pen size={16} /> : <Code size={16} />}
-                              <span>{isPreviewMode ? 'Preview' : 'Edit'}</span>
+                              
                          </Toggle>
 
                          {/* Export Code (Icon on Mobile, Button on Desktop) */}
