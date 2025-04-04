@@ -61,7 +61,7 @@ const DraggableComponent = ({ component }: DraggableComponentProps) => {
       {...listeners}
       {...attributes}
       onClick={handleClick}
-      className={`p-2 border rounded cursor-pointer bg-white flex flex-col items-center justify-center text-sm ${isDragging ? 'opacity-50 cursor-grabbing' : ''
+      className={`p-2 border rounded cursor-pointer bg-white flex flex-col items-center justify-center text-sm w-24 h-24 flex-shrink-0 ${isDragging ? 'opacity-50 cursor-grabbing' : ''
         } hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700`}
       style={{
         touchAction: 'none',
@@ -70,7 +70,7 @@ const DraggableComponent = ({ component }: DraggableComponentProps) => {
       <div className="text-blue-500 mb-1 dark:text-white">
         <component.icon size={20} />
       </div>
-      <span className='text-black dark:text-white'>{component.label}</span>
+      <span className="text-black dark:text-white text-center">{component.label}</span>
     </div>
   );
 };
