@@ -1,6 +1,6 @@
 import {
   Heading,
-  Text, // Changed Paragraph to Text
+  Text,
   Image,
   Square,
   Link,
@@ -8,19 +8,27 @@ import {
   Container,
   Section,
   Columns,
-  AlignLeft,
   AlignCenter,
   FormInput,
   Box,
   Table,
   Video,
   LayoutGrid,
-  // Separator, // Removed Separator
-  SeparatorHorizontal
-  
+  SeparatorHorizontal,
 } from 'lucide-react';
 
-export const ComponentLibrary = {
+interface ComponentDefaultProps {
+  [key: string]: string | number | string[] | { [key: string]: string | number } | string[][];
+}
+
+interface ComponentType {
+  type: string;
+  label: string;
+  icon: React.ComponentType;
+  defaultProps: ComponentDefaultProps;
+}
+
+export const ComponentLibrary: Record<'basic' | 'layout' | 'advanced', ComponentType[]> = {
   basic: [
     {
       type: 'Heading',
@@ -36,13 +44,14 @@ export const ComponentLibrary = {
     {
       type: 'Paragraph',
       label: 'Paragraph',
-      icon: Text, // Changed Paragraph to Text
+      icon: Text,
       defaultProps: {
         text: 'This is a paragraph. Click to edit.',
         textAlign: 'left',
         color: '#333333',
       },
     },
+  
     {
       type: 'Image',
       label: 'Image',
@@ -118,13 +127,13 @@ export const ComponentLibrary = {
     },
     {
       type: 'Grid',
-      label: "Grid",
+      label: 'Grid',
       icon: LayoutGrid,
       defaultProps: {
         columns: 2,
-        gap: '16px'
-      }
-    }
+        gap: '16px',
+      },
+    },
   ],
   advanced: [
     {
@@ -151,12 +160,12 @@ export const ComponentLibrary = {
       label: 'Table',
       icon: Table,
       defaultProps: {
-        headers: ['Header 1', 'Header 2', 'Header 3'],
+        headers: ['Header 1', 'Header 2', 'Header 3'] , // Explicitly defining as an array of strings
         rows: [
           ['Cell 1-1', 'Cell 1-2', 'Cell 1-3'],
-          ['Cell 2-1', 'Cell 2-2', 'Cell 2-3'],
-        ],
-      },
+          ['Cell 2-1', 'Cell 2-2', 'Cell 2-3']
+        ] // Explicitly defining as an array of arrays
+      }
     },
     {
       type: 'Video',
@@ -171,7 +180,7 @@ export const ComponentLibrary = {
     {
       type: 'Divider',
       label: 'Divider',
-      icon: SeparatorHorizontal, // Replaced Separator with HorizontalRule
+      icon: SeparatorHorizontal,
       defaultProps: {
         thickness: '1px',
         color: '#e0e0e0',
@@ -182,19 +191,30 @@ export const ComponentLibrary = {
 };
 
 // Utility class for component management
-export class ComponentManager {
-  private components = new Map<string, any>();
+interface ComponentInstance {
+  id: string;
+  type: string;
+  pageId: string;
+  parentId?: string;
+  props: ComponentDefaultProps;
+}
 
-  addComponent(component: any) {
+export class ComponentManager {
+  private components = new Map<string, { id: string; pageId: string; parentId?: string }>();
+
+  addComponent(component: { id: string; pageId: string; parentId?: string }) {
     this.components.set(component.id, component);
   }
 
-  getComponents(pageId: string) {
+  getComponents(pageId: string): { id: string; pageId: string; parentId?: string }[] {
     return Array.from(this.components.values()).filter((c) => c.pageId === pageId);
   }
 
   reorder(pageId: string, oldIndex: number, newIndex: number) {
     const components = this.getComponents(pageId).filter((c) => !c.parentId);
+    if (oldIndex < 0 || newIndex < 0 || oldIndex >= components.length || newIndex >= components.length) {
+      return components; // Prevents errors if indexes are out of bounds
+    }
     const [moved] = components.splice(oldIndex, 1);
     components.splice(newIndex, 0, moved);
     return components;

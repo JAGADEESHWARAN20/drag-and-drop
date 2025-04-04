@@ -1,5 +1,7 @@
 import React from 'react';
-import { TextInput } from './PropertyEditorUtils';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 // Define a type for table cell data
 type TableCell = string | number | boolean | null;
@@ -11,17 +13,21 @@ interface TableProps {
 
 interface TableEditorProps {
      props: TableProps;
-     onChange: (key: keyof TableProps, value: any, isResponsive?: boolean) => void;
+     onChange: <K extends keyof TableProps>(
+          key: K,
+          value: TableProps[K],
+          isResponsive?: boolean
+     ) => void;
 }
 
 export const TableEditor = ({ props, onChange }: TableEditorProps) => {
-     const handleHeadersChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-          const headers = e.target.value.split(',').map((header) => header.trim());
+     const handleHeadersChange = (value: string) => {
+          const headers = value.split(',').map((header) => header.trim());
           onChange('headers', headers);
      };
 
-     const handleRowsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-          const rows = e.target.value.split('\n').map((row) =>
+     const handleRowsChange = (value: string) => {
+          const rows = value.split('\n').map((row) =>
                row.split(',').map((cell) => {
                     const trimmedCell = cell.trim();
                     if (trimmedCell === '') return null;
@@ -35,27 +41,26 @@ export const TableEditor = ({ props, onChange }: TableEditorProps) => {
      };
 
      return (
-          <div>
-               <div className="mb-3">
-                    <label className="block text-sm font-medium mb-1 text-gray-700">
-                         Headers (comma separated)
-                    </label>
-                    <TextInput
+          <div className="space-y-4">
+               <div>
+                    <Label htmlFor="headers">Headers (comma separated)</Label>
+                    <Input
+                         id="headers"
                          value={(props.headers || []).join(',')}
-                         onChange={handleHeadersChange}
-                         label="Headers"
+                         onChange={(e) => handleHeadersChange(e.target.value)}
+                         placeholder="Enter headers, separated by commas"
                     />
                </div>
-               <div className="mb-3">
-                    <label className="block text-sm font-medium mb-1 text-gray-700">
-                         Rows (one per line, cells comma separated)
-                    </label>
-                    <textarea
+
+               <div>
+                    <Label htmlFor="rows">Rows (one per line, cells comma separated)</Label>
+                    <Textarea
+                         id="rows"
                          value={(props.rows || []).map((row) => row.join(',')).join('\n')}
-                         onChange={handleRowsChange}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                         onChange={(e) => handleRowsChange(e.target.value)}
+                         placeholder="Enter rows, one per line"
                          rows={5}
-                    ></textarea>
+                    />
                </div>
           </div>
      );

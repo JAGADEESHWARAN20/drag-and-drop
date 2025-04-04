@@ -13,16 +13,17 @@ export interface Component {
   pageId: string;
   parentId: string | null;
   type: string;
-  props: Record<string, any>;
-  children: string[]; // Maintain order of children
+  props: Record<string, string | number | boolean | object>;  // Updated
+  children: string[];
   responsiveProps: {
-    desktop: Record<string, any>;
-    tablet: Record<string, any>;
-    mobile: Record<string, any>;
+    desktop: Record<string, string | number | boolean | object>;
+    tablet: Record<string, string | number | boolean | object>;
+    mobile: Record<string, string | number | boolean | object>;
   };
-  style?: Record<string, any>;
+  style?: Record<string, string | number>;
   allowChildren?: boolean;
 }
+
 
 interface WebsiteState {
   pages: Page[];
@@ -36,8 +37,12 @@ interface WebsiteState {
   addPage: (name: string) => string;
   addComponent: (component: Component) => void;
   removeComponent: (id: string) => void;
-  updateComponentProps: (id: string, props: Record<string, any>) => void;
-  updateResponsiveProps: (id: string, breakpoint: Breakpoint, props: Record<string, any>) => void;
+  updateComponentProps: (id: string, props: Record<string, string | number | boolean | object>) => void;
+  updateResponsiveProps: (
+    id: string,
+    breakpoint: Breakpoint,
+    props: Record<string, string | number | boolean | object>
+  ) => void;
   setSelectedComponentId: (id: string | null) => void;
   reorderComponents: (pageId: string, oldIndex: number, newIndex: number) => void;
   moveComponent: (id: string, targetId: string | null, isContainer?: boolean) => void;
@@ -66,7 +71,7 @@ export const useWebsiteStore = create<WebsiteState>((set, get) => ({
     return newId;
   },
 
-  addComponent: (component) =>
+  addComponent: (component: Omit <Component, 'children' | 'style' | 'allowChildren'>) =>
     set((state) => {
       const updatedComponent = { ...component, children: [], style: {}, allowChildren: false };
       const parent = state.components.find((c) => c.id === component.parentId);
@@ -107,11 +112,17 @@ export const useWebsiteStore = create<WebsiteState>((set, get) => ({
   },
 
   updateComponentProps: (id, props) =>
-    set((state) => ({
-      components: state.components.map((c) =>
-        c.id === id ? { ...c, props: { ...c.props, ...props } } : c
-      ),
-    })),
+    set((state) => {
+      // Ensure updates apply ONLY to the selected component
+      if (state.selectedComponentId !== id) return state;
+
+      return {
+        components: state.components.map((c) =>
+          c.id === id ? { ...c, props: { ...c.props, ...props } } : c
+        ),
+      };
+    }),
+
 
   updateResponsiveProps: (id, breakpoint, props) =>
     set((state) => ({

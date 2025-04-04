@@ -9,7 +9,7 @@ interface LinkProps {
 
 interface LinkEditorProps {
   props: LinkProps;
-  onChange: (key: keyof LinkProps, value: any, isResponsive?: boolean) => void;
+  onChange: (key: keyof LinkProps, value: string, isResponsive?: boolean) => void;
 }
 
 export const LinkEditor = ({ props, onChange }: LinkEditorProps) => {

@@ -1,15 +1,14 @@
-// ListEditor.tsx
 import React from 'react';
 import { TextInput, SelectInput } from './PropertyEditorUtils';
 
 interface ListProps {
-  type?: string;
+  type?: 'ul' | 'ol';
   items?: string[];
 }
 
 interface ListEditorProps {
   props: ListProps;
-  onChange: (key: keyof ListProps, value: any, isResponsive?: boolean) => void;
+  onChange: (key: keyof ListProps, value: string | string[], isResponsive?: boolean) => void;
 }
 
 export const ListEditor = ({ props, onChange }: ListEditorProps) => {

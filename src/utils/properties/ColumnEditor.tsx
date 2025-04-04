@@ -9,22 +9,26 @@ interface ColumnProps {
 
 interface ColumnEditorProps {
   props: ColumnProps;
-  onChange: (key: keyof ColumnProps, value: any, isResponsive?: boolean) => void;
+  onChange: <K extends keyof ColumnProps>(
+    key: K,
+    value: ColumnProps[K],
+    isResponsive?: boolean
+  ) => void;
   breakpoint: Breakpoint;
 }
 
-export const ColumnEditor = ({
+export const ColumnEditor: React.FC<ColumnEditorProps> = ({
   props,
   onChange,
   breakpoint,
-}: ColumnEditorProps) => {
+}) => {
   const isResponsive = breakpoint !== 'desktop';
 
   return (
     <div>
       <SelectInput
         label="Width"
-        value={props.width || '1'}
+        value={props.width ?? '1'}
         options={[
           { value: '1', label: 'Full Width (1/1)' },
           { value: '1/2', label: 'Half Width (1/2)' },
@@ -33,13 +37,13 @@ export const ColumnEditor = ({
           { value: '1/4', label: 'Quarter (1/4)' },
           { value: '3/4', label: 'Three Quarters (3/4)' },
         ]}
-        onChange={(value) => onChange('width', value, isResponsive)}
+        onChange={(value: string) => onChange('width', value, isResponsive)}
         isResponsive={isResponsive}
       />
       <TextInput
         label="Padding"
-        value={props.padding || '0'}
-        onChange={(value) => onChange('padding', value)}
+        value={props.padding ?? '0'}
+        onChange={(value: string) => onChange('padding', value)}
       />
     </div>
   );

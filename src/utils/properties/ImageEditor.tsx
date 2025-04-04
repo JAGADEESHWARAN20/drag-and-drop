@@ -11,7 +11,7 @@ interface ImageProps {
 
 interface ImageEditorProps {
   props: ImageProps;
-  onChange: (key: keyof ImageProps, value: any, isResponsive?: boolean) => void;
+  onChange: (key: keyof ImageProps, value: string, isResponsive?: boolean) => void;
   breakpoint: Breakpoint;
   isResponsive?: boolean;
 }
@@ -20,10 +20,8 @@ export const ImageEditor = ({
   props,
   onChange,
   breakpoint,
-  isResponsive
+  isResponsive,
 }: ImageEditorProps) => {
- 
-
   return (
     <div>
       <TextInput

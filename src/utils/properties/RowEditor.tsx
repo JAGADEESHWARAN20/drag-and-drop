@@ -11,7 +11,7 @@ interface RowProps {
 
 interface RowEditorProps {
      props: RowProps;
-     onChange: (key: keyof RowProps, value: any, isResponsive?: boolean) => void;
+     onChange: (key: keyof RowProps, value: string, isResponsive?: boolean) => void;
      breakpoint: Breakpoint;
 }
 
@@ -22,12 +22,30 @@ export const RowEditor = ({
 }: RowEditorProps) => {
      const isResponsive = breakpoint !== 'desktop';
 
+     const handleChange = (key: keyof RowProps, value: unknown, isResponsive?: boolean) => {
+          let typedValue: string | number | HTMLElement;
+
+          if (typeof value === 'string') {
+               typedValue = value;
+          } else if (typeof value === 'number') {
+               typedValue = value.toString(); // Convert number to string to match expected type
+          } else if (value instanceof HTMLElement) {
+               console.warn(`Received a DOM element for ${key}, which is unexpected.`);
+               return;
+          } else {
+               console.warn(`Unhandled value type for ${key}:`, value);
+               return;
+          }
+
+          onChange(key, typedValue, isResponsive);
+     };
+
      return (
           <div>
                <TextInput
                     label="Gap"
                     value={props.gap || '16px'}
-                    onChange={(value) => onChange('gap', value)}
+                    onChange={(value) => handleChange('gap', value)}
                />
                <SelectInput
                     label="Align Items"
@@ -38,7 +56,7 @@ export const RowEditor = ({
                          { value: 'center', label: 'Center' },
                          { value: 'flex-end', label: 'End' },
                     ]}
-                    onChange={(value) => onChange('alignItems', value, isResponsive)}
+                    onChange={(value) => handleChange('alignItems', value, isResponsive)}
                     isResponsive={isResponsive}
                />
                <SelectInput
@@ -52,7 +70,7 @@ export const RowEditor = ({
                          { value: 'space-around', label: 'Space Around' },
                          { value: 'space-evenly', label: 'Space Evenly' },
                     ]}
-                    onChange={(value) => onChange('justifyContent', value, isResponsive)}
+                    onChange={(value) => handleChange('justifyContent', value, isResponsive)}
                     isResponsive={isResponsive}
                />
           </div>

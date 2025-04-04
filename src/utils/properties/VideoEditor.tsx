@@ -10,7 +10,11 @@ interface VideoProps {
 
 interface VideoEditorProps {
   props: VideoProps;
-  onChange: (key: keyof VideoProps, value: any, isResponsive?: boolean) => void;
+  onChange: <K extends keyof VideoProps>(
+    key: K,
+    value: VideoProps[K], // Use inferred type instead of 'any'
+    isResponsive?: boolean
+  ) => void;
   breakpoint: Breakpoint;
 }
 

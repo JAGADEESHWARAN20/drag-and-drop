@@ -1,17 +1,16 @@
-// ParagraphEditor.tsx
 import React from 'react';
 import { Breakpoint } from '../../store/WebsiteStore';
 import { TextInput, SelectInput, ColorPicker } from './PropertyEditorUtils';
 
 interface ParagraphProps {
   text?: string;
-  textAlign?: string;
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
   color?: string;
 }
 
 interface ParagraphEditorProps {
   props: ParagraphProps;
-  onChange: (key: keyof ParagraphProps, value: any, isResponsive?: boolean) => void;
+  onChange: (key: keyof ParagraphProps, value: string, isResponsive?: boolean) => void;
   breakpoint: Breakpoint;
 }
 
@@ -22,13 +21,21 @@ export const ParagraphEditor = ({
 }: ParagraphEditorProps) => {
   const isResponsive = breakpoint !== 'desktop';
 
+  const handleChange = (key: keyof ParagraphProps, value: unknown, isResponsive?: boolean) => {
+    if (typeof value === 'string') {
+      onChange(key, value, isResponsive);
+    } else {
+      console.warn(`Invalid type for ${key}: Expected string, got ${typeof value}`);
+    }
+  };
+
   return (
     <div>
       <div className="mb-3">
         <label className="block text-sm font-medium mb-1 text-gray-700">Text</label>
         <textarea
           value={props.text || ''}
-          onChange={(e) => onChange('text', e.target.value)}
+          onChange={(e) => handleChange('text', e.target.value)}
           className="w-full border rounded px-3 py-2 text-sm"
           rows={4}
         />
@@ -36,7 +43,7 @@ export const ParagraphEditor = ({
       <SelectInput
         label="Text Align"
         value={props.textAlign || 'left'}
-        onChange={(value) => onChange('textAlign', value, isResponsive)}
+        onChange={(value) => handleChange('textAlign', value, isResponsive)}
         options={[
           { value: 'left', label: 'Left' },
           { value: 'center', label: 'Center' },
@@ -48,7 +55,7 @@ export const ParagraphEditor = ({
       <ColorPicker
         label="Color"
         value={props.color || '#333333'}
-        onChange={(value) => onChange('color', value)}
+        onChange={(value) => handleChange('color', value)}
       />
     </div>
   );

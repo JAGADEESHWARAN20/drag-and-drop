@@ -360,8 +360,9 @@ export const Divider: FC<DividerProps> = ({ thickness, color, margin, className 
   );
 };
 
-// Export all components as a registry
-export const ComponentRegistry: Record<string, FC<any>> = {
+
+
+export const ComponentRegistry: Record<string, unknown> = {    
   Heading: Components.Heading,
   Paragraph: Components.Paragraph,
   Image: Components.Image,

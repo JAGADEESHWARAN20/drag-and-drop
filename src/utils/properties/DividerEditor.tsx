@@ -10,7 +10,11 @@ interface DividerProps {
 
 interface DividerEditorProps {
      props: DividerProps;
-     onChange: (key: keyof DividerProps, value: any, isResponsive?: boolean) => void;
+     onChange: <K extends keyof DividerProps>(
+          key: K,
+          value: DividerProps[K],
+          isResponsive?: boolean
+     ) => void;
 }
 
 export const DividerEditor = ({ props, onChange }: DividerEditorProps) => {

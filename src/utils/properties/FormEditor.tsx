@@ -1,16 +1,18 @@
-// FormEditor.tsx
-import React from 'react';
 import { TextInput, SelectInput } from './PropertyEditorUtils';
 
 interface FormProps {
   submitText?: string;
   action?: string;
-  method?: string;
+  method?: 'GET' | 'POST';
 }
 
 interface FormEditorProps {
   props: FormProps;
-  onChange: (key: keyof FormProps, value: any, isResponsive?: boolean) => void;
+  onChange: <K extends keyof FormProps>(
+    key: K,
+    value: FormProps[K],
+    isResponsive?: boolean
+  ) => void;
 }
 
 export const FormEditor = ({ props, onChange }: FormEditorProps) => {
@@ -18,22 +20,22 @@ export const FormEditor = ({ props, onChange }: FormEditorProps) => {
     <div>
       <TextInput
         label="Submit Text"
-        value={props.submitText || 'Submit'}
-        onChange={(value) => onChange('submitText', value)}
+        value={props.submitText ?? 'Submit'}
+        onChange={(value: string) => onChange('submitText', value)}
       />
       <TextInput
         label="Form Action"
-        value={props.action || ''}
-        onChange={(value) => onChange('action', value)}
+        value={props.action ?? ''}
+        onChange={(value: string) => onChange('action', value)}
       />
       <SelectInput
         label="Method"
-        value={props.method || 'POST'}
+        value={props.method ?? 'POST'}
         options={[
           { value: 'GET', label: 'GET' },
           { value: 'POST', label: 'POST' },
         ]}
-        onChange={(value) => onChange('method', value)}
+        onChange={(value: 'GET' | 'POST') => onChange('method', value)}
       />
     </div>
   );
