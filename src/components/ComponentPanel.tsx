@@ -63,7 +63,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ }, ref
             <h3 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-400 uppercase">
               {category}
             </h3>
-            <div className="grid md:grid-cols-2 gap-2 flex md:flex-col overflow-x-auto md:overflow-y-auto">
+            <div className="sm:flex sm:overflow-x-auto sm:gap-2 md:grid md:grid-cols-2 md:gap-2 md:overflow-y-auto">
               {components.map((component) => (
                 <DraggableComponent key={component.type} component={component} />
               ))}
