@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useRef, forwardRef } from 'react';
+import React, { useState, useRef, useEffect, forwardRef } from 'react';
 import DraggableComponent from './DraggableComponent';
 import { ComponentLibrary } from '../data/ComponentLibrary';
-import { Search, MousePointerClick } from 'lucide-react';
+import { Search, MousePointerClick, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ComponentType, SVGProps } from 'react';
 
 interface LibraryComponent {
@@ -19,6 +19,37 @@ interface ComponentPanelProps {
 
 const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ }, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const componentListRef = useRef<HTMLDivElement>(null);
+  const [showLeftScroll, setShowLeftScroll] = useState(false);
+  const [showRightScroll, setShowRightScroll] = useState(false);
+
+  useEffect(() => {
+    const checkScrollVisibility = () => {
+      if (componentListRef.current) {
+        const { scrollWidth, clientWidth, scrollLeft } = componentListRef.current;
+        setShowLeftScroll(scrollLeft > 0);
+        setShowRightScroll(scrollLeft < scrollWidth - clientWidth);
+      }
+    };
+
+    checkScrollVisibility();
+    const observer = new ResizeObserver(checkScrollVisibility);
+    if (componentListRef.current) {
+      observer.observe(componentListRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [searchTerm]);
+
+  const scrollLeft = () => {
+    componentListRef.current?.scrollBy({ left: -100, behavior: 'smooth' });
+  };
+
+  const scrollRight = () => {
+    componentListRef.current?.scrollBy({ left: 100, behavior: 'smooth' });
+  };
 
   const filteredComponents = Object.entries(ComponentLibrary).reduce<
     Record<string, LibraryComponent[]>
@@ -63,10 +94,31 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ }, ref
             <h3 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-400 uppercase">
               {category}
             </h3>
-            <div className="flex space-x-2 overflow-x-auto pb-2">
-              {components.map((component) => (
-                <DraggableComponent key={component.type} component={component} />
-              ))}
+            <div className="relative">
+              {showLeftScroll && (
+                <button
+                  onClick={scrollLeft}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-full shadow-md p-1 z-10 focus:outline-none"
+                >
+                  <ChevronLeft size={16} className="text-gray-500 dark:text-gray-300" />
+                </button>
+              )}
+              <div
+                ref={componentListRef}
+                className="flex overflow-x-auto scroll-smooth gap-2 pb-2"
+              >
+                {components.map((component) => (
+                  <DraggableComponent key={component.type} component={component} />
+                ))}
+              </div>
+              {showRightScroll && (
+                <button
+                  onClick={scrollRight}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-full shadow-md p-1 z-10 focus:outline-none"
+                >
+                  <ChevronRight size={16} className="text-gray-500 dark:text-gray-300" />
+                </button>
+              )}
             </div>
           </div>
         ))}
