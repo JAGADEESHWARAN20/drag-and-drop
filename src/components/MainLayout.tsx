@@ -114,10 +114,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                    <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-2">
                                         Component Library
                                    </h2>
-                                   <div className="relative">
+                                   <div className="relative scrollbar-hidden">
                                         <div
                                              ref={componentPanelScrollRef}
-                                             className="pb-2 overflow-hidden scrollbar-hidden"
+                                             className="pb-2"
                                         >
                                              <ComponentPanel ref={componentPanelRef} />
                                         </div>
