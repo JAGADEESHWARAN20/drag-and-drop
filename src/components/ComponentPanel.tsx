@@ -31,7 +31,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ }, ref
   }, {});
 
   return (
-    <div className="p-4 h-full overflow-x-auto scroll-componentcontainer flex flex-col " ref={ref}>
+    <div className="p-4 h-full  flex flex-col " ref={ref}>
       <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md">
         <div className="flex items-center mb-2 text-blue-700 dark:text-blue-300">
           <MousePointerClick size={16} className="mr-2" />
@@ -63,7 +63,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ }, ref
             <h3 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-400 uppercase">
               {category}
             </h3>
-            <div className="flex flex-row gap-2 scroll-componentcontainer whitespace-nowrap overflow-x-scroll scrollbar-hidden">
+            <div className="flex flex-row gap-2  whitespace-nowrap overflow-x-scroll scrollbar-hidden">
               {components.map((component) => (
                 <div key={component.type} className="flex-shrink-0">
                   <DraggableComponent component={component} />
