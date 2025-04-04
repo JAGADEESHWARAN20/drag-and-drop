@@ -63,14 +63,13 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ }, ref
             <h3 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-400 uppercase">
               {category}
             </h3>
-            <div className="flex flex-wrap gap-2 overflow-x-auto">
+            <div className="flex flex-row gap-2 overflow-x-auto">
               {components.map((component) => (
-                <div key={component.type} className="inline-block">
+                <div key={component.type} className="flex-shrink-0">
                   <DraggableComponent component={component} />
                 </div>
               ))}
             </div>
-
           </div>
         ))}
         {Object.keys(filteredComponents).length === 0 && searchTerm && (
