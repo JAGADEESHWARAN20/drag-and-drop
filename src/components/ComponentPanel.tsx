@@ -31,7 +31,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ }, ref
   }, {});
 
   return (
-    <div className="p-4 h-full overflow-y-auto flex flex-col" ref={ref}>
+    <div className="p-4 h-full overflow-x-auto scroll-componentcontainer flex flex-col " ref={ref}>
       <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md">
         <div className="flex items-center mb-2 text-blue-700 dark:text-blue-300">
           <MousePointerClick size={16} className="mr-2" />
