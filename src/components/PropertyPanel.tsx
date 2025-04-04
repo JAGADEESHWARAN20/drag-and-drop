@@ -100,6 +100,18 @@ const PropertyPanel = () => {
   const safeStyle = (mergedProps.style && typeof mergedProps.style === 'object')
     ? mergedProps.style as Record<string, string>
     : {};
+  
+  const [device, setDevice] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
+
+  const rawWidth =
+    selectedComponent.responsiveProps?.[device]?.width ??
+    selectedComponent.props.width ??
+    '';
+
+  const safeWidth =
+    typeof rawWidth === 'string' || typeof rawWidth === 'number' ? rawWidth : '';
+
+
 
   return (
     <div className="p-4 h-full overflow-y-auto border-l border-gray-200">
@@ -170,11 +182,7 @@ const PropertyPanel = () => {
                         <Label>{device}</Label>
                         <Input
                           type="text"
-                          value={String(
-                            selectedComponent.responsiveProps?.[device]?.width ??
-                            selectedComponent.props.width ??
-                            ''
-                          )}
+                          value={safeWidth}
                           onChange={(e) =>
                             handleDeviceWidthChange(device, e.target.value)
                           }
