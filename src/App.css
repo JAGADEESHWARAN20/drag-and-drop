@@ -11,9 +11,11 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -22,6 +24,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -41,7 +44,61 @@
   color: #888;
 }
 
-.scroll-componentcontainer{
+.scroll-componentcontainer {
   overflow-x: auto;
   white-space: nowrap;
+}
+
+/* Global Scrollbar Styles */
+
+/* WebKit (Chrome, Safari) */
+*::-webkit-scrollbar {
+  width: 5px;
+  /* Vertical scrollbar width */
+  height: 5px;
+  /* Horizontal scrollbar height */
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+  /* Hide the track */
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #888;
+  /* Color of the thumb */
+  border-radius: 10px;
+  /* Rounded edges for the thumb */
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #555;
+  /* Darker color on hover */
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  /* Makes the scrollbar thin (5px) */
+  scrollbar-color: #888 transparent;
+  /* Thumb color, track color (transparent to hide) */
+}
+
+/* Ensure the scroll-componentcontainer follows the same style */
+.scroll-componentcontainer::-webkit-scrollbar {
+  height: 5px;
+  /* Specifically for horizontal scrollbar */
+}
+
+.scroll-componentcontainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-componentcontainer::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.scroll-componentcontainer::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
