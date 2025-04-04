@@ -103,17 +103,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                         <Menu size={20} />
                                    </Button>
                               </SheetTrigger>
-                              <SheetContent side="top" className="w-full h-auto max-h-96 p-4">
-                                   <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">
+                              <SheetContent side="top" className="w-full h-auto max-h-96 p-4 flex flex-col">
+                                   <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-2">
                                         Component Library
                                    </h2>
-                                   <div ref={componentPanelRef} className="overflow-x-auto">
-                                        <div className="inline-block py-2 pr-4 min-w-full">
-                                             <ComponentPanel />
-                                        </div>
-                                   </div>
-                                   <div className="mt-4">
-                                        <Button variant="outline" onClick={() => componentPanelRef.current?.scrollIntoView({ behavior: 'smooth' })}>
+                                   <ComponentPanel ref={componentPanelRef} />
+                                   <div className="mt-2">
+                                        <Button variant="outline" size="sm" onClick={() => componentPanelRef.current?.scrollIntoView({ behavior: 'smooth' })}>
                                              Scroll to Components
                                         </Button>
                                    </div>

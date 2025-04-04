@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useRef, forwardRef } from 'react';
 import DraggableComponent from './DraggableComponent';
 import { ComponentLibrary } from '../data/ComponentLibrary';
 import { Search, MousePointerClick } from 'lucide-react';
@@ -13,7 +13,11 @@ interface LibraryComponent {
   defaultProps: Record<string, string | number | boolean | string[] | string[][] | Record<string, string | number>>;
 }
 
-const ComponentPanel = () => {
+interface ComponentPanelProps {
+  // You can define any other props your ComponentPanel might receive here
+}
+
+const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ }, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredComponents = Object.entries(ComponentLibrary).reduce<
@@ -27,7 +31,7 @@ const ComponentPanel = () => {
   }, {});
 
   return (
-    <div className="p-4 h-full overflow-y-auto flex flex-col">
+    <div className="p-4 h-full overflow-y-auto flex flex-col" ref={ref}>
       <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md">
         <div className="flex items-center mb-2 text-blue-700 dark:text-blue-300">
           <MousePointerClick size={16} className="mr-2" />
@@ -59,16 +63,33 @@ const ComponentPanel = () => {
             <h3 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-400 uppercase">
               {category}
             </h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex space-x-2 overflow-x-auto pb-2">
               {components.map((component) => (
                 <DraggableComponent key={component.type} component={component} />
               ))}
             </div>
           </div>
         ))}
+        {Object.keys(filteredComponents).length === 0 && searchTerm && (
+          <div className="text-center text-gray-500 dark:text-gray-400">
+            No components found matching "{searchTerm}"
+          </div>
+        )}
+        {Object.keys(ComponentLibrary).length > 0 && Object.keys(filteredComponents).length === 0 && !searchTerm && (
+          <div className="text-center text-gray-500 dark:text-gray-400">
+            Browse components by category. Click to add, or drag to the canvas.
+          </div>
+        )}
+        {Object.keys(ComponentLibrary).length === 0 && (
+          <div className="text-center text-gray-500 dark:text-gray-400">
+            No components available in the library.
+          </div>
+        )}
       </div>
     </div>
   );
-};
+});
+
+ComponentPanel.displayName = 'ComponentPanel'; // Optional: for better debugging
 
 export default ComponentPanel;
