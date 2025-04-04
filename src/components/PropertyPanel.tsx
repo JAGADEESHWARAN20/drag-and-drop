@@ -3,9 +3,9 @@ import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
 import { PropertyEditors } from '../utils/PropertyEditors';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs,TabsList,TabsContent,TabsTrigger } from '@/components/ui/tabs';
 import PositionEditor from './PositionEditor';
-import { Button } from '@/components/ui/button';
+import Button from '@/components/ui/button'; // ✅ Corrected import
 import { PositionType } from './DroppableContainer';
 
 interface Position {
@@ -49,11 +49,26 @@ const PropertyPanel = () => {
   const responsiveProps = selectedComponent.responsiveProps?.[breakpoint] || {};
   const mergedProps = { ...regularProps, ...responsiveProps };
 
+  const isValidPropValue = (value: unknown): value is string | number | boolean | object => {
+    return (
+      typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'boolean' ||
+      (typeof value === 'object' && value !== null)
+    );
+  };
+
   const handlePropertyChange = (key: string, value: unknown, isResponsive = false) => {
+    if (!isValidPropValue(value)) return;
+
+    const payload: Record<string, string | number | boolean | object> = {
+      [key]: value,
+    };
+
     if (isResponsive) {
-      updateResponsiveProps(selectedComponentId, breakpoint, { [key]: value });
+      updateResponsiveProps(selectedComponentId, breakpoint, payload);
     } else {
-      updateComponentProps(selectedComponentId, { [key]: value });
+      updateComponentProps(selectedComponentId, payload);
     }
   };
 
@@ -70,8 +85,21 @@ const PropertyPanel = () => {
   };
 
   const handleStyleChange = (key: string, value: string, isResponsive = false) => {
-    handlePropertyChange(`style.${key}`, value, isResponsive);
+    const style = { ...((mergedProps.style as object) || {}) };
+    if (isResponsive) {
+      updateResponsiveProps(selectedComponentId, breakpoint, {
+        style: { ...style, [key]: value },
+      });
+    } else {
+      updateComponentProps(selectedComponentId, {
+        style: { ...style, [key]: value },
+      });
+    }
   };
+
+  const safeStyle = (mergedProps.style && typeof mergedProps.style === 'object')
+    ? mergedProps.style as Record<string, string>
+    : {};
 
   return (
     <div className="p-4 h-full overflow-y-auto border-l border-gray-200">
@@ -122,7 +150,7 @@ const PropertyPanel = () => {
 
         <TabsContent value="position">
           <PositionEditor
-            position={selectedComponent.props.position}
+            position={selectedComponent.props.position as Position}
             onChange={handlePositionChange}
           />
         </TabsContent>
@@ -137,18 +165,18 @@ const PropertyPanel = () => {
                 <div className="mb-4">
                   <Label>Width (Responsive)</Label>
                   <div className="grid grid-cols-3 gap-2">
-                    {['mobile', 'tablet', 'desktop'].map((device) => (
+                    {(['mobile', 'tablet', 'desktop'] as Breakpoint[]).map((device) => (
                       <div key={device} className="space-y-2">
                         <Label>{device}</Label>
                         <Input
                           type="text"
-                          value={
-                            selectedComponent.responsiveProps?.[device]?.width ||
-                            selectedComponent.props.width ||
+                          value={String(
+                            selectedComponent.responsiveProps?.[device]?.width ??
+                            selectedComponent.props.width ??
                             ''
-                          }
+                          )}
                           onChange={(e) =>
-                            handleDeviceWidthChange(device as Breakpoint, e.target.value)
+                            handleDeviceWidthChange(device, e.target.value)
                           }
                         />
                       </div>
@@ -161,8 +189,8 @@ const PropertyPanel = () => {
                 <Label>Background Color</Label>
                 <Input
                   type="color"
-                  value={mergedProps?.style?.backgroundColor || ''}
-                  onChange={(e) => handleStyleChange('backgroundColor', e.target.value, false)}
+                  value={safeStyle.backgroundColor || ''}
+                  onChange={(e) => handleStyleChange('backgroundColor', e.target.value)}
                 />
               </div>
 
@@ -170,8 +198,8 @@ const PropertyPanel = () => {
                 <Label>Font Size</Label>
                 <Input
                   type="text"
-                  value={mergedProps?.style?.fontSize || ''}
-                  onChange={(e) => handleStyleChange('fontSize', e.target.value, false)}
+                  value={safeStyle.fontSize || ''}
+                  onChange={(e) => handleStyleChange('fontSize', e.target.value)}
                 />
               </div>
 
@@ -179,8 +207,8 @@ const PropertyPanel = () => {
                 <Label>Padding</Label>
                 <Input
                   type="text"
-                  value={mergedProps?.style?.padding || ''}
-                  onChange={(e) => handleStyleChange('padding', e.target.value, false)}
+                  value={safeStyle.padding || ''}
+                  onChange={(e) => handleStyleChange('padding', e.target.value)}
                 />
               </div>
 
