@@ -6,8 +6,8 @@ import ComponentPanel from './ComponentPanel';
 import Canvas from './Canvas';
 import PropertyPanel from './PropertyPanel';
 import ElementHierarchyViewer from './ElementHierarchyViewer';
-import { Menu, ChevronLeft, ChevronRight, X, Eye, Download, Smartphone, Tablet, Monitor, Layers } from 'lucide-react';
-import  Button  from '@/components/ui/button';
+import { Menu, ChevronDown, ChevronRight, X, Download, Smartphone, Tablet, Monitor, Layers } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
      Select,
      SelectContent,
@@ -16,7 +16,6 @@ import {
      SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -110,26 +109,38 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                              onClick={() => setIsComponentPanelOpen(false)}
                                              className="text-gray-600 dark:text-gray-300"
                                         >
-                                             <ChevronLeft size={24} />
+                                             <X size={24} />
                                         </Button>
                                    </div>
                                    <ComponentPanel />
                               </SheetContent>
                          </Sheet>
-                         <h1 className="text-xl font-bold text-blue-900 dark:text-blue-300">WebBuilder</h1>
+                         <h1 className="text-xl font-bold text-black">WebBuilder</h1>
                     </div>
 
                     <div className="flex items-center space-x-4">
-                         {/* Page Selector (Dropdown on Mobile, Select on Desktop) */}
+                         {/* Page Selector (Icon on Mobile, Select on Desktop) */}
                          <div className="block md:hidden">
                               <Sheet>
                                    <SheetTrigger asChild>
-                                        <Button variant="outline" className="text-gray-600 dark:text-gray-300">
-                                             {pages.find((page) => page.id === currentPageId)?.name || 'Select Page'}
+                                        <Button variant="outline" size="icon" className="rounded-full">
+                                             <ChevronDown size={20} />
                                         </Button>
                                    </SheetTrigger>
                                    <SheetContent side="top" className="w-full p-4">
-                                        <div className="space-y-2">
+                                        <div className="flex justify-between items-center mb-4">
+                                             <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300">
+                                                  Pages
+                                             </h2>
+                                             <Button
+                                                  variant="ghost"
+                                                  onClick={() => setIsComponentPanelOpen(false)}
+                                                  className="text-gray-600 dark:text-gray-300"
+                                             >
+                                                  <X size={24} />
+                                             </Button>
+                                        </div>
+                                        <div className="space-y-2 mb-4">
                                              {pages.map((page) => (
                                                   <div key={page.id} className="flex items-center justify-between">
                                                        <Button
@@ -164,7 +175,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                          </div>
                          <div className="hidden md:block">
                               <Select value={currentPageId} onValueChange={onChangePage}>
-                                   <SelectTrigger className="w-[180px] bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                                   <SelectTrigger className="w-[180px] bg-white dark:bg-gray-700 text-black">
                                         <SelectValue placeholder="Select a page" />
                                    </SelectTrigger>
                                    <SelectContent>
@@ -212,50 +223,30 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               </ToggleGroupItem>
                          </ToggleGroup>
 
-                         {/* Actions (Dropdown on Mobile, Buttons on Desktop) */}
+                         {/* Export Code (Icon on Mobile, Button on Desktop) */}
                          <div className="block md:hidden">
-                              <DropdownMenu>
-                                   <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" size="icon" className="rounded-full">
-                                             <Menu size={20} />
-                                        </Button>
-                                   </DropdownMenuTrigger>
-                                   <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={onPreviewToggle}>
-                                             <Eye size={16} className="mr-2" />
-                                             {isPreviewMode ? 'Edit Mode' : 'Preview Mode'}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={onExportCode}>
-                                             <Download size={16} className="mr-2" />
-                                             Export Code
-                                        </DropdownMenuItem>
-                                   </DropdownMenuContent>
-                              </DropdownMenu>
+                              <Button
+                                   variant="outline"
+                                   size="icon"
+                                   className="rounded-full"
+                                   onClick={onExportCode}
+                              >
+                                   <Download size={20} />
+                              </Button>
                          </div>
                          <div className="hidden md:flex items-center space-x-2">
                               <Button
-                                   variant={isPreviewMode ? 'default' : 'outline'}
-                                   onClick={onPreviewToggle}
-                                   className="text-gray-600 dark:text-gray-300"
-                              >
-                                   <Eye size={16} className="mr-2" />
-                                   {isPreviewMode ? 'Edit Mode' : 'Preview Mode'}
-                              </Button>
-                              <Button
                                    variant="outline"
                                    onClick={onExportCode}
-                                   className="text-gray-600 dark:text-gray-300"
+                                   className="text-black"
                               >
                                    <Download size={16} className="mr-2" />
                                    Export Code
                               </Button>
                          </div>
 
-                         {/* Dark/Light Mode Toggle */}
-                         <div className="flex items-center space-x-2">
-                              <Label htmlFor="dark-mode" className="text-gray-600 dark:text-gray-300">
-                                   {isDarkMode ? 'Dark' : 'Light'}
-                              </Label>
+                         {/* Dark/Light Mode Toggle (No Label) */}
+                         <div className="flex items-center">
                               <Switch
                                    id="dark-mode"
                                    checked={isDarkMode}
@@ -295,7 +286,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                              <SheetTrigger asChild>
                                                   <Button
                                                        variant="ghost"
-                                                       className="absolute top-4 right-4 z-50 text-gray-600 dark:text-gray-300"
+                                                       className="absolute top-4 right-12 z-50 text-gray-600 dark:text-gray-300"
                                                   >
                                                        {isPropertyPanelOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
                                                   </Button>
@@ -310,7 +301,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                                             onClick={() => setIsPropertyPanelOpen(false)}
                                                             className="text-gray-600 dark:text-gray-300"
                                                        >
-                                                            <ChevronRight size={24} />
+                                                            <X size={24} />
                                                        </Button>
                                                   </div>
                                                   <PropertyPanel />
@@ -324,7 +315,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                              <SheetTrigger asChild>
                                                   <Button
                                                        variant="ghost"
-                                                       className="absolute top-4 right-16 z-50 text-gray-600 dark:text-gray-300"
+                                                       className="absolute top-4 right-4 z-50 text-gray-600 dark:text-gray-300"
                                                   >
                                                        <Layers size={24} />
                                                   </Button>
@@ -339,7 +330,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                                             onClick={() => setIsHierarchyOpen(false)}
                                                             className="text-gray-600 dark:text-gray-300"
                                                        >
-                                                            <ChevronRight size={24} />
+                                                            <X size={24} />
                                                        </Button>
                                                   </div>
                                                   <ElementHierarchyViewer />
