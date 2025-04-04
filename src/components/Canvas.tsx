@@ -259,7 +259,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="h-full flex items-center justify-center text-gray-500 text-lg p-6"
+                className="h-full flex items-center justify-center text-gray-500 mt-7 text-lg p-6"
               >
                 Click components to add them to the canvas
               </motion.div>

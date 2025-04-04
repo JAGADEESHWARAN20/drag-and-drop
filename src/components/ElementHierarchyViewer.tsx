@@ -22,7 +22,7 @@ const ElementHierarchyViewer: React.FC = () => {
 
      return (
           <div style={{ width: '300px', borderLeft: '1px solid #ccc', padding: '10px' }}>
-               <h3 className="text-lg font-semibold mb-2">Element Hierarchy</h3>
+              
                {renderHierarchy(null)}
           </div>
      );

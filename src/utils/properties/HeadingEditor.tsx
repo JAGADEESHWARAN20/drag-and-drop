@@ -10,7 +10,7 @@ export const HeadingEditor = () => {
   );
 
   // Ensure editor only shows when a heading is selected
-  if (!selectedComponent || selectedComponent.type !== "heading") {
+  if (!selectedComponent || selectedComponent.type !== "Heading") {
     return null;
   }
 
