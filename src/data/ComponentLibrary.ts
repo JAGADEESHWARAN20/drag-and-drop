@@ -51,7 +51,7 @@ export const ComponentLibrary: Record<'basic' | 'layout' | 'advanced', Component
         color: '#333333',
       },
     },
-  
+  ,
     {
       type: 'Image',
       label: 'Image',

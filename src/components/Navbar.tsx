@@ -1,7 +1,12 @@
+'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Page, Breakpoint } from '../store/WebsiteStore';
-import { Smartphone, Tablet, Monitor, Play, Code, Plus } from 'lucide-react';
+import { Smartphone, Tablet, Monitor, Play, Code, Plus, Menu } from 'lucide-react';
+import  Button  from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Card } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 interface NavbarProps {
   pages: Page[];
@@ -24,96 +29,61 @@ const Navbar = ({
   isPreviewMode,
   onExportCode,
   breakpoint,
-  setBreakpoint
+  setBreakpoint,
 }: NavbarProps) => {
-  return (
-    <div className="bg-white shadow-md">
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center">
-          <h1 className="text-xl font-bold text-blue-600 mr-6">WebBuilder</h1>
+  const [menuOpen, setMenuOpen] = useState(false);
 
-          {/* Pages */}
-          <div className="flex items-center space-x-1">
-            {pages.map(page => (
-              <button
+  return (
+    <Card className="w-full shadow-md p-4 flex items-center justify-between bg-white">
+      {/* Menu Icon */}
+      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <Menu size={24} />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-full sm:w-64 p-4">
+          <h1 className="text-xl font-bold text-blue-600 mb-4">WebBuilder</h1>
+          <div className="flex flex-col space-y-2">
+            {pages.map((page) => (
+              <Button
                 key={page.id}
-                className={`px-3 py-1 text-sm rounded ${
-                  currentPageId === page.id
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                variant={currentPageId === page.id ? 'outline' : 'ghost'}
                 onClick={() => onChangePage(page.id)}
               >
                 {page.name}
-              </button>
+              </Button>
             ))}
-
-            <button
-              className="px-2 py-1 text-gray-500 hover:bg-gray-100 rounded"
-              onClick={() => onAddPage(`Page ${pages.length + 1}`)}
-              title="Add new page"
-            >
-              <Plus size={18} />
-            </button>
+            <Button variant="ghost" onClick={() => onAddPage(`Page ${pages.length + 1}`)}>
+              <Plus size={18} /> Add Page
+            </Button>
           </div>
-        </div>
+        </SheetContent>
+      </Sheet>
 
-        <div className="flex items-center space-x-2">
-          {/* Responsive Breakpoints */}
-          <div className="border rounded overflow-hidden flex mr-2">
-            <button
-              className={`p-2 ${
-                breakpoint === 'mobile' ? 'bg-blue-100 text-blue-700' : 'bg-white text-gray-600'
-              }`}
-              onClick={() => setBreakpoint('mobile')}
-              title="Mobile View"
-            >
-              <Smartphone size={18} />
-            </button>
-            <button
-              className={`p-2 ${
-                breakpoint === 'tablet' ? 'bg-blue-100 text-blue-700' : 'bg-white text-gray-600'
-              }`}
-              onClick={() => setBreakpoint('tablet')}
-              title="Tablet View"
-            >
-              <Tablet size={18} />
-            </button>
-            <button
-              className={`p-2 ${
-                breakpoint === 'desktop' ? 'bg-blue-100 text-blue-700' : 'bg-white text-gray-600'
-              }`}
-              onClick={() => setBreakpoint('desktop')}
-              title="Desktop View"
-            >
-              <Monitor size={18} />
-            </button>
-          </div>
+      {/* Breakpoints */}
+      <ToggleGroup type="single" value={breakpoint} onValueChange={setBreakpoint} className="hidden sm:flex space-x-2">
+        <ToggleGroupItem value="mobile" title="Mobile View">
+          <Smartphone size={18} />
+        </ToggleGroupItem>
+        <ToggleGroupItem value="tablet" title="Tablet View">
+          <Tablet size={18} />
+        </ToggleGroupItem>
+        <ToggleGroupItem value="desktop" title="Desktop View">
+          <Monitor size={18} />
+        </ToggleGroupItem>
+      </ToggleGroup>
 
-          {/* Preview Toggle */}
-          <button
-            className={`px-4 py-2 rounded text-sm flex items-center ${
-              isPreviewMode
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-            }`}
-            onClick={onPreviewToggle}
-          >
-            <Play size={16} className="mr-1" />
-            {isPreviewMode ? 'Exit Preview' : 'Preview'}
-          </button>
-
-          {/* Export Code */}
-          <button
-            className="px-4 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 flex items-center"
-            onClick={onExportCode}
-          >
-            <Code size={16} className="mr-1" />
-            Export Code
-          </button>
-        </div>
+      {/* Actions */}
+      <div className="flex items-center space-x-2">
+        <Button size="icon" variant={isPreviewMode ? 'default' : 'outline'} onClick={onPreviewToggle}>
+          <Play size={20} />
+        </Button>
+        <Button size="icon" className="bg-green-500" onClick={onExportCode}>
+          <Code size={20} />
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 };
 

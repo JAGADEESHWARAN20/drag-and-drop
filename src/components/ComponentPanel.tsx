@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import DraggableComponent from './DraggableComponent';
 import { ComponentLibrary } from '../data/ComponentLibrary';
-import { Search, MousePointer, MousePointerClick } from 'lucide-react';
+import { Search, MousePointerClick } from 'lucide-react';
 import { ComponentType, SVGProps } from 'react';
 
 // Define the type for a component in ComponentLibrary
@@ -11,8 +11,9 @@ interface LibraryComponent {
   type: string;
   label: string;
   icon: ComponentType<SVGProps<SVGSVGElement> & { size?: string | number }>;
-  defaultProps: Record<string, unknown>;
+  defaultProps: Record<string, string | number | boolean | string[] | string[][] | Record<string, string | number>>;
 }
+
 
 const ComponentPanel = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,8 +29,8 @@ const ComponentPanel = () => {
   }, {});
 
   return (
-    <div className="p-6 h-full overflow-y-auto">
-      <h2 className="text-xl font-semibold mb-4 text-blue-900">Component Library</h2>
+    <div className="p-4 h-full overflow-y-auto flex flex-col">
+      <h2 className="text-lg font-semibold mb-4 text-blue-900">Component Library</h2>
 
       <div className="mb-4 p-3 bg-blue-50 rounded-md">
         <div className="flex items-center mb-2 text-blue-700">
@@ -39,7 +40,8 @@ const ComponentPanel = () => {
         <p className="text-xs text-blue-600">Click any component to add it to the canvas</p>
       </div>
 
-      <div className="mb-4">
+      {/* Search Input */}
+      <div className="mb-4 sticky top-0 bg-white z-10 p-2 shadow-sm">
         <div className="relative">
           <input
             type="text"
@@ -51,11 +53,13 @@ const ComponentPanel = () => {
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
         </div>
       </div>
-      <div className="space-y-6">
+
+      {/* Component Categories */}
+      <div className="space-y-6 flex-1 overflow-y-auto">
         {Object.entries(filteredComponents).map(([category, components]) => (
-          <div key={category}>
+          <div key={category} className="mb-4">
             <h3 className="text-sm font-medium mb-2 text-gray-600 uppercase">{category}</h3>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
               {components.map((component) => (
                 <DraggableComponent key={component.type} component={component} />
               ))}
