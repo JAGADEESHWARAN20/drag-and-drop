@@ -65,7 +65,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ }, ref
             </h3>
             <div className=" gap-2  whitespace-nowrap">
               {components.map((component) => (
-                <div key={component.type} className="flex flex-row overflow-x-scroll flex-shrink-0">
+                <div key={component.type} className="flex flex-col overflow-x-scroll flex-shrink-0">
                   <DraggableComponent component={component} />
                 </div>
               ))}
