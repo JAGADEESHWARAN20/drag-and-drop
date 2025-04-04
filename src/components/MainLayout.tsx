@@ -56,13 +56,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      const componentPanelRef = useRef<HTMLDivElement>(null);
      const componentPanelScrollRef = useRef<HTMLDivElement>(null);
 
-     const scrollLeft = () => {
-          componentPanelScrollRef.current?.scrollBy({ left: -100, behavior: 'smooth' });
-     };
-
-     const scrollRight = () => {
-          componentPanelScrollRef.current?.scrollBy({ left: 100, behavior: 'smooth' });
-     };
+  
 
      // Toggle dark mode by adding/removing the 'dark' class on the root element
      useEffect(() => {
@@ -120,16 +114,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                         <div ref={componentPanelScrollRef} className="flex overflow-x-auto scroll-smooth gap-2 pb-2">
                                              <ComponentPanel ref={componentPanelRef} />
                                         </div>
-                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-full shadow-md">
-                                             <Button variant="ghost" size="icon" onClick={scrollLeft}>
-                                                  <ChevronLeft size={20} />
-                                             </Button>
-                                        </div>
-                                        <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-full shadow-md">
-                                             <Button variant="ghost" size="icon" onClick={scrollRight}>
-                                                  <ChevronRight size={20} />
-                                             </Button>
-                                        </div>
+                                        
                                    </div>
                               </SheetContent>
                          </Sheet>
