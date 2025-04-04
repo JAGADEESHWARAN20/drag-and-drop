@@ -56,13 +56,13 @@ const DraggableComponent = ({ component }: DraggableComponentProps) => {
   };
 
   return (
+    // In DraggableComponent.jsx
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
       onClick={handleClick}
-      className={`p-2 border rounded cursor-pointer bg-white flex flex-col items-center justify-center text-sm w-24 h-24 flex-shrink-0 ${isDragging ? 'opacity-50 cursor-grabbing' : ''
-        } hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700`}
+      className={`p-2 border rounded cursor-pointer bg-white flex flex-col items-center justify-center text-sm w-20 h-20 md:w-24 md:h-24 flex-shrink-0 ${isDragging ? 'opacity-50 cursor-grabbing' : ''} hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700`}
       style={{
         touchAction: 'none',
       }}
