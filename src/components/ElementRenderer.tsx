@@ -2,14 +2,14 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
-import { useWebsiteStore, Component } from '../store/WebsiteStore';
+import { useWebsiteStore, Component as ComponentTypeFromStore } from '../store/WebsiteStore';
 import { X, Move } from 'lucide-react';
 import { PositionType } from './DroppableContainer';
 import { ComponentRegistry } from '../utils/ComponentRegistry';
 
 interface ElementRendererProps {
      id: string;
-     componentData: Component;
+     componentData: ComponentTypeFromStore;
      isSelected: boolean;
      onSelect: () => void;
      isPreviewMode: boolean;
@@ -34,7 +34,7 @@ const ElementRenderer = ({
           },
      });
 
-     const getComponentPositionStyles = (component: Component) => {
+     const getComponentPositionStyles = (component: ComponentTypeFromStore) => {
           const position = component.props.position as
                | {
                     type: PositionType;
@@ -45,6 +45,7 @@ const ElementRenderer = ({
                     zIndex?: string;
                }
                | undefined;
+
           if (!position) return {};
 
           return {
@@ -65,36 +66,9 @@ const ElementRenderer = ({
           zIndex: isDragging ? 50 : 'auto',
      };
 
-     if (isPreviewMode) {
-          const Component = ComponentRegistry[componentData.type];
-          if (!Component) return null;
-
-          const responsiveProps = componentData.responsiveProps?.[currentBreakpoint] || {};
-          const mergedProps = { ...componentData.props, ...responsiveProps };
-          const childComponents = components.filter((c) => c.parentId === componentData.id);
-
-          return (
-               <div style={getComponentPositionStyles(componentData)}>
-                    <Component {...mergedProps} id={componentData.id} isPreviewMode={isPreviewMode}>
-                         {childComponents.map((child) => {
-                              const childComponentData = components.find((c) => c.id === child.id);
-                              if (!childComponentData) return null;
-                              return (
-                                   <ElementRenderer
-                                        key={child.id}
-                                        id={child.id}
-                                        componentData={childComponentData}
-                                        isSelected={false}
-                                        onSelect={() => { }}
-                                        isPreviewMode={isPreviewMode}
-                                        currentBreakpoint={currentBreakpoint}
-                                   />
-                              );
-                         })}
-                    </Component>
-               </div>
-          );
-     }
+     const childComponents = React.useMemo(() => {
+          return components.filter((c) => c.parentId === componentData.id);
+     }, [components, componentData.id]);
 
      const handleDelete = (e: React.MouseEvent) => {
           e.stopPropagation();
@@ -122,13 +96,45 @@ const ElementRenderer = ({
           updateComponentProps(id, { position: newPosition });
      };
 
+     const ResolvedComponent = ComponentRegistry[componentData.type] as React.ComponentType<any>;
+     const responsiveProps = componentData.responsiveProps?.[currentBreakpoint] || {};
+     const mergedProps = { ...componentData.props, ...responsiveProps };
+
+     if (isPreviewMode) {
+          if (!ResolvedComponent) return null;
+
+          return (
+               <div style={getComponentPositionStyles(componentData)}>
+                    <ResolvedComponent {...mergedProps} id={componentData.id} isPreviewMode={isPreviewMode}>
+                         {childComponents.map((child) => {
+                              const childComponentData = components.find((c) => c.id === child.id);
+                              if (!childComponentData) return null;
+                              return (
+                                   <ElementRenderer
+                                        key={child.id}
+                                        id={child.id}
+                                        componentData={childComponentData}
+                                        isSelected={false}
+                                        onSelect={() => { }}
+                                        isPreviewMode={isPreviewMode}
+                                        currentBreakpoint={currentBreakpoint}
+                                   />
+                              );
+                         })}
+                    </ResolvedComponent>
+               </div>
+          );
+     }
+
      return (
           <motion.div
                ref={setNodeRef}
                style={{ ...style, ...getComponentPositionStyles(componentData) }}
                {...attributes}
                {...listeners}
-               className={`component-wrapper mb-2 ${isSelected ? 'outline outline-2 outline-blue-500' : 'hover:outline hover:outline-1 hover:outline-blue-300'
+               className={`component-wrapper mb-2 ${isSelected
+                         ? 'outline outline-2 outline-blue-500'
+                         : 'hover:outline hover:outline-1 hover:outline-blue-300'
                     } cursor-move`}
                layout
                layoutId={id}
@@ -147,34 +153,25 @@ const ElementRenderer = ({
                     </div>
                )}
 
-               {(() => {
-                    const Component = ComponentRegistry[componentData.type];
-                    if (!Component) return null;
-
-                    const responsiveProps = componentData.responsiveProps?.[currentBreakpoint] || {};
-                    const mergedProps = { ...componentData.props, ...responsiveProps };
-                    const childComponents = components.filter((c) => c.parentId === componentData.id);
-
-                    return (
-                         <Component {...mergedProps} id={componentData.id} isPreviewMode={isPreviewMode}>
-                              {childComponents.map((child) => {
-                                   const childComponentData = components.find((c) => c.id === child.id);
-                                   if (!childComponentData) return null;
-                                   return (
-                                        <ElementRenderer
-                                             key={child.id}
-                                             id={child.id}
-                                             componentData={childComponentData}
-                                             isSelected={false}
-                                             onSelect={() => { }}
-                                             isPreviewMode={isPreviewMode}
-                                             currentBreakpoint={currentBreakpoint}
-                                        />
-                                   );
-                              })}
-                         </Component>
-                    );
-               })()}
+               {ResolvedComponent && (
+                    <ResolvedComponent {...mergedProps} id={componentData.id} isPreviewMode={isPreviewMode}>
+                         {childComponents.map((child) => {
+                              const childComponentData = components.find((c) => c.id === child.id);
+                              if (!childComponentData) return null;
+                              return (
+                                   <ElementRenderer
+                                        key={child.id}
+                                        id={child.id}
+                                        componentData={childComponentData}
+                                        isSelected={false}
+                                        onSelect={() => { }}
+                                        isPreviewMode={isPreviewMode}
+                                        currentBreakpoint={currentBreakpoint}
+                                   />
+                              );
+                         })}
+                    </ResolvedComponent>
+               )}
           </motion.div>
      );
 };

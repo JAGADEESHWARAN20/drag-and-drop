@@ -27,6 +27,7 @@ const PropertyPanel = () => {
   } = useWebsiteStore();
 
   const [activeTab, setActiveTab] = useState<string>('general');
+  const [device, setDevice] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
 
   const selectedComponent = components.find(
     (component) => component.id === selectedComponentId
@@ -101,7 +102,7 @@ const PropertyPanel = () => {
     ? mergedProps.style as Record<string, string>
     : {};
   
-  const [device, setDevice] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
+
 
   const rawWidth =
     selectedComponent.responsiveProps?.[device]?.width ??
