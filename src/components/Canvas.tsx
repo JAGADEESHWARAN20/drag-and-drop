@@ -205,7 +205,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
       <div
         ref={setNodeRef}
         style={canvasStyle}
-        className={`min-h-full mx-auto bg-white ${getCanvasWidth()} transition-all duration-300 ${isOver ? 'bg-green-100' : ''}`}
+        className={`h-full mx-auto bg-white ${getCanvasWidth()} transition-all duration-300 ${isOver ? 'bg-green-100' : ''}`}
         
         id="canvas-drop-area"
       >
@@ -235,7 +235,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
             )}
           </SortableContext>
           {rootComponents.length === 0 && !isPreviewMode && isOver && draggingComponent && (
-            <div className="absolute top-0 left-0 w-full h-full bg-green-100 opacity-50 flex items-center justify-center text-green-500">
+            <div className="absolute top-0 left-0 w-full h-full bg-neutral-100 backdrop-blur-md  opacity-50 flex items-center justify-center text-green-500">
               Drop here to add component
             </div>
           )}
