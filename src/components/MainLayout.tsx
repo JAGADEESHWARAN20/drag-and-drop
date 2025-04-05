@@ -73,8 +73,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     const newPageId = uuidv4();
     onAddPage(`Page ${pages.length + 1}`);
     setIsPageSheetOpen(false);
-  };
-
+     };
+     
+     
   const handleDeletePage = (pageId: string) => {
     if (pages.length === 1) {
       toast({ title: 'Cannot Delete', description: 'At least one page must exist' });
@@ -108,8 +109,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
   const isMobile = breakpoint === 'mobile';
 
-  return (
-    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
+     return (
+          <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
       {/* Navbar */}
       <nav className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 shadow-md">
         <div className="flex items-center space-x-3">
@@ -162,7 +163,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                         {page.name}
                       </Button>
                       {pages.length > 1 && (
-                        <Button
+                           <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeletePage(page.id)}
@@ -194,7 +195,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                   <div key={page.id} className="flex items-center justify-between px-2 py-1">
                     <SelectItem value={page.id}>{page.name}</SelectItem>
                     {pages.length > 1 && (
-                      <Button
+                         <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeletePage(page.id)}
@@ -304,7 +305,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
           {/* Property Panel */}
           {!isPreviewMode && selectedComponentId && (
-            <Sheet open={isPropertyPanelOpen} onOpenChange={setIsPropertyPanelOpen}>
+               <Sheet open={isPropertyPanelOpen} onOpenChange={setIsPropertyPanelOpen}>
               <SheetTrigger asChild>
                 <Button
                   variant="ghost"
@@ -322,7 +323,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
           {/* Element Hierarchy */}
           {!isPreviewMode && selectedComponentId && (
-            <Sheet open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen}>
+               <Sheet open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen}>
               <SheetTrigger asChild>
                 <Button
                   variant="ghost"
@@ -340,10 +341,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             </Sheet>
           )}
 
+
           <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
+          
         </div>
       </div>
-    </div>
+     </div>
   );
 };
 
