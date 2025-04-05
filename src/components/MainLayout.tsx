@@ -13,7 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
-import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from '@/components/ui/sheet';
+import {
+     Sheet,
+     SheetContent,
+     SheetTrigger,
+     SheetTitle,
+     SheetHeader
+} from '@/components/ui/sheet'; // Import only necessary components
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toggle } from '@/components/ui/toggle';
@@ -117,10 +123,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
      const handleDragStart = (event: DragStartEvent) => {
           const { active } = event;
+          console.log('Drag started:', active.id, active.data?.current); // Debug log
           if (active.data?.current?.type === 'COMPONENT') {
                const { componentType, defaultProps } = active.data.current;
                setDraggingComponent({ type: componentType, defaultProps });
-               setSheetOpen(false); // Close sheet immediately when dragging starts
+               // Force sheet closure with a slight delay to ensure state update
+               setTimeout(() => setSheetOpen(false), 0); // Microtask to enforce re-render
           }
      };
 
@@ -132,7 +140,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                const newComponentId = uuidv4();
                addComponent({
                     type: componentType,
-                    props: defaultProps || {}, // Ensure defaultProps is defined
+                    props: defaultProps || {},
                     id: newComponentId,
                     pageId: currentPageId,
                     parentId: null,
@@ -152,7 +160,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
                     <nav className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 shadow-md">
                          <div className="flex items-center space-x-3">
-                              <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
+                              <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}> {/* Remove ref */}
                                    <SheetTrigger asChild>
                                         <Button variant="ghost" className="text-gray-600 dark:text-gray-300 p-2">
                                              <Menu size={20} />

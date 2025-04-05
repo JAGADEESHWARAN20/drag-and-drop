@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 
 interface WithClassName {
   className?: string;
+  ref?: React.Ref<HTMLDivElement>;
 }
 
 
