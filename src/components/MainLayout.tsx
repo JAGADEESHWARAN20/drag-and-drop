@@ -308,7 +308,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               <SheetTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="absolute top-[20px] right-12 z-50 text-gray-600 dark:text-gray-300"
+                  className="absolute top-8 right-5 z-50 text-gray-600 dark:text-gray-300"
                 >
                   {isPropertyPanelOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
                 </Button>
@@ -326,7 +326,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               <SheetTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="absolute top-4 right-4 z-50 text-gray-600 dark:text-gray-300"
+                  className="absolute top-6 right-5 z-50 text-gray-600 dark:text-gray-300"
                 >
                   <Layers size={24} />
                 </Button>
