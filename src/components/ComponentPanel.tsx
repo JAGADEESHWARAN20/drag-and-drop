@@ -59,8 +59,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { componentOrder, setComponentOrder, startDragging, endDragging, setDraggingComponent } = useWebsiteStore();
   const { isDragging: dndKitIsDragging } = useDndKitContext();
-  const dragStartTimeout = useRef<NodeJS.Timeout | null>(null);
-  const isDraggingIntent = useRef(false);
+  const closePanelTimeout = useRef<NodeJS.Timeout | null>(null); // Ref for the close panel timeout
 
   const allComponentsArray = useMemo(() => {
     return Object.values(ComponentLibrary).flat();
@@ -102,25 +101,22 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event;
-    if (active.data?.current?.type === 'COMPONENT') {
+    if (active.data?.current?.type === 'COMPONENT' && onClosePanel) {
       const { componentType, defaultProps } = active.data.current;
       setDraggingComponent({ type: componentType, defaultProps });
-      if (onClosePanel) {
+      // Add a delay before closing the panel
+      closePanelTimeout.current = setTimeout(() => {
         onClosePanel();
-      }
+        closePanelTimeout.current = null;
+      }, 200); // Adjust the delay (milliseconds) as needed
     }
-    // Remove the logic for reordering drag start here, as the hold interaction
-    // is specifically for dragging to the canvas. Reordering will still work
-    // with a normal drag gesture.
   }, [onClosePanel, setDraggingComponent]);
 
   const handleDragEnd = useCallback((event: any) => {
-    isDraggingIntent.current = false;
-    if (dragStartTimeout.current) {
-      clearTimeout(dragStartTimeout.current);
-      dragStartTimeout.current = null;
+    if (closePanelTimeout.current) {
+      clearTimeout(closePanelTimeout.current);
+      closePanelTimeout.current = null;
     }
-    endDragging();
     const { active, over } = event;
     if (active.id !== over?.id) {
       const oldIndex = orderedComponents.findIndex(comp => comp.type === active.id);
