@@ -40,7 +40,7 @@ export function Toaster({ position: defaultPosition = 'top-right', customPositio
 
     if (isMobile) {
       currentPosition = 'custom';
-      currentCustomPositionClass = 'fixed left-1/2 -translate-x-1/2 bottom-8 md:bottom-24 z-[101]'; // Adjust bottom value as needed
+      currentCustomPositionClass = 'fixed left-1/2 -translate-x-1/2 bottom-[50%] md:bottom-24 z-[101]'; // Adjust bottom value as needed
     }
 
     switch (currentPosition) {
