@@ -1,7 +1,18 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { DndContext, DragEndEvent } from '@dnd-kit/core';
+import {
+     DndContext,
+     DragEndEvent,
+     DragStartEvent,
+     MouseSensor,
+     TouchSensor,
+     KeyboardSensor,
+     useSensor,
+     useSensors,
+     closestCenter,
+} from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useWebsiteStore, Breakpoint, Page } from '../store/WebsiteStore';
 import ComponentPanel from './ComponentPanel';
 import Canvas from './Canvas';
@@ -47,7 +58,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      breakpoint,
      setBreakpoint,
 }) => {
-     const { components, selectedComponentId,addComponent } = useWebsiteStore();
+     const { components, selectedComponentId, addComponent } = useWebsiteStore();
 
      const [isComponentPanelOpen, setIsComponentPanelOpen] = useState(false);
      const [isPropertyPanelOpen, setIsPropertyPanelOpen] = useState(false);
@@ -57,7 +68,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      const componentPanelRef = useRef<HTMLDivElement>(null);
      const componentPanelScrollRef = useRef<HTMLDivElement>(null);
 
-     // Toggle dark mode by adding/removing the 'dark' class on the root element
+     // Configure sensors for drag-and-drop
+     const sensors = useSensors(
+          useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+          useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
+          useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+     );
+
+     // Toggle dark mode
      useEffect(() => {
           if (isDarkMode) {
                document.documentElement.classList.add('dark');
@@ -93,53 +111,68 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           toast({ title: 'Page Deleted', description: 'Page has been deleted' });
           setIsPageSheetOpen(false);
      };
+
+     const handleDragStart = (event: DragStartEvent) => {
+          // Close the ComponentPanel sheet when dragging starts for better UX
+          setIsComponentPanelOpen(false);
+     };
+
      const handleDragEnd = (event: DragEndEvent) => {
           const { active, over } = event;
 
           if (!active || !over) return;
 
-          // Check if the dragged item is a component from the ComponentPanel
+          // Handle drag from ComponentPanel
           if (active.data?.current?.type === 'COMPONENT') {
                const { componentType, defaultProps } = active.data.current;
                const currentPageId = useWebsiteStore.getState().currentPageId;
+               const responsiveProps = { desktop: {}, tablet: {}, mobile: {} };
+               const newComponentId = uuidv4(); // Use UUID for unique IDs instead of Date.now()
 
-               // Handle drop on the canvas (top-level)
+               // Drop on the canvas root
                if (over.id === 'canvas-drop-area') {
-                    const parentId = null; // Top-level component
-                    const responsiveProps = { desktop: {}, tablet: {}, mobile: {} };
-
                     addComponent({
                          type: componentType,
                          props: defaultProps,
-                         id: Date.now().toString(),
+                         id: newComponentId,
                          pageId: currentPageId,
-                         parentId,
+                         parentId: null,
                          responsiveProps,
                     });
+                    toast({
+                         title: 'Component Added',
+                         description: `Added ${componentType} to canvas.`,
+                    });
                }
-               // Handle drop on a DroppableContainer (nested component)
+               // Drop on a DroppableContainer (nested)
                else if (over.id.toString().startsWith('droppable-')) {
                     const parentId = over.id.toString().replace('droppable-', '');
                     const parentComponent = useWebsiteStore.getState().components.find((c) => c.id === parentId);
 
                     if (parentComponent && parentComponent.allowChildren) {
-                         const responsiveProps = { desktop: {}, tablet: {}, mobile: {} };
-
                          addComponent({
                               type: componentType,
                               props: defaultProps,
-                              id: Date.now().toString(),
+                              id: newComponentId,
                               pageId: currentPageId,
                               parentId,
                               responsiveProps,
                          });
+                         toast({
+                              title: 'Component Added',
+                              description: `Added ${componentType} to ${parentComponent.type}.`,
+                         });
                     } else {
-                         console.warn(`Cannot drop into component ${parentId}: it does not allow children or does not exist.`);
+                         toast({
+                              title: 'Drop Failed',
+                              description: 'Target does not allow children.',
+                              variant: 'destructive',
+                         });
                     }
                }
           }
      };
-     // Determine if the device is mobile based on breakpoint
+
      const isMobile = breakpoint === 'mobile';
 
      return (
@@ -155,16 +188,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               </SheetTrigger>
                               <SheetContent
                                    side="top"
-                                   className={`w-full overflow-hidden scrollbar-hidden h-auto max-h-96 p-4 flex flex-col    ${isMobile ? 'min-w-[100vw]' : 'min-w-[300px]'}`}
+                                   className={`w-full overflow-hidden scrollbar-hidden h-auto max-h-96 p-4 flex flex-col ${isMobile ? 'min-w-[100vw]' : 'min-w-[300px]'}`}
                               >
                                    <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-2">
                                         Component Library
                                    </h2>
                                    <div className="relative scrollbar-hidden">
-                                        <div
-                                             ref={componentPanelScrollRef}
-                                             className="pb-2"
-                                        >
+                                        <div ref={componentPanelScrollRef} className="pb-2">
                                              <ComponentPanel ref={componentPanelRef} />
                                         </div>
                                    </div>
@@ -191,9 +221,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                         </Button>
                                    </SheetTrigger>
                                    <SheetContent side="top" className="w-full p-4">
-                                        <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">
-                                             Pages
-                                        </h2>
+                                        <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">Pages</h2>
                                         <div className="space-y-2 mb-4">
                                              {pages.map((page) => (
                                                   <div key={page.id} className="flex items-center justify-between">
@@ -277,7 +305,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               </ToggleGroupItem>
                          </ToggleGroup>
 
-                         {/* Preview/Edit Mode Toggle (Shadcn Toggle Button) */}
+                         {/* Preview/Edit Mode Toggle */}
                          <Toggle
                               aria-label="Toggle Preview Mode"
                               pressed={isPreviewMode}
@@ -285,26 +313,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               className={`flex items-center space-x-2 data-[state=pressed]:bg-blue-600 text-gray-600 dark:text-gray-300 rounded-md px-3 py-1`}
                          >
                               {isPreviewMode ? <Pen size={16} /> : <Code size={16} />}
-                              
                          </Toggle>
 
-                         {/* Export Code (Icon on Mobile, Button on Desktop) */}
+                         {/* Export Code */}
                          <div className="block md:hidden">
-                              <Button
-                                   variant="outline"
-                                   size="icon"
-                                   className="rounded-full p-2"
-                                   onClick={onExportCode}
-                              >
+                              <Button variant="outline" size="icon" className="rounded-full p-2" onClick={onExportCode}>
                                    <Download size={20} className="text-gray-600 dark:text-gray-300" />
                               </Button>
                          </div>
                          <div className="hidden md:flex items-center space-x-2">
-                              <Button
-                                   variant="outline"
-                                   onClick={onExportCode}
-                                   className="text-black dark:text-white"
-                              >
+                              <Button variant="outline" onClick={onExportCode} className="text-black dark:text-white">
                                    <Download size={16} className="mr-2" />
                                    Export Code
                               </Button>
@@ -322,84 +340,86 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     </div>
                </nav>
 
-               {/* Main Content (Canvas Takes Full Screen) */}
+               {/* Main Content */}
                <div className="flex-1 flex overflow-hidden relative">
-                    <div className="flex-1 overflow-auto relative">
-                         {/* Breakpoint Selector in Preview Mode (Mobile Only, Vertical) */}
-                         <AnimatePresence>
-                              {isPreviewMode && (
-                                   <motion.div
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: 20 }}
-                                        transition={{ duration: 0.3 }}
-                                        className="absolute top-4 right-4 z-50 block md:hidden"
-                                   >
-                                        <ToggleGroup
-                                             type="single"
-                                             value={breakpoint}
-                                             onValueChange={(value) => value && setBreakpoint(value as Breakpoint)}
-                                             className="flex flex-col space-y-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-md"
+                    <DndContext
+                         sensors={sensors}
+                         collisionDetection={closestCenter}
+                         onDragStart={handleDragStart}
+                         onDragEnd={handleDragEnd}
+                    >
+                         <div className="flex-1 overflow-auto relative">
+                              {/* Breakpoint Selector in Preview Mode (Mobile Only) */}
+                              <AnimatePresence>
+                                   {isPreviewMode && (
+                                        <motion.div
+                                             initial={{ opacity: 0, x: 20 }}
+                                             animate={{ opacity: 1, x: 0 }}
+                                             exit={{ opacity: 0, x: 20 }}
+                                             transition={{ duration: 0.3 }}
+                                             className="absolute top-4 right-4 z-50 block md:hidden"
                                         >
-                                             <ToggleGroupItem value="mobile" title="Mobile View" className="p-2">
-                                                  <Smartphone size={18} className="text-gray-600 dark:text-gray-300" />
-                                             </ToggleGroupItem>
-                                             <ToggleGroupItem value="tablet" title="Tablet View" className="p-2">
-                                                  <Tablet size={18} className="text-gray-600 dark:text-gray-300" />
-                                             </ToggleGroupItem>
-                                             <ToggleGroupItem value="desktop" title="Desktop View" className="p-2">
-                                                  <Monitor size={18} className="text-gray-600 dark:text-gray-300" />
-                                             </ToggleGroupItem>
-                                        </ToggleGroup>
-                                   </motion.div>
+                                             <ToggleGroup
+                                                  type="single"
+                                                  value={breakpoint}
+                                                  onValueChange={(value) => value && setBreakpoint(value as Breakpoint)}
+                                                  className="flex flex-col space-y-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-md"
+                                             >
+                                                  <ToggleGroupItem value="mobile" title="Mobile View" className="p-2">
+                                                       <Smartphone size={18} className="text-gray-600 dark:text-gray-300" />
+                                                  </ToggleGroupItem>
+                                                  <ToggleGroupItem value="tablet" title="Tablet View" className="p-2">
+                                                       <Tablet size={18} className="text-gray-600 dark:text-gray-300" />
+                                                  </ToggleGroupItem>
+                                                  <ToggleGroupItem value="desktop" title="Desktop View" className="p-2">
+                                                       <Monitor size={18} className="text-gray-600 dark:text-gray-300" />
+                                                  </ToggleGroupItem>
+                                             </ToggleGroup>
+                                        </motion.div>
+                                   )}
+                              </AnimatePresence>
+
+                              {/* Property Panel */}
+                              {!isPreviewMode && (selectedComponentId || components.length > 0) && (
+                                   <Sheet open={isPropertyPanelOpen} onOpenChange={setIsPropertyPanelOpen}>
+                                        <SheetTrigger asChild>
+                                             <Button
+                                                  variant="ghost"
+                                                  className="absolute top-4 right-12 z-50 text-gray-600 dark:text-gray-300"
+                                             >
+                                                  {isPropertyPanelOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
+                                             </Button>
+                                        </SheetTrigger>
+                                        <SheetContent side="right" className="w-80 p-4">
+                                             <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">Properties</h2>
+                                             <PropertyPanel />
+                                        </SheetContent>
+                                   </Sheet>
                               )}
-                         </AnimatePresence>
 
-                         {/* Property Panel Toggle Button */}
-                         {!isPreviewMode && (selectedComponentId || components.length > 0) && (
-                              <Sheet open={isPropertyPanelOpen} onOpenChange={setIsPropertyPanelOpen}>
-                                   <SheetTrigger asChild>
-                                        <Button
-                                             variant="ghost"
-                                             className="absolute top-4 right-12 z-50 text-gray-600 dark:text-gray-300"
-                                        >
-                                             {isPropertyPanelOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
-                                        </Button>
-                                   </SheetTrigger>
-                                   <SheetContent side="right" className="w-80 p-4">
-                                        <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">
-                                             Properties
-                                        </h2>
-                                        <PropertyPanel />
-                                   </SheetContent>
-                              </Sheet>
-                         )}
+                              {/* Element Hierarchy */}
+                              {!isPreviewMode && (
+                                   <Sheet open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen}>
+                                        <SheetTrigger asChild>
+                                             <Button
+                                                  variant="ghost"
+                                                  className="absolute top-4 right-4 z-50 text-gray-600 dark:text-gray-300"
+                                             >
+                                                  <Layers size={24} />
+                                             </Button>
+                                        </SheetTrigger>
+                                        <SheetContent side="right" className="w-80 p-4">
+                                             <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">
+                                                  Element Hierarchy
+                                             </h2>
+                                             <ElementHierarchyViewer />
+                                        </SheetContent>
+                                   </Sheet>
+                              )}
 
-                         {/* Element Hierarchy Toggle Button */}
-                         {!isPreviewMode && (
-                              <Sheet open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen}>
-                                   <SheetTrigger asChild>
-                                        <Button
-                                             variant="ghost"
-                                             className="absolute top-4 right-4 z-50 text-gray-600 dark:text-gray-300"
-                                        >
-                                             <Layers size={24} />
-                                        </Button>
-                                   </SheetTrigger>
-                                   <SheetContent side="right" className="w-80 p-4">
-                                        <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">
-                                             Element Hierarchy
-                                        </h2>
-                                        <ElementHierarchyViewer />
-                                   </SheetContent>
-                              </Sheet>
-                         )}
-
-                         <DndContext onDragEnd={handleDragEnd}>
-                         
-                         <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
-                         </DndContext>
-                    </div>
+                              <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
+                         </div>
+                    </DndContext>
                </div>
           </div>
      );
