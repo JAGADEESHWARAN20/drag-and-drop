@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, forwardRef } from 'react';
-import DraggableComponent from './DraggableComponent';
+import React, { useState, forwardRef } from 'react';
 import { ComponentLibrary } from '../data/ComponentLibrary';
 import { Search, MousePointerClick } from 'lucide-react';
 import { ComponentType, SVGProps } from 'react';
@@ -14,10 +13,10 @@ interface LibraryComponent {
 }
 
 interface ComponentPanelProps {
-  // You can define any other props your ComponentPanel might receive here
+  onComponentClick: (type: string, defaultProps: Record<string, any>) => void;
 }
 
-const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ }, ref) => {
+const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComponentClick }, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredComponents = Object.entries(ComponentLibrary).reduce<
@@ -31,7 +30,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ }, ref
   }, {});
 
   return (
-    <div className="p-4 h-full  flex flex-col " ref={ref}>
+    <div className="p-4 h-full flex flex-col" ref={ref}>
       <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md">
         <div className="flex items-center mb-2 text-blue-700 dark:text-blue-300">
           <MousePointerClick size={16} className="mr-2" />
@@ -57,16 +56,23 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ }, ref
       </div>
 
       {/* Component Categories */}
-      <div className="space-x-2 flex flex-row overflow-x-scroll  scrollbar-hidden">
+      <div className="space-x-2 flex flex-row overflow-x-scroll scrollbar-hidden">
         {Object.entries(filteredComponents).map(([category, components]) => (
           <div key={category} className="mb-4 flex flex-col gap-2">
             <h3 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-400 uppercase">
               {category}
             </h3>
-            <div className="flex flex-row gap-2  whitespace-nowrap scrollbar-hidden">
+            <div className="flex flex-row gap-2 whitespace-nowrap scrollbar-hidden">
               {components.map((component) => (
-                <div key={component.type} className="flex-shrink-0">
-                  <DraggableComponent component={component} />
+                <div
+                  key={component.type}
+                  onClick={() => onComponentClick(component.type, component.defaultProps)}
+                  className="p-2 border rounded cursor-pointer bg-white flex flex-col items-center justify-center text-sm w-20 h-20 flex-shrink-0 hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700"
+                >
+                  <div className="text-blue-500 mb-1 dark:text-white">
+                    <component.icon size={20} aria-hidden="true" />
+                  </div>
+                  <span className="text-black dark:text-white text-center">{component.label}</span>
                 </div>
               ))}
             </div>
@@ -79,7 +85,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ }, ref
         )}
         {Object.keys(ComponentLibrary).length > 0 && Object.keys(filteredComponents).length === 0 && !searchTerm && (
           <div className="text-center text-gray-500 dark:text-gray-400">
-            Browse components by category. Click to add, or drag to the canvas.
+            Browse components by category. Click to add to the canvas.
           </div>
         )}
         {Object.keys(ComponentLibrary).length === 0 && (

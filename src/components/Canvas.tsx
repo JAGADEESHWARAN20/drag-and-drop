@@ -1,11 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { useDroppable } from '@dnd-kit/core';
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useWebsiteStore, Breakpoint, Component } from '../store/WebsiteStore';
 import { ComponentRegistry } from '../utils/ComponentRegistry';
 import DroppableContainer from './DroppableContainer';
@@ -32,7 +28,6 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
   } = useWebsiteStore();
 
   const { selectedIds, handleComponentClick, setSelectedIds } = SelectionManager();
-  const [activeId, setActiveId] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   const currentPage = useMemo(
@@ -47,11 +42,6 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
     () => pageComponents.filter((c) => !c.parentId),
     [pageComponents]
   );
-
-  const { setNodeRef: setCanvasDropRef, isOver: isCanvasOver } = useDroppable({
-    id: 'canvas-drop-area',
-    data: { accepts: 'COMPONENT' },
-  });
 
   const handleRightClick = useCallback((event: React.MouseEvent) => {
     if (isPreviewMode) return;
@@ -68,7 +58,6 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
       const mergedProps = { ...componentData.props, ...responsiveProps };
       const childComponents = components.filter((c) => c.parentId === componentData.id);
       const isSelected = selectedIds.includes(componentData.id);
-      const isDragging = activeId === componentData.id;
 
       return (
         <DroppableContainer
@@ -93,10 +82,10 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
             )}
             {componentData.allowChildren && !isPreviewMode && (
               <div
-                className={`border-dashed border-2 p-2 ${isDragging ? 'bg-blue-100' : 'border-gray-400'} text-gray-500 text-center`}
+                className="border-dashed border-2 p-2 border-gray-400 text-gray-500 text-center"
                 style={{ minHeight: '40px' }}
               >
-                Drop here to add child
+                Child area
               </div>
             )}
           </DynamicComponent>
@@ -113,7 +102,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
         </DroppableContainer>
       );
     },
-    [components, currentBreakpoint, isPreviewMode, selectedIds, handleComponentClick, setAllowChildren, activeId]
+    [components, currentBreakpoint, isPreviewMode, selectedIds, handleComponentClick, setAllowChildren]
   );
 
   const getCanvasWidth = useCallback(() => {
@@ -132,8 +121,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
   return (
     <div className={`min-h-full mx-auto bg-white ${getCanvasWidth()} transition-all duration-300`}>
       <div
-        ref={setCanvasDropRef}
-        className={`min-h-[calc(100vh-80px)] relative ${isPreviewMode ? 'bg-white' : 'bg-gray-50 border-dashed border-2 border-gray-300'} overflow-x-auto ${isCanvasOver && !isPreviewMode ? 'bg-green-100' : ''}`}
+        className={`min-h-[calc(100vh-80px)] relative ${isPreviewMode ? 'bg-white' : 'bg-gray-50 border-dashed border-2 border-gray-300'} overflow-x-auto`}
         onClick={() => !isPreviewMode && setSelectedComponentId(null)}
         onContextMenu={handleRightClick}
       >
@@ -147,7 +135,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
               animate={{ opacity: 1 }}
               className="h-full flex items-center justify-center text-gray-500 mt-7 text-lg p-6"
             >
-              Drag components from the panel to add them to the canvas.
+              Click components in the panel to add them to the canvas.
             </motion.div>
           ) : (
             <div className="p-6">

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
 import PositionEditor from './PositionEditor';
-import Button  from '@/components/ui/button';
+import Button from '@/components/ui/button';
 import { PositionType } from './DroppableContainer';
 
 interface Position {
@@ -27,7 +27,6 @@ const PropertyPanel = () => {
   } = useWebsiteStore();
 
   const [activeTab, setActiveTab] = useState<string>('general');
-  const [device, setDevice] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
 
   const selectedComponent = components.find(
     (component) => component.id === selectedComponentId
@@ -45,7 +44,6 @@ const PropertyPanel = () => {
   }
 
   const PropertyEditor = PropertyEditors[selectedComponent.type];
-
   const regularProps = selectedComponent.props || {};
   const responsiveProps = selectedComponent.responsiveProps?.[breakpoint] || {};
   const mergedProps = { ...regularProps, ...responsiveProps };
@@ -104,7 +102,7 @@ const PropertyPanel = () => {
       : {};
 
   const rawWidth =
-    selectedComponent.responsiveProps?.[device]?.width ??
+    selectedComponent.responsiveProps?.[breakpoint]?.width ??
     selectedComponent.props.width ??
     '';
 
@@ -183,9 +181,7 @@ const PropertyPanel = () => {
                         <Input
                           type="text"
                           value={safeWidth}
-                          onChange={(e) =>
-                            handleDeviceWidthChange(device, e.target.value)
-                          }
+                          onChange={(e) => handleDeviceWidthChange(device, e.target.value)}
                           className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
                         />
                       </div>

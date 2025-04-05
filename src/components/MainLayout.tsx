@@ -1,18 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import {
-     DndContext,
-     DragEndEvent,
-     DragStartEvent,
-     MouseSensor,
-     TouchSensor,
-     KeyboardSensor,
-     useSensor,
-     useSensors,
-     closestCenter,
-} from '@dnd-kit/core';
-import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useWebsiteStore, Breakpoint, Page } from '../store/WebsiteStore';
 import ComponentPanel from './ComponentPanel';
 import Canvas from './Canvas';
@@ -20,13 +8,7 @@ import PropertyPanel from './PropertyPanel';
 import ElementHierarchyViewer from './ElementHierarchyViewer';
 import { Menu, ChevronRight, ChevronLeft, X, Download, Smartphone, Tablet, Monitor, Layers, Code, Pen, Plus } from 'lucide-react';
 import Button from '@/components/ui/button';
-import {
-     Select,
-     SelectContent,
-     SelectItem,
-     SelectTrigger,
-     SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -58,7 +40,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      breakpoint,
      setBreakpoint,
 }) => {
-     const { components, selectedComponentId, addComponent } = useWebsiteStore();
+     const { components, selectedComponentId, addComponent, setSelectedComponentId } = useWebsiteStore();
 
      const [isComponentPanelOpen, setIsComponentPanelOpen] = useState(false);
      const [isPropertyPanelOpen, setIsPropertyPanelOpen] = useState(false);
@@ -66,14 +48,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      const [isDarkMode, setIsDarkMode] = useState(false);
      const [isPageSheetOpen, setIsPageSheetOpen] = useState(false);
      const componentPanelRef = useRef<HTMLDivElement>(null);
-     const componentPanelScrollRef = useRef<HTMLDivElement>(null);
-
-     // Configure sensors for drag-and-drop
-     const sensors = useSensors(
-          useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
-          useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
-          useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-     );
 
      // Toggle dark mode
      useEffect(() => {
@@ -84,14 +58,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           }
      }, [isDarkMode]);
 
-     // Show PropertyPanel if a component is selected or exists on the canvas
+     // Only open panels when a component is explicitly selected
      useEffect(() => {
-          if (selectedComponentId || components.length > 0) {
+          if (selectedComponentId) {
                setIsPropertyPanelOpen(true);
+               setIsHierarchyOpen(false); // Optional: close hierarchy when property opens
           } else {
                setIsPropertyPanelOpen(false);
+               setIsHierarchyOpen(false);
           }
-     }, [selectedComponentId, components]);
+     }, [selectedComponentId]);
 
      const handleAddPage = () => {
           const newPageId = uuidv4();
@@ -112,67 +88,24 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           setIsPageSheetOpen(false);
      };
 
-     const handleDragStart = (event: DragStartEvent) => {
-          // Close the ComponentPanel sheet when dragging starts for better UX
-          setIsComponentPanelOpen(false);
+     const handleComponentAdd = (type: string, defaultProps: Record<string, any>) => {
+          const newComponentId = uuidv4();
+          addComponent({
+               type,
+               props: defaultProps,
+               id: newComponentId,
+               pageId: currentPageId,
+               parentId: null,
+               responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
+          });
+          toast({
+               title: 'Component Added',
+               description: `Added ${type} to canvas.`,
+          });
+          setIsComponentPanelOpen(false); // Close sheet after adding
+          setSelectedComponentId(null); // Reset selection to require canvas click
      };
-
-     const handleDragEnd = (event: DragEndEvent) => {
-          const { active, over } = event;
-
-          if (!active || !over) return;
-
-          // Handle drag from ComponentPanel
-          if (active.data?.current?.type === 'COMPONENT') {
-               const { componentType, defaultProps } = active.data.current;
-               const currentPageId = useWebsiteStore.getState().currentPageId;
-               const responsiveProps = { desktop: {}, tablet: {}, mobile: {} };
-               const newComponentId = uuidv4(); // Use UUID for unique IDs instead of Date.now()
-
-               // Drop on the canvas root
-               if (over.id === 'canvas-drop-area') {
-                    addComponent({
-                         type: componentType,
-                         props: defaultProps,
-                         id: newComponentId,
-                         pageId: currentPageId,
-                         parentId: null,
-                         responsiveProps,
-                    });
-                    toast({
-                         title: 'Component Added',
-                         description: `Added ${componentType} to canvas.`,
-                    });
-               }
-               // Drop on a DroppableContainer (nested)
-               else if (over.id.toString().startsWith('droppable-')) {
-                    const parentId = over.id.toString().replace('droppable-', '');
-                    const parentComponent = useWebsiteStore.getState().components.find((c) => c.id === parentId);
-
-                    if (parentComponent && parentComponent.allowChildren) {
-                         addComponent({
-                              type: componentType,
-                              props: defaultProps,
-                              id: newComponentId,
-                              pageId: currentPageId,
-                              parentId,
-                              responsiveProps,
-                         });
-                         toast({
-                              title: 'Component Added',
-                              description: `Added ${componentType} to ${parentComponent.type}.`,
-                         });
-                    } else {
-                         toast({
-                              title: 'Drop Failed',
-                              description: 'Target does not allow children.',
-                              variant: 'destructive',
-                         });
-                    }
-               }
-          }
-     };
-
+     
      const isMobile = breakpoint === 'mobile';
 
      return (
@@ -193,18 +126,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                    <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-2">
                                         Component Library
                                    </h2>
-                                   <div className="relative scrollbar-hidden">
-                                        <div ref={componentPanelScrollRef} className="pb-2">
-                                             <ComponentPanel ref={componentPanelRef} />
-                                        </div>
-                                   </div>
+                                   <ComponentPanel ref={componentPanelRef} onComponentClick={handleComponentAdd} />
                               </SheetContent>
                          </Sheet>
                          <h1 className="text-lg font-bold text-black dark:text-white">WebBuilder</h1>
                     </div>
 
                     <div className="flex items-center space-x-3">
-                         {/* Page Selector (Long-Press on Mobile, Select on Desktop) */}
+                         {/* Page Selector */}
                          <div className="block md:hidden">
                               <Sheet open={isPageSheetOpen} onOpenChange={setIsPageSheetOpen}>
                                    <SheetTrigger asChild>
@@ -287,7 +216,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               </Select>
                          </div>
 
-                         {/* Breakpoint Selector (Desktop Only in Navbar) */}
+                         {/* Breakpoint Selector */}
                          <ToggleGroup
                               type="single"
                               value={breakpoint}
@@ -342,84 +271,77 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
                {/* Main Content */}
                <div className="flex-1 flex overflow-hidden relative">
-                    <DndContext
-                         sensors={sensors}
-                         collisionDetection={closestCenter}
-                         onDragStart={handleDragStart}
-                         onDragEnd={handleDragEnd}
-                    >
-                         <div className="flex-1 overflow-auto relative">
-                              {/* Breakpoint Selector in Preview Mode (Mobile Only) */}
-                              <AnimatePresence>
-                                   {isPreviewMode && (
-                                        <motion.div
-                                             initial={{ opacity: 0, x: 20 }}
-                                             animate={{ opacity: 1, x: 0 }}
-                                             exit={{ opacity: 0, x: 20 }}
-                                             transition={{ duration: 0.3 }}
-                                             className="absolute top-4 right-4 z-50 block md:hidden"
+                    <div className="flex-1 overflow-auto relative">
+                         {/* Breakpoint Selector in Preview Mode (Mobile) */}
+                         <AnimatePresence>
+                              {isPreviewMode && (
+                                   <motion.div
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 20 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="absolute top-4 right-4 z-50 block md:hidden"
+                                   >
+                                        <ToggleGroup
+                                             type="single"
+                                             value={breakpoint}
+                                             onValueChange={(value) => value && setBreakpoint(value as Breakpoint)}
+                                             className="flex flex-col space-y-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-md"
                                         >
-                                             <ToggleGroup
-                                                  type="single"
-                                                  value={breakpoint}
-                                                  onValueChange={(value) => value && setBreakpoint(value as Breakpoint)}
-                                                  className="flex flex-col space-y-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-md"
-                                             >
-                                                  <ToggleGroupItem value="mobile" title="Mobile View" className="p-2">
-                                                       <Smartphone size={18} className="text-gray-600 dark:text-gray-300" />
-                                                  </ToggleGroupItem>
-                                                  <ToggleGroupItem value="tablet" title="Tablet View" className="p-2">
-                                                       <Tablet size={18} className="text-gray-600 dark:text-gray-300" />
-                                                  </ToggleGroupItem>
-                                                  <ToggleGroupItem value="desktop" title="Desktop View" className="p-2">
-                                                       <Monitor size={18} className="text-gray-600 dark:text-gray-300" />
-                                                  </ToggleGroupItem>
-                                             </ToggleGroup>
-                                        </motion.div>
-                                   )}
-                              </AnimatePresence>
-
-                              {/* Property Panel */}
-                              {!isPreviewMode && (selectedComponentId || components.length > 0) && (
-                                   <Sheet open={isPropertyPanelOpen} onOpenChange={setIsPropertyPanelOpen}>
-                                        <SheetTrigger asChild>
-                                             <Button
-                                                  variant="ghost"
-                                                  className="absolute top-4 right-12 z-50 text-gray-600 dark:text-gray-300"
-                                             >
-                                                  {isPropertyPanelOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
-                                             </Button>
-                                        </SheetTrigger>
-                                        <SheetContent side="right" className="w-80 p-4">
-                                             <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">Properties</h2>
-                                             <PropertyPanel />
-                                        </SheetContent>
-                                   </Sheet>
+                                             <ToggleGroupItem value="mobile" title="Mobile View" className="p-2">
+                                                  <Smartphone size={18} className="text-gray-600 dark:text-gray-300" />
+                                             </ToggleGroupItem>
+                                             <ToggleGroupItem value="tablet" title="Tablet View" className="p-2">
+                                                  <Tablet size={18} className="text-gray-600 dark:text-gray-300" />
+                                             </ToggleGroupItem>
+                                             <ToggleGroupItem value="desktop" title="Desktop View" className="p-2">
+                                                  <Monitor size={18} className="text-gray-600 dark:text-gray-300" />
+                                             </ToggleGroupItem>
+                                        </ToggleGroup>
+                                   </motion.div>
                               )}
+                         </AnimatePresence>
 
-                              {/* Element Hierarchy */}
-                              {!isPreviewMode && (
-                                   <Sheet open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen}>
-                                        <SheetTrigger asChild>
-                                             <Button
-                                                  variant="ghost"
-                                                  className="absolute top-4 right-4 z-50 text-gray-600 dark:text-gray-300"
-                                             >
-                                                  <Layers size={24} />
-                                             </Button>
-                                        </SheetTrigger>
-                                        <SheetContent side="right" className="w-80 p-4">
-                                             <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">
-                                                  Element Hierarchy
-                                             </h2>
-                                             <ElementHierarchyViewer />
-                                        </SheetContent>
-                                   </Sheet>
-                              )}
+                         {/* Property Panel */}
+                         {!isPreviewMode && selectedComponentId && (
+                              <Sheet open={isPropertyPanelOpen} onOpenChange={setIsPropertyPanelOpen}>
+                                   <SheetTrigger asChild>
+                                        <Button
+                                             variant="ghost"
+                                             className="absolute top-4 right-12 z-50 text-gray-600 dark:text-gray-300"
+                                        >
+                                             {isPropertyPanelOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
+                                        </Button>
+                                   </SheetTrigger>
+                                   <SheetContent side="right" className="w-80 p-4">
+                                        <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">Properties</h2>
+                                        <PropertyPanel />
+                                   </SheetContent>
+                              </Sheet>
+                         )}
 
-                              <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
-                         </div>
-                    </DndContext>
+                         {/* Element Hierarchy */}
+                         {!isPreviewMode && selectedComponentId && (
+                              <Sheet open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen}>
+                                   <SheetTrigger asChild>
+                                        <Button
+                                             variant="ghost"
+                                             className="absolute top-4 right-4 z-50 text-gray-600 dark:text-gray-300"
+                                        >
+                                             <Layers size={24} />
+                                        </Button>
+                                   </SheetTrigger>
+                                   <SheetContent side="right" className="w-80 p-4">
+                                        <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">
+                                             Element Hierarchy
+                                        </h2>
+                                        <ElementHierarchyViewer />
+                                   </SheetContent>
+                              </Sheet>
+                         )}
+
+                         <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
+                    </div>
                </div>
           </div>
      );

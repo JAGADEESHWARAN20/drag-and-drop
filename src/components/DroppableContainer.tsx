@@ -1,5 +1,4 @@
 import React from 'react';
-import { useDroppable } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useWebsiteStore } from '../store/WebsiteStore';
@@ -33,39 +32,17 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
 }) => {
   const { removeComponent } = useWebsiteStore();
 
-  // Droppable setup
-  const {
-    isOver,
-    setNodeRef: setDroppableNodeRef,
-  } = useDroppable({
-    id: `droppable-${id}`,
-    data: {
-      accepts: 'COMPONENT',
-      containerId: id,
-    },
-  });
-
-  // Sortable setup
   const {
     attributes,
     listeners,
-    setNodeRef: setSortableNodeRef,
+    setNodeRef,
     transform,
     transition,
     isDragging,
   } = useSortable({
     id,
-    data: {
-      type: 'SORTABLE_ITEM',
-      componentId: id,
-    },
+    data: { type: 'SORTABLE_ITEM', componentId: id },
   });
-
-  // Combine refs for both droppable and sortable
-  const setNodeRef = (element: HTMLElement | null) => {
-    setDroppableNodeRef(element);
-    setSortableNodeRef(element);
-  };
 
   if (isPreviewMode) {
     return <>{children}</>;
@@ -104,8 +81,6 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
   };
 
   const positionStyles = getPositionStyles();
-
-  // Combine sortable transform and transition with position styles
   const style: React.CSSProperties = {
     ...positionStyles,
     transform: CSS.Transform.toString(transform),
@@ -117,8 +92,7 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
   return (
     <div
       ref={setNodeRef}
-      className={`w-full ${isOver ? 'bg-slate-200' : ''} ${isSelected ? 'outline outline-[5px] py-3 px-2 outline-slate-700' : 'hover:outline hover:outline-1 hover:outline-blue-300'
-        } ${isDragging ? 'shadow-lg' : ''}`}
+      className={`w-full ${isSelected ? 'outline outline-[5px] py-3 px-2 outline-slate-700' : 'hover:outline hover:outline-1 hover:outline-blue-300'} ${isDragging ? 'shadow-lg' : ''}`}
       onClick={handleClick}
       style={style}
       data-component-id={id}
