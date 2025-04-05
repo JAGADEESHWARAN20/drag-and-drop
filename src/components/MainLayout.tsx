@@ -19,7 +19,7 @@ import {
      SheetTrigger,
      SheetTitle,
      SheetHeader
-} from '@/components/ui/sheet'; // Import only necessary components
+} from '@/components/ui/sheet';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toggle } from '@/components/ui/toggle';
@@ -115,7 +115,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           });
           setSheetOpen(false);
           setSelectedComponentId(newComponentId);
-          return newComponentId;
      };
 
      const isMobile = breakpoint === 'mobile';
@@ -124,23 +123,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
      const handleDragStart = (event: DragStartEvent) => {
           const { active } = event;
-          console.log('Drag started:', active.id, active.data?.current); // Debug log
+          console.log('Drag started:', active.id, active.data?.current);
+
           if (active.data?.current?.type === 'COMPONENT') {
                const { componentType, defaultProps } = active.data.current;
-               setDraggingComponent({ type: componentType, defaultProps });
-              
-               setSheetOpen(false);
-          }
-          setSelectedComponentId(handleComponentAdd(active.data.current.type, active.data.current.defaultProps)); 
-          
-     };
-
-     const handleDragEnd = (event: DragEndEvent) => {
-          const { active, over } = event;
-          console.log('Drag End:', { active, over }); // Debug log
-          if (over?.id === 'canvas-drop-area' && active.data?.current?.type === 'COMPONENT') {
-               const { componentType, defaultProps } = active.data.current;
                const newComponentId = uuidv4();
+
+               // Add component immediately when drag starts
                addComponent({
                     type: componentType,
                     props: defaultProps || {},
@@ -149,12 +138,31 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     parentId: null,
                     responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
                });
-               setDraggingComponent(null);
+
+               setDraggingComponent({ type: componentType, defaultProps });
                setSelectedComponentId(newComponentId);
+               setSheetOpen(false);
+
                toast({
                     title: 'Component Added',
                     description: `Added ${componentType} to canvas.`,
                });
+          }
+
+          if (componentPanelRef.current) {
+               componentPanelRef.current.style.pointerEvents = 'none';
+          }
+     };
+
+     const handleDragEnd = (event: DragEndEvent) => {
+          const { active, over } = event;
+          console.log('Drag End:', { active, over });
+
+          // Reset dragging state
+          setDraggingComponent(null);
+
+          if (componentPanelRef.current) {
+               componentPanelRef.current.style.pointerEvents = 'auto';
           }
      };
 
@@ -163,7 +171,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
                     <nav className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 shadow-md">
                          <div className="flex items-center space-x-3">
-                              <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}> {/* Remove ref */}
+                              <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
                                    <SheetTrigger asChild>
                                         <Button variant="ghost" className="text-gray-600 dark:text-gray-300 p-2">
                                              <Menu size={20} />
