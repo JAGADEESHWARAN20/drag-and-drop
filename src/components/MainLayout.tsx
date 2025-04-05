@@ -6,7 +6,7 @@ import ComponentPanel from './ComponentPanel';
 import Canvas from './Canvas';
 import PropertyPanel from './PropertyPanel';
 import ElementHierarchyViewer from './ElementHierarchyViewer';
-import { Menu, ChevronRight, ChevronLeft, X, Download, Smartphone, Tablet, Monitor, Layers, Code, Pen, Plus, GripVertical } from 'lucide-react';
+import { Menu, ChevronRight, ChevronLeft, X, Download, Smartphone, Tablet, Monitor, Layers, Code, Pen, Plus } from 'lucide-react';
 import Button from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -49,9 +49,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      const [isPageSheetOpen, setIsPageSheetOpen] = useState(false);
      const componentPanelRef = useRef<HTMLDivElement>(null);
 
-     // Drag state for mobile triggers
+     // Gesture state for mobile drawer
      const [dragStartX, setDragStartX] = useState<number | null>(null);
-     const dragThreshold = 20; // Pixels to drag before triggering
+     const [dragStartY, setDragStartY] = useState<number | null>(null);
+     const dragThreshold = 20; // Pixels to swipe before triggering
+     const [isDragging, setIsDragging] = useState(false);
 
      // Toggle dark mode
      useEffect(() => {
@@ -112,29 +114,44 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
      const isMobile = breakpoint === 'mobile';
 
-     // Drag handlers for mobile
+     // Gesture handlers for mobile drawer
      const handleTouchStart = (e: React.TouchEvent, type: 'property' | 'hierarchy') => {
           if (!isMobile || isPreviewMode) return;
           setDragStartX(e.touches[0].clientX);
+          setDragStartY(e.touches[0].clientY);
+          setIsDragging(true);
      };
 
      const handleTouchMove = (e: React.TouchEvent, type: 'property' | 'hierarchy') => {
-          if (!isMobile || isPreviewMode || dragStartX === null) return;
+          if (!isMobile || isPreviewMode || dragStartX === null || dragStartY === null || !isDragging) return;
           const currentX = e.touches[0].clientX;
+          const currentY = e.touches[0].clientY;
           const deltaX = dragStartX - currentX;
+          const deltaY = Math.abs(dragStartY - currentY);
 
-          if (Math.abs(deltaX) > dragThreshold) {
-               if (type === 'property') {
-                    setIsPropertyPanelOpen(true);
-               } else if (type === 'hierarchy') {
-                    setIsHierarchyOpen(true);
+          // Only trigger on horizontal swipe with minimal vertical movement
+          if (Math.abs(deltaX) > dragThreshold && deltaY < dragThreshold) {
+               if (deltaX > 0 && !isDragging) { // Swipe right to left to open
+                    if (type === 'property' && !isPropertyPanelOpen) {
+                         setIsPropertyPanelOpen(true);
+                    } else if (type === 'hierarchy' && !isHierarchyOpen) {
+                         setIsHierarchyOpen(true);
+                    }
+               } else if (deltaX < 0 && isDragging) { // Swipe left to right to close
+                    if (type === 'property' && isPropertyPanelOpen) {
+                         setIsPropertyPanelOpen(false);
+                    } else if (type === 'hierarchy' && isHierarchyOpen) {
+                         setIsHierarchyOpen(false);
+                    }
                }
-               setDragStartX(null); // Reset to prevent multiple triggers
+               setIsDragging(false); // Reset dragging state after action
           }
      };
 
      const handleTouchEnd = () => {
           setDragStartX(null);
+          setDragStartY(null);
+          setIsDragging(false);
      };
 
      return (
@@ -337,13 +354,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                    <SheetTrigger asChild>
                                         {isMobile ? (
                                              <div
-                                                  className="absolute top-4 right-16 z-50 text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-full p-2 cursor-grab"
+                                                  className="absolute top-0 right-0 w-10 h-full z-50 bg-gradient-to-l from-gray-200 to-transparent dark:from-gray-700 cursor-pointer"
                                                   onTouchStart={(e) => handleTouchStart(e, 'property')}
                                                   onTouchMove={(e) => handleTouchMove(e, 'property')}
                                                   onTouchEnd={handleTouchEnd}
-                                             >
-                                                  <GripVertical size={24} />
-                                             </div>
+                                             />
                                         ) : (
                                              <Button
                                                   variant="ghost"
@@ -366,13 +381,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                    <SheetTrigger asChild>
                                         {isMobile ? (
                                              <div
-                                                  className="absolute top-4 right-4 z-50 text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-full p-2 cursor-grab"
+                                                  className="absolute top-0 right-0 w-10 h-full z-50 bg-gradient-to-l from-gray-200 to-transparent dark:from-gray-700 cursor-pointer"
                                                   onTouchStart={(e) => handleTouchStart(e, 'hierarchy')}
                                                   onTouchMove={(e) => handleTouchMove(e, 'hierarchy')}
                                                   onTouchEnd={handleTouchEnd}
-                                             >
-                                                  <GripVertical size={24} />
-                                             </div>
+                                             />
                                         ) : (
                                              <Button
                                                   variant="ghost"
