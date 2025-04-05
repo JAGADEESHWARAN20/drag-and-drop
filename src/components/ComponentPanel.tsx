@@ -63,7 +63,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
   const { isDragging: dndKitIsDragging } = useDndKitContext(); // Get isDragging from dnd-kit
   const dragStartTimeout = useRef<NodeJS.Timeout | null>(null); // Ref for the timeout
   const isDraggingIntent = useRef(false); // Ref to track drag intent
-
+  const [hasDraggedSignificantly, setHasDraggedSignificantly] = useState(false);
   const allComponentsArray = useMemo(() => {
     return Object.values(ComponentLibrary).flat();
   }, []);
@@ -102,10 +102,13 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
     }
   };
 
-  const handleDragStart = useCallback(() => {
+  const initialDragPosition = useRef({ x: 0, y: 0 });
+
+  const handleDragStart = useCallback((event) => {
     isDraggingIntent.current = true;
+    initialDragPosition.current = event.client || { x: 0, y: 0 }; // Use event.client or adjust based on your event object
     dragStartTimeout.current = setTimeout(() => {
-      if (isDraggingIntent.current) {
+      if (isDraggingIntent.current && hasDraggedSignificantly) { // Only close if dragged
         startDragging();
         if (onClosePanel) {
           onClosePanel();
@@ -113,8 +116,23 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
       }
       isDraggingIntent.current = false;
       dragStartTimeout.current = null;
-    }, 150); // Increased delay slightly
-  }, [startDragging, onClosePanel]);
+      setHasDraggedSignificantly(false); // Reset for the next drag
+    }, 150);
+  }, [startDragging, onClosePanel, setHasDraggedSignificantly]);
+  const handleDragMove = useCallback((event) => {
+    if (isDraggingIntent.current) {
+      const currentPosition = event.client || { x: 0, y: 0 };
+      const deltaX = Math.abs(currentPosition.x - initialDragPosition.current.x);
+      const deltaY = Math.abs(currentPosition.y - initialDragPosition.current.y);
+
+      // Define a threshold for significant movement
+      const dragThreshold = 5; // Adjust this value
+
+      if (deltaX > dragThreshold || deltaY > dragThreshold) {
+        setHasDraggedSignificantly(true);
+      }
+    }
+  }, [initialDragPosition, isDraggingIntent, setHasDraggedSignificantly]);
 
   const handleDragEnd = useCallback((event: any) => {
     isDraggingIntent.current = false;
@@ -199,7 +217,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
         </div>
       )}
 
-      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext onDragStart={handleDragStart} onDragMove={handleDragMove} onDragEnd={handleDragEnd}>
         <SortableContext
           items={filteredComponents.map((component) => component.type)}
           strategy={horizontalListSortingStrategy} // Use horizontal sorting
