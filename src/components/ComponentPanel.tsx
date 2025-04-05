@@ -7,7 +7,7 @@ import { ComponentType, SVGProps } from 'react';
 import Button from '@/components/ui/button';
 import {
   DndContext,
-  useDndContext, // Import useDndContext
+  useDndContext as useDndKitContext, // Import useDndContext
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -56,11 +56,11 @@ const SortableLibraryComponent = ({ component, onComponentClick }: { component: 
   );
 };
 
-const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComponentClick }, ref) => {
+const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComponentClick, onClosePanel }, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { componentOrder, setComponentOrder } = useWebsiteStore();
-  const { isDragging } = useDndContext(); // Get the isDragging state
+  const { componentOrder, setComponentOrder, startDragging, endDragging } = useWebsiteStore(); // Get startDragging and endDragging actions
+  const { isDragging: dndKitIsDragging } = useDndKitContext(); // Get isDragging from dnd-kit
 
   const allComponentsArray = useMemo(() => {
     return Object.values(ComponentLibrary).flat();
@@ -100,7 +100,15 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
     }
   };
 
+  const handleDragStart = useCallback(() => {
+    startDragging(); // Call the Zustand action to set isDragging to true
+    if (onClosePanel) {
+      onClosePanel();
+    }
+  }, [startDragging, onClosePanel]);
+
   const handleDragEnd = useCallback((event: any) => {
+    endDragging(); // Call the Zustand action to set isDragging to false
     const { active, over } = event;
     if (active.id !== over?.id) {
       const oldIndex = orderedComponents.findIndex(comp => comp.type === active.id);
@@ -138,7 +146,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
         setComponentOrder([...componentOrder, active.id]);
       }
     }
-  }, [componentOrder, orderedComponents, setComponentOrder]);
+  }, [componentOrder, orderedComponents, setComponentOrder, startDragging, endDragging]);
 
   return (
     <div className="p-4 h-full flex flex-col" ref={ref}>
@@ -177,12 +185,12 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
         </div>
       )}
 
-      <DndContext onDragEnd={handleDragEnd}>
+      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <SortableContext
           items={filteredComponents.map((component) => component.type)}
           strategy={horizontalListSortingStrategy} // Use horizontal sorting
         >
-          <div className={`flex space-x-2 overflow-x-auto ${isDragging ? 'overflow-x-hidden' : ''}`}>
+          <div className={`flex space-x-2 overflow-x-auto ${dndKitIsDragging ? 'overflow-x-hidden' : ''}`}>
             {filteredComponents.map((component) => (
               <SortableLibraryComponent
                 key={component.type}

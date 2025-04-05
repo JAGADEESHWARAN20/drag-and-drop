@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { immer } from 'zustand/middleware/immer';
 import { devtools } from 'zustand/middleware';
-import { WebsiteState, Component } from '../types'; // Import Component type
+import { WebsiteState as State, Component } from '../types'; // Import Component type
 
 export type Breakpoint = 'desktop' | 'tablet' | 'mobile';
 
@@ -25,7 +25,12 @@ interface WebsiteStoreActions {
   setComponentOrder: (order: string[]) => void;
   componentOrder: string[];
   updateComponentOrder: (parentId: string | null, newOrder: string[]) => void;
+  isDragging: boolean;
+  startDragging: () => void;
+  endDragging: () => void;
 }
+
+type WebsiteState = State & WebsiteStoreActions;
 
 export const useWebsiteStore = create<WebsiteState>()(
   devtools(
@@ -37,6 +42,7 @@ export const useWebsiteStore = create<WebsiteState>()(
       selectedComponentId: null,
       isPreviewMode: false,
       breakpoint: 'desktop',
+      isDragging: false,
 
       setCurrentPageId: (id) => set((state) => { state.currentPageId = id; }),
       addPage: (page) => set((state) => { state.pages.push(page); }),
@@ -47,6 +53,9 @@ export const useWebsiteStore = create<WebsiteState>()(
           state.currentPageId = state.pages[0].id;
         }
       }),
+      setIsDragging: (dragging: boolean) => set({ isDragging: dragging }),
+      startDragging: () => set({ isDragging: true }),
+      endDragging: () => set({ isDragging: false }),// Action to set isDragging
       addComponent: (component) => set((state) => {
         const newComponent: Component = {
           id: uuidv4(),
