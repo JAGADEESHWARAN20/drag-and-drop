@@ -205,7 +205,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
       <div
         ref={setNodeRef}
         style={canvasStyle}
-        className={`min-h-full mx-auto bg-white ${getCanvasWidth()} transition-all duration-300 ${isOver ? 'bg-green-100' : ''}`}
+        className={`h-full mx-auto bg-white ${getCanvasWidth()} transition-all duration-300 ${isOver ? 'bg-green-100' : ''}`}
         {...(node && !(active || over) ? droppable : {})}
         id="canvas-drop-area"
       >
