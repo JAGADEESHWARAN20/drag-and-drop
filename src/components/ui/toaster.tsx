@@ -1,4 +1,5 @@
-import { useToast } from "@/hooks/use-toast"
+import React from 'react';
+import { useToast } from "@/hooks/use-toast";
 import {
   Toast,
   ToastClose,
@@ -6,10 +7,44 @@ import {
   ToastProvider,
   ToastTitle,
   ToastViewport,
-} from "@/components/ui/toast"
+} from "@/components/ui/toast";
+import { cn } from "@/lib/utils"; // Assuming you have a cn (classnames) utility
 
-export function Toaster() {
-  const { toasts } = useToast()
+interface ToasterProps {
+  position?: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right' | 'custom';
+  customPositionClass?: string;
+}
+
+export function Toaster({ position = 'top-right', customPositionClass }: ToasterProps) {
+  const { toasts } = useToast();
+
+  let viewportClassName = 'fixed z-[100] pointer-events-none';
+
+  switch (position) {
+    case 'top-left':
+      viewportClassName = cn(viewportClassName, 'top-2 left-2');
+      break;
+    case 'top-center':
+      viewportClassName = cn(viewportClassName, 'top-2 left-1/2 -translate-x-1/2');
+      break;
+    case 'top-right':
+      viewportClassName = cn(viewportClassName, 'top-2 right-2');
+      break;
+    case 'bottom-left':
+      viewportClassName = cn(viewportClassName, 'bottom-2 left-2');
+      break;
+    case 'bottom-center':
+      viewportClassName = cn(viewportClassName, 'bottom-2 left-1/2 -translate-x-1/2');
+      break;
+    case 'bottom-right':
+      viewportClassName = cn(viewportClassName, 'bottom-2 right-2');
+      break;
+    case 'custom':
+      viewportClassName = customPositionClass || viewportClassName;
+      break;
+    default:
+      viewportClassName = cn(viewportClassName, 'top-2 right-2'); // Default to top-right
+  }
 
   return (
     <ToastProvider duration={600}>
@@ -25,9 +60,9 @@ export function Toaster() {
             {action}
             <ToastClose />
           </Toast>
-        )
+        );
       })}
-      <ToastViewport />
+      <ToastViewport className={viewportClassName} />
     </ToastProvider>
-  )
+  );
 }
