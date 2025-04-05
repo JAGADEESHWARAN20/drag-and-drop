@@ -92,7 +92,7 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
   return (
     <div
       ref={setNodeRef}
-      className={`w-full ${isSelected ? ' py-3 px-2 ' : 'hover:outline hover:outline-[1px] hover:outline-blue-300'} ${isDragging ? 'shadow-lg' : ''}`}
+      className={` ${isSelected ? ' ' : ''} ${isDragging ? 'shadow-lg' : ''}`}
       onClick={handleClick}
       style={style}
       data-component-id={id}
@@ -103,7 +103,6 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
         <div className="absolute -top-6 right-0 flex text-slate-700 py-2 text-xs z-50">
           <span className="px-2 py-1 flex w-full items-center">
             <Move size={12} className="mr-1" />
-            
           </span>
           <button
             className="px-2 py-1 rounded-full bg-red-500 hover:bg-red-600"
