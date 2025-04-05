@@ -108,19 +108,12 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
       if (onClosePanel) {
         onClosePanel();
       }
-    } else {
-      // Existing logic for reordering within the panel
-      isDraggingIntent.current = true;
-      dragStartTimeout.current = setTimeout(() => {
-        if (isDraggingIntent.current) {
-          startDragging();
-        }
-        isDraggingIntent.current = false;
-        dragStartTimeout.current = null;
-      }, 150);
     }
-  }, [startDragging, onClosePanel, setDraggingComponent]);
-  
+    // Remove the logic for reordering drag start here, as the hold interaction
+    // is specifically for dragging to the canvas. Reordering will still work
+    // with a normal drag gesture.
+  }, [onClosePanel, setDraggingComponent]);
+
   const handleDragEnd = useCallback((event: any) => {
     isDraggingIntent.current = false;
     if (dragStartTimeout.current) {

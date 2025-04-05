@@ -57,3 +57,5 @@ export type PublicContextDescriptor = {
      isDragging: boolean;
      // ...
 };
+export type ValidProp = string | number | boolean | string[] | string[][] | { [key: string]: string | number };
+export type ComponentProps = Record<string, ValidProp>;

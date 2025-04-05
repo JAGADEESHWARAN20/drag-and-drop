@@ -1,13 +1,9 @@
 'use client';
 
-
-import { useDraggable } from '@dnd-kit/core';
-
+import React, { useRef, useState, useEffect } from 'react';
+import { useDraggable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { ComponentType, SVGProps } from 'react';
-
-// Create a unified type for component props
-type ValidProp = string | number | boolean | string[] | string[][] | { [key: string]: string | number };
-export type ComponentProps = Record<string, ValidProp>;
+import { ComponentProps } from '../types'; // Adjust path as needed
 
 interface LibraryComponent {
   type: string;
@@ -21,8 +17,10 @@ interface DraggableComponentProps {
 }
 
 const DraggableComponent = ({ component }: DraggableComponentProps) => {
-  
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+  const dragRef = useRef<HTMLDivElement>(null);
+  const [isPressing, setIsPressing] = useState(false);
+  const [pressTimeout, setPressTimeout] = useState<NodeJS.Timeout | null>(null);
+  const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({
     id: `draggable-${component.type}`,
     data: {
       type: 'COMPONENT',
@@ -31,16 +29,30 @@ const DraggableComponent = ({ component }: DraggableComponentProps) => {
     },
   });
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 300, // Adjust the hold duration (milliseconds)
+        tolerance: 5, // Optional: Add a small tolerance to prevent accidental activation
+      },
+    })
+  );
+
+  useEffect(() => {
+    setNodeRef(dragRef.current as HTMLDivElement);
+  }, [setNodeRef, dragRef]);
+  
   return (
     <div
-      ref={setNodeRef}
+      ref={dragRef}
       {...listeners}
       {...attributes}
       className={`p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 md:w-24 md:h-24 flex-shrink-0 ${isDragging ? 'opacity-50 cursor-grabbing' : ''
-        } hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700`}
+        } ${isPressing ? 'ring-2 ring-blue-500' : ''} hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700`}
       style={{
         touchAction: 'none',
         userSelect: 'none',
+        transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
       }}
       aria-labelledby={`drag-label-${component.type}`}
     >
