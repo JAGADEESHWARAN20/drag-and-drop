@@ -127,9 +127,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           if (active.data?.current?.type === 'COMPONENT') {
                const { componentType, defaultProps } = active.data.current;
                setDraggingComponent({ type: componentType, defaultProps });
-               // Force sheet closure with a slight delay to ensure state update
+              
                setSheetOpen(false);
           }
+          handleComponentAdd(active.data.current.type, active.data.current.defaultProps);
      };
 
      const handleDragEnd = (event: DragEndEvent) => {
