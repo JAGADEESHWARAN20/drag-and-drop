@@ -1,3 +1,4 @@
+// --- Updated useWebsiteStore definition ---
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { immer } from 'zustand/middleware/immer';
@@ -10,12 +11,12 @@ interface WebsiteStoreActions {
   setCurrentPageId: (id: string) => void;
   addPage: (page: { id: string; name: string }) => void;
   removePage: (pageId: string) => void;
-  addComponent: (component: Omit<Component, 'id' | 'children' | 'style' | 'allowChildren' | 'responsiveProps'> & { parentId?: string }) => void;
+  addComponent: (component: Omit<Component, 'id' | 'children' | 'style'> & { parentId?: string | null; allowChildren?: boolean; responsiveProps: { desktop: Record<string, any>; tablet: Record<string, any>; mobile: Record<string, any>; } }) => void;
   removeComponent: (id: string) => void;
   updateComponentProps: (id: string, props: Record<string, string | number | boolean | object>) => void;
   updateResponsiveProps: (id: string, breakpoint: Breakpoint, props: Record<string, string | number | boolean | object>) => void;
   setSelectedComponentId: (id: string | null) => void;
-  reorderComponents: (pageId: string, oldIndex: number, newIndex: number) => void;
+  reorderComponents: (pageId: string, oldIndex: number, newIndex: number) => void; // Removed parentId
   moveComponent: (id: string, targetId: string | null, isContainer?: boolean) => void;
   setIsPreviewMode: (isPreview: boolean) => void;
   setBreakpoint: (breakpoint: Breakpoint) => void;
@@ -69,7 +70,7 @@ export const useWebsiteStore = create<WebsiteState>()(
           children: [],
           responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
           style: {},
-          allowChildren: false,
+          allowChildren: component.allowChildren || false,
         };
         const parent = state.components.find((c) => c.id === component.parentId);
         if (parent && parent.allowChildren) {
@@ -182,7 +183,7 @@ export const useWebsiteStore = create<WebsiteState>()(
           state.components = [...orderedRootComponents, ...nonRootComponents];
         }
       }),
-      setComponentOrder: (order) => set((state) => ({ componentOrder: order })), // Implement setComponentOrder
+      setComponentOrder: (order) => set((state) => ({ componentOrder: order })),
       updateComponentOrder: (parentId, newOrder) => set((state) => {
         if (parentId === null) {
           const rootComponents = state.components.filter(c => c.parentId === null);

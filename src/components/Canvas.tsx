@@ -1,7 +1,20 @@
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import {
+  DndContext,
+  DragEndEvent,
+  useDroppable,
+  UniqueIdentifier, // Import UniqueIdentifier
+  Active,
+  Over,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
 import { Component } from "../types";
 import { ComponentRegistry } from '../utils/ComponentRegistry';
@@ -12,6 +25,8 @@ import { motion } from 'framer-motion';
 import Button from '@/components/ui/button';
 import SelectionManager from './SelectionManager';
 import ContextMenu from './ContextMenu';
+import { v4 as uuidv4 } from 'uuid';
+import { MutableRefObject } from 'react';
 
 interface CanvasProps {
   isPreviewMode: boolean;
@@ -26,10 +41,17 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
     selectedComponentId,
     setSelectedComponentId,
     setAllowChildren,
+    draggingComponent,
+    setDraggingComponent,
+    addComponent,
+    reorderComponents, // Import reorderComponents
   } = useWebsiteStore();
 
   const { selectedIds, handleComponentClick, setSelectedIds } = SelectionManager();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const { setNodeRef, isOver, active, rect, node, over, ...droppable } = useDroppable({ // Destructure all relevant properties
+    id: 'canvas-drop-area',
+  });
 
   const currentPage = useMemo(
     () => pages.find((page) => page.id === currentPageId) || pages[0],
@@ -52,7 +74,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
 
   const renderComponent = useCallback(
     (componentData: Component) => {
-      const DynamicComponent = ComponentRegistry[componentData.type] as React.ComponentType<any>;
+      const DynamicComponent = (ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.component) as React.ComponentType<any>;
       if (!DynamicComponent) return null;
 
       const responsiveProps = componentData.responsiveProps?.[currentBreakpoint] || {};
@@ -81,7 +103,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
                 ))}
               </SortableContext>
             )}
-            {componentData.allowChildren && !isPreviewMode && (
+            {(ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren) && !isPreviewMode && (
               <div
                 className="border-dashed border-2 p-2 border-gray-400 text-gray-500 text-center"
                 style={{ minHeight: '40px' }}
@@ -93,10 +115,10 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
           {componentData.type === 'Container' && !isPreviewMode && (
             <div className="mt-2">
               <Button
-                variant={componentData.allowChildren ? 'default' : 'outline'}
-                onClick={() => setAllowChildren(componentData.id, !componentData.allowChildren)}
+                variant={(ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren) ? 'default' : 'outline'}
+                onClick={() => setAllowChildren(componentData.id, !(ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren))}
               >
-                {componentData.allowChildren ? 'Disable Children' : 'Enable Children'}
+                {(ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren) ? 'Disable Children' : 'Enable Children'}
               </Button>
             </div>
           )}
@@ -119,48 +141,118 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
     }
   }, [currentBreakpoint]);
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    // Handle dropping a new component from the library
+    if (active?.id === 'library-component' && over?.id === 'canvas-drop-area' && draggingComponent) {
+      const newComponentId = uuidv4();
+      addComponent({
+        type: draggingComponent.type,
+        props: draggingComponent.defaultProps,
+        pageId: currentPageId,
+        parentId: null, // Initially no parent
+        responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
+        // Access allowChildren from ComponentRegistry
+        allowChildren: (ComponentRegistry[draggingComponent.type as keyof typeof ComponentRegistry]?.allowChildren) || false,
+      });
+      setDraggingComponent(null); // Clear the dragged component
+      setSelectedComponentId(newComponentId); // Select the newly added component
+      toast({
+        title: 'Component Added',
+        description: `Added ${draggingComponent.type} to canvas.`,
+      });
+      return;
+    }
+
+    // Existing reordering logic (if you have it)
+    if (active && over && active.id !== over.id) {
+      const activeId = active.id;
+      const overId = over.id;
+
+      const activeComponent = components.find(c => c.id === activeId);
+      const overComponent = components.find(c => c.id === overId);
+
+      if (activeComponent && overComponent && activeComponent.parentId === overComponent.parentId) {
+        const parentId = activeComponent.parentId;
+        const siblings = pageComponents.filter(c => c.parentId === parentId).map(c => c.id);
+        const oldIndex = siblings.indexOf(String(activeId)); // Cast activeId to string
+        const newIndex = siblings.indexOf(String(overId));   // Cast overId to string
+
+        if (oldIndex !== -1 && newIndex !== -1) {
+          reorderComponents(currentPageId, oldIndex, newIndex); // Removed parentId
+        }
+      } else if (activeComponent && !overComponent && activeComponent.parentId === null) {
+        // Dragging to the root level (no over component)
+        const oldIndex = rootComponents.findIndex(c => c.id === activeId);
+        // You might need to determine the new index based on drop position if not using SortableContext at the root
+        // For simplicity here, we won't change the order if dropped outside existing root components
+        if (oldIndex !== -1) {
+          // Optionally handle dropping at the end or beginning of root components
+        }
+      }
+    }
+  };
+
+  const canvasStyle = {
+    minHeight: 'calc(100vh - 80px)',
+    width: '100%',
+    backgroundColor: isOver ? 'lightgreen' : 'transparent',
+  };
+
   return (
-    <div className={`min-h-full mx-auto bg-white ${getCanvasWidth()} transition-all duration-300`}>
+    <DndContext onDragEnd={handleDragEnd}>
       <div
-        className={`min-h-[calc(100vh-80px)] relative ${isPreviewMode ? 'bg-white' : 'bg-gray-50 border-dashed border-2 border-gray-300'} overflow-x-auto`}
-        onClick={() => !isPreviewMode && setSelectedComponentId(null)}
-        onContextMenu={handleRightClick}
+        ref={setNodeRef}
+        style={canvasStyle}
+        className={`min-h-full mx-auto bg-white ${getCanvasWidth()} transition-all duration-300 ${isOver ? 'bg-green-100' : ''}`}
+        {...(node && !(active || over) ? droppable : {})}
+        id="canvas-drop-area"
       >
-        <SortableContext
-          items={rootComponents.map((c) => c.id)}
-          strategy={verticalListSortingStrategy}
+        <div
+          className={`relative ${isPreviewMode ? 'bg-white' : 'bg-gray-50 border-dashed border-2 border-gray-300'} overflow-x-auto p-6`}
+          onClick={() => !isPreviewMode && setSelectedComponentId(null)}
+          onContextMenu={handleRightClick}
         >
-          {rootComponents.length === 0 && !isPreviewMode ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="h-full flex items-center justify-center text-gray-500 mt-7 text-lg p-6"
-            >
-              Click components in the panel to add them to the canvas.
-            </motion.div>
-          ) : (
-            <div className="p-6">
-              {rootComponents.map((component) => (
+          <SortableContext
+            items={rootComponents.map((c) => c.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {rootComponents.length === 0 && !isPreviewMode ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="h-full flex items-center justify-center text-gray-500 mt-7 text-lg p-6"
+              >
+                Click components in the panel to add them to the canvas.
+              </motion.div>
+            ) : (
+              rootComponents.map((component) => (
                 <SortableItem key={component.id} id={component.id}>
                   {renderComponent(component)}
                 </SortableItem>
-              ))}
+              ))
+            )}
+          </SortableContext>
+          {rootComponents.length === 0 && !isPreviewMode && isOver && draggingComponent && (
+            <div className="absolute top-0 left-0 w-full h-full bg-green-100 opacity-50 flex items-center justify-center text-green-500">
+              Drop here to add component
             </div>
           )}
-        </SortableContext>
+        </div>
+        {contextMenu && (
+          <ContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            selectedIds={selectedIds}
+            onClose={() => setContextMenu(null)}
+            onAddToParent={(parentId) => selectedIds.forEach((id) => useWebsiteStore.getState().updateComponentParent(id, parentId))}
+            onMoveAbove={(componentId) => reorderComponents(currentPageId, rootComponents.findIndex((c) => c.id === String(componentId)), rootComponents.findIndex((c) => c.id === String(componentId)) - 1)}
+            onMoveBelow={(componentId) => reorderComponents(currentPageId, rootComponents.findIndex((c) => c.id === String(componentId)), rootComponents.findIndex((c) => c.id === String(componentId)) + 1)}
+          />
+        )}
       </div>
-      {contextMenu && (
-        <ContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          selectedIds={selectedIds}
-          onClose={() => setContextMenu(null)}
-          onAddToParent={(parentId) => selectedIds.forEach((id) => useWebsiteStore.getState().updateComponentParent(id, parentId))}
-          onMoveAbove={(componentId) => useWebsiteStore.getState().reorderComponents(currentPageId, rootComponents.findIndex((c) => c.id === componentId), rootComponents.findIndex((c) => c.id === componentId) - 1)}
-          onMoveBelow={(componentId) => useWebsiteStore.getState().reorderComponents(currentPageId, rootComponents.findIndex((c) => c.id === componentId), rootComponents.findIndex((c) => c.id === componentId) + 1)}
-        />
-      )}
-    </div>
+    </DndContext>
   );
 };
 

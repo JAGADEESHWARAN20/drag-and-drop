@@ -11,6 +11,12 @@ interface HeadingProps {
   isPreviewMode?: boolean;
 }
 
+interface ComponentDefinition {
+  component: FC<any>;
+  allowChildren?: boolean;
+  
+}
+
 export const Heading: FC<HeadingProps> = ({ text, level, textAlign, color, className, children, isPreviewMode }) => {
   const Tag = level || 'h2';
 
@@ -362,19 +368,19 @@ export const Divider: FC<DividerProps> = ({ thickness, color, margin, className 
 
 
 
-export const ComponentRegistry: Record<string, unknown> = {    
-  Heading: Components.Heading,
-  Paragraph: Components.Paragraph,
-  Image: Components.Image,
-  Button: Components.Button,
-  Link: Components.Link,
-  Container: Components.Container,
-  Section: Components.Section,
-  Row: Components.Row,
-  Column: Components.Column,
-  Form: Components.Form,
-  List: Components.List,
-  Table: Components.Table,
-  Video: Components.Video,
-  Divider: Components.Divider,
+export const ComponentRegistry: Record<string, ComponentDefinition> = {
+  Heading: { component: Components.Heading },
+  Paragraph: { component: Components.Paragraph },
+  Image: { component: Components.Image },
+  Button: { component: Components.Button },
+  Link: { component: Components.Link },
+  Container: { component: Components.Container, allowChildren: true }, // Example: Container allows children
+  Section: { component: Components.Section },
+  Row: { component: Components.Row },
+  Column: { component: Components.Column },
+  Form: { component: Components.Form },
+  List: { component: Components.List },
+  Table: { component: Components.Table },
+  Video: { component: Components.Video },
+  Divider: { component: Components.Divider },
 };
