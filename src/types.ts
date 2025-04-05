@@ -1,3 +1,5 @@
+// In your ../types/index.ts
+
 export type Breakpoint = 'desktop' | 'tablet' | 'mobile';
 
 export interface Page {
@@ -28,6 +30,7 @@ export interface WebsiteState {
      selectedComponentId: string | null;
      isPreviewMode: boolean;
      breakpoint: Breakpoint;
+     componentOrder: string[];
 
      setCurrentPageId: (id: string) => void;
      addPage: (page: Page) => void;
@@ -45,4 +48,5 @@ export interface WebsiteState {
      updateComponentParent: (id: string, parentId: string | null) => void;
      reorderChildren: (parentId: string | null, newOrder: string[]) => void;
      updateComponentOrder: (parentId: string | null, newOrder: string[]) => void;
+     setComponentOrder: (order: string[]) => void; // Add this line
 }

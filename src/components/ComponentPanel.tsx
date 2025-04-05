@@ -1,10 +1,22 @@
 'use client';
 
-import React, { useState, forwardRef } from 'react';
+import React, { useState, forwardRef, useMemo, useCallback } from 'react';
 import { ComponentLibrary } from '../data/ComponentLibrary';
 import { Search, MousePointerClick } from 'lucide-react';
 import { ComponentType, SVGProps } from 'react';
-import  Button  from '@/components/ui/button'; // Assuming you have a Button component
+import Button from '@/components/ui/button'; // Assuming you have a Button component
+import {
+  DndContext,
+
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { useWebsiteStore } from '../store/WebsiteStore';
+import { toast } from '@/components/ui/use-toast';
 
 interface LibraryComponent {
   type: string;
@@ -17,31 +29,114 @@ interface ComponentPanelProps {
   onComponentClick: (type: string, defaultProps: Record<string, any>) => void;
 }
 
+const SortableLibraryComponent = ({ component, onComponentClick }: { component: LibraryComponent; onComponentClick: (type: string, defaultProps: Record<string, any>) => void }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: component.type });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    cursor: 'grab',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      key={component.type}
+      onClick={() => onComponentClick(component.type, component.defaultProps)}
+      className="p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 flex-shrink-0 hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700"
+    >
+      <div className="text-blue-500 mb-1 dark:text-white">
+        <component.icon size={20} aria-hidden="true" />
+      </div>
+      <span className="text-black dark:text-white text-center">{component.label}</span>
+    </div>
+  );
+};
+
 const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComponentClick }, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { componentOrder, setComponentOrder } = useWebsiteStore(); // Assuming you have these in your store
 
-  const filteredComponents = Object.entries(ComponentLibrary).reduce<
-    Record<string, LibraryComponent[]>
-  >((acc, [category, components]) => {
-    const filtered = components.filter((comp) =>
+  const allComponentsArray = useMemo(() => {
+    return Object.values(ComponentLibrary).flat();
+  }, []);
+
+  const orderedComponents = useMemo(() => {
+    if (!componentOrder || componentOrder.length === 0) {
+      return allComponentsArray;
+    }
+    const ordered = [];
+    const remaining = new Map(allComponentsArray.map(comp => [comp.type, comp]));
+    for (const type of componentOrder) {
+      const comp = remaining.get(type);
+      if (comp) {
+        ordered.push(comp);
+        remaining.delete(type);
+      }
+    }
+    ordered.push(...remaining.values());
+    return ordered;
+  }, [allComponentsArray, componentOrder]);
+
+  const filteredComponents = useMemo(() => {
+    return orderedComponents.filter((comp) =>
       comp.label.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    if (filtered.length) acc[category] = filtered;
-    return acc;
-  }, {});
+  }, [orderedComponents, searchTerm]);
 
   const handleSearchButtonClick = () => {
     setIsSearchOpen(!isSearchOpen);
     if (!isSearchOpen) {
-      // Focus on the input when it opens
       setTimeout(() => {
         document.querySelector<HTMLInputElement>('.component-panel-search-input')?.focus();
       }, 100);
     } else {
-      setSearchTerm(''); // Clear search term when closing
+      setSearchTerm('');
     }
   };
+
+  const handleDragEnd = useCallback((event: any) => {
+    const { active, over } = event;
+    if (active.id !== over?.id) {
+      const oldIndex = orderedComponents.findIndex(comp => comp.type === active.id);
+      const newIndex = orderedComponents.findIndex(comp => comp.type === over?.id);
+
+      const newOrder = Array.from(componentOrder);
+      const activeIdInOrder = newOrder.find(id => id === active.id);
+      const overIdInOrder = newOrder.find(id => id === over?.id);
+
+      if (activeIdInOrder && overIdInOrder) {
+        const oldOrderIndex = newOrder.indexOf(activeIdInOrder);
+        const newOrderIndex = newOrder.indexOf(overIdInOrder);
+        newOrder.splice(oldOrderIndex, 1);
+        newOrder.splice(newOrderIndex, 0, active.id);
+        setComponentOrder(newOrder);
+        return;
+      }
+
+      if (activeIdInOrder && !overIdInOrder) {
+        const oldOrderIndex = newOrder.indexOf(activeIdInOrder);
+        newOrder.splice(oldOrderIndex, 1);
+        newOrder.push(active.id);
+        setComponentOrder(newOrder);
+        return;
+      }
+
+      if (!activeIdInOrder && overIdInOrder) {
+        const newOrderIndex = newOrder.indexOf(overIdInOrder);
+        newOrder.splice(newOrderIndex, 0, active.id);
+        setComponentOrder(newOrder);
+        return;
+      }
+
+      if (!activeIdInOrder && !overIdInOrder) {
+        setComponentOrder([...componentOrder, active.id]);
+      }
+    }
+  }, [componentOrder, orderedComponents, setComponentOrder]);
 
   return (
     <div className="p-4 h-full flex flex-col" ref={ref}>
@@ -49,10 +144,10 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
         <div>
           <div className="flex items-center mb-2 text-blue-700 dark:text-blue-300">
             <MousePointerClick size={16} className="mr-2" />
-            <span className="text-sm font-medium">Click to add</span>
+            <span className="text-sm font-medium">Drag to reorder, Click to add</span>
           </div>
           <p className="text-xs text-blue-600 dark:text-blue-400">
-            Click any component to add it to the canvas
+            Drag and drop components to change their order in the panel. Click to add to the canvas.
           </p>
         </div>
         <Button
@@ -65,7 +160,6 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
         </Button>
       </div>
 
-      {/* Search Input (Conditionally Rendered) */}
       {isSearchOpen && (
         <div className="mb-4">
           <div className="relative">
@@ -81,45 +175,38 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
         </div>
       )}
 
-      {/* Component Categories */}
-      <div className="space-x-2 flex flex-row overflow-x-scroll scrollbar-hidden">
-        {Object.entries(filteredComponents).map(([category, components]) => (
-          <div key={category} className="mb-4 flex flex-col gap-2">
-            <h3 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-400 uppercase">
-              {category}
-            </h3>
-            <div className="flex flex-row gap-2 whitespace-nowrap scrollbar-hidden">
-              {components.map((component) => (
-                <div
-                  key={component.type}
-                  onClick={() => onComponentClick(component.type, component.defaultProps)}
-                  className="p-2 border rounded cursor-pointer bg-white flex flex-col items-center justify-center text-sm w-20 h-20 flex-shrink-0 hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700"
-                >
-                  <div className="text-blue-500 mb-1 dark:text-white">
-                    <component.icon size={20} aria-hidden="true" />
-                  </div>
-                  <span className="text-black dark:text-white text-center">{component.label}</span>
-                </div>
-              ))}
-            </div>
+      <DndContext onDragEnd={handleDragEnd}>
+        <SortableContext
+          items={filteredComponents.map((component) => component.type)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-2">
+            {filteredComponents.map((component) => (
+              <SortableLibraryComponent
+                key={component.type}
+                component={component}
+                onComponentClick={onComponentClick}
+              />
+            ))}
           </div>
-        ))}
-        {Object.keys(filteredComponents).length === 0 && searchTerm && (
-          <div className="text-center text-gray-500 dark:text-gray-400">
-            No components found matching "{searchTerm}"
-          </div>
-        )}
-        {Object.keys(ComponentLibrary).length > 0 && Object.keys(filteredComponents).length === 0 && !searchTerm && !isSearchOpen && (
-          <div className="text-center text-gray-500 dark:text-gray-400">
-            Browse components by category. Click to add to the canvas.
-          </div>
-        )}
-        {Object.keys(ComponentLibrary).length === 0 && (
-          <div className="text-center text-gray-500 dark:text-gray-400">
-            No components available in the library.
-          </div>
-        )}
-      </div>
+        </SortableContext>
+      </DndContext>
+
+      {Object.keys(filteredComponents).length === 0 && searchTerm && (
+        <div className="text-center text-gray-500 dark:text-gray-400">
+          No components found matching "{searchTerm}"
+        </div>
+      )}
+      {Object.keys(ComponentLibrary).length > 0 && filteredComponents.length === 0 && !searchTerm && !isSearchOpen && (
+        <div className="text-center text-gray-500 dark:text-gray-400">
+          Drag and drop to reorder components. Click to add to the canvas.
+        </div>
+      )}
+      {Object.keys(ComponentLibrary).length === 0 && (
+        <div className="text-center text-gray-500 dark:text-gray-400">
+          No components available in the library.
+        </div>
+      )}
     </div>
   );
 });
