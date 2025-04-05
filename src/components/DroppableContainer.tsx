@@ -92,7 +92,7 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
   return (
     <div
       ref={setNodeRef}
-      className={` ${isSelected ? ' ' : ''} ${isDragging ? 'shadow-lg' : ''}`}
+      className={`relative ${isSelected ? ' ' : ''} ${isDragging ? 'shadow-lg' : ''}`}
       onClick={handleClick}
       style={style}
       data-component-id={id}
