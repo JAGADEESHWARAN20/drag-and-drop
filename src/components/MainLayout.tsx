@@ -6,7 +6,7 @@ import ComponentPanel from './ComponentPanel';
 import Canvas from './Canvas';
 import PropertyPanel from './PropertyPanel';
 import ElementHierarchyViewer from './ElementHierarchyViewer';
-import { Menu, ChevronRight, ChevronLeft, X, Download, Smartphone, Tablet, Monitor, Layers, Code, Pen, Plus } from 'lucide-react';
+import { Menu, ChevronRight, ChevronLeft, X, Download, Smartphone, Tablet, Monitor, Layers, Code, Pen, Plus, GripVertical } from 'lucide-react';
 import Button from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -48,6 +48,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      const [isDarkMode, setIsDarkMode] = useState(false);
      const [isPageSheetOpen, setIsPageSheetOpen] = useState(false);
      const componentPanelRef = useRef<HTMLDivElement>(null);
+
+     // Drag state for mobile triggers
+     const [dragStartX, setDragStartX] = useState<number | null>(null);
+     const dragThreshold = 20; // Pixels to drag before triggering
 
      // Toggle dark mode
      useEffect(() => {
@@ -105,8 +109,33 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           setIsComponentPanelOpen(false); // Close sheet after adding
           setSelectedComponentId(null); // Reset selection to require canvas click
      };
-     
+
      const isMobile = breakpoint === 'mobile';
+
+     // Drag handlers for mobile
+     const handleTouchStart = (e: React.TouchEvent, type: 'property' | 'hierarchy') => {
+          if (!isMobile || isPreviewMode) return;
+          setDragStartX(e.touches[0].clientX);
+     };
+
+     const handleTouchMove = (e: React.TouchEvent, type: 'property' | 'hierarchy') => {
+          if (!isMobile || isPreviewMode || dragStartX === null) return;
+          const currentX = e.touches[0].clientX;
+          const deltaX = dragStartX - currentX;
+
+          if (Math.abs(deltaX) > dragThreshold) {
+               if (type === 'property') {
+                    setIsPropertyPanelOpen(true);
+               } else if (type === 'hierarchy') {
+                    setIsHierarchyOpen(true);
+               }
+               setDragStartX(null); // Reset to prevent multiple triggers
+          }
+     };
+
+     const handleTouchEnd = () => {
+          setDragStartX(null);
+     };
 
      return (
           <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
@@ -306,12 +335,23 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                          {!isPreviewMode && selectedComponentId && (
                               <Sheet open={isPropertyPanelOpen} onOpenChange={setIsPropertyPanelOpen}>
                                    <SheetTrigger asChild>
-                                        <Button
-                                             variant="ghost"
-                                             className="absolute top-4 right-12 z-50 text-gray-600 dark:text-gray-300"
-                                        >
-                                             {isPropertyPanelOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
-                                        </Button>
+                                        {isMobile ? (
+                                             <div
+                                                  className="absolute top-4 right-16 z-50 text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-full p-2 cursor-grab"
+                                                  onTouchStart={(e) => handleTouchStart(e, 'property')}
+                                                  onTouchMove={(e) => handleTouchMove(e, 'property')}
+                                                  onTouchEnd={handleTouchEnd}
+                                             >
+                                                  <GripVertical size={24} />
+                                             </div>
+                                        ) : (
+                                             <Button
+                                                  variant="ghost"
+                                                  className="absolute top-4 right-12 z-50 text-gray-600 dark:text-gray-300"
+                                             >
+                                                  {isPropertyPanelOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
+                                             </Button>
+                                        )}
                                    </SheetTrigger>
                                    <SheetContent side="right" className="w-80 p-4">
                                         <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">Properties</h2>
@@ -324,12 +364,23 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                          {!isPreviewMode && selectedComponentId && (
                               <Sheet open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen}>
                                    <SheetTrigger asChild>
-                                        <Button
-                                             variant="ghost"
-                                             className="absolute top-4 right-4 z-50 text-gray-600 dark:text-gray-300"
-                                        >
-                                             <Layers size={24} />
-                                        </Button>
+                                        {isMobile ? (
+                                             <div
+                                                  className="absolute top-4 right-4 z-50 text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-full p-2 cursor-grab"
+                                                  onTouchStart={(e) => handleTouchStart(e, 'hierarchy')}
+                                                  onTouchMove={(e) => handleTouchMove(e, 'hierarchy')}
+                                                  onTouchEnd={handleTouchEnd}
+                                             >
+                                                  <GripVertical size={24} />
+                                             </div>
+                                        ) : (
+                                             <Button
+                                                  variant="ghost"
+                                                  className="absolute top-4 right-4 z-50 text-gray-600 dark:text-gray-300"
+                                             >
+                                                  <Layers size={24} />
+                                             </Button>
+                                        )}
                                    </SheetTrigger>
                                    <SheetContent side="right" className="w-80 p-4">
                                         <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">
