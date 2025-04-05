@@ -1,13 +1,9 @@
-// --- Updated useWebsiteStore definition ---
-import { create, useStore, StoreApi } from 'zustand'; // Import StoreApi
+import { create, useStore, StoreApi } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { immer } from 'zustand/middleware/immer';
 import { devtools } from 'zustand/middleware';
-import { WebsiteState as State, Component } from '../types'; // Import Component type
-import React, { ReactNode, createContext, useContext } from 'react'; // Correct imports
-
-
-// ... (previous imports remain the same)
+import { WebsiteState as State, Component } from '../types';
+import React, { ReactNode, createContext, useContext } from 'react';
 
 export type Breakpoint = 'desktop' | 'tablet' | 'mobile';
 
@@ -49,11 +45,11 @@ interface WebsiteStoreActions {
   endDragging: () => void;
   draggingComponent: { type: string | null; defaultProps: Record<string, any> | null };
   setDraggingComponent: (component: { type: string | null; defaultProps: Record<string, any> | null }) => void;
-  setSheetOpen: (isOpen: boolean) => void; // Already added
+  setSheetOpen: (isOpen: boolean) => void;
 }
 
 type WebsiteState = State & WebsiteStoreActions & {
-  isSheetOpen: boolean; // Add this property to the WebsiteState type
+  isSheetOpen: boolean;
 };
 
 export const useWebsiteStore = create<WebsiteState>()(
@@ -68,7 +64,7 @@ export const useWebsiteStore = create<WebsiteState>()(
       breakpoint: 'desktop',
       isDragging: false,
       draggingComponent: { type: null, defaultProps: null },
-      isSheetOpen: false, // Initialize isSheetOpen here
+      isSheetOpen: false,
 
       setCurrentPageId: (id) => set((state) => { state.currentPageId = id; }),
       addPage: (page) => set((state) => { state.pages.push(page); }),
@@ -88,9 +84,9 @@ export const useWebsiteStore = create<WebsiteState>()(
           pageId: state.currentPageId,
           parentId: component.parentId || null,
           type: component.type,
-          props: component.props,
+          props: component.props || {}, // Ensure props is defined
           children: [],
-          responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
+          responsiveProps: component.responsiveProps || { desktop: {}, tablet: {}, mobile: {} }, // Ensure responsiveProps is defined
           style: {},
           allowChildren: component.allowChildren || false,
         };
@@ -230,5 +226,4 @@ export const useWebsiteStore = create<WebsiteState>()(
       setSheetOpen: (isOpen: boolean) => set((state) => { state.isSheetOpen = isOpen; }),
     })),
     { name: 'WebsiteStore' }
-  )
-);
+));

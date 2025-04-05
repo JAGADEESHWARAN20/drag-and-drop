@@ -13,7 +13,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useWebsiteStore } from '../store/WebsiteStore';
 import DraggableComponent from './DraggableComponent';
-import { UniqueIdentifier } from '@dnd-kit/core'; // Import UniqueIdentifier
+import { UniqueIdentifier } from '@dnd-kit/core';
 
 interface LibraryComponent {
   type: string;
@@ -67,10 +67,10 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
     const ordered: LibraryComponent[] = [];
     const remaining = new Map(allComponentsArray.map(comp => [comp.type, comp]));
     for (const type of componentOrder) {
-      const comp = remaining.get(type.toString()); // Convert to string if needed
+      const comp = remaining.get(type);
       if (comp) {
         ordered.push(comp);
-        remaining.delete(type.toString());
+        remaining.delete(type);
       }
     }
     ordered.push(...remaining.values());
@@ -132,7 +132,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
       )}
 
       <SortableContext
-        items={filteredComponents.map((component) => component.type as UniqueIdentifier)} // Cast to UniqueIdentifier
+        items={filteredComponents.map((component) => component.type as UniqueIdentifier)}
         strategy={horizontalListSortingStrategy}
       >
         <div

@@ -126,12 +126,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
      const handleDragEnd = (event: DragEndEvent) => {
           const { active, over } = event;
+          console.log('Drag End:', { active, over }); // Debug log
           if (over?.id === 'canvas-drop-area' && active.data?.current?.type === 'COMPONENT') {
                const { componentType, defaultProps } = active.data.current;
                const newComponentId = uuidv4();
                addComponent({
                     type: componentType,
-                    props: defaultProps,
+                    props: defaultProps || {}, // Ensure defaultProps is defined
                     id: newComponentId,
                     pageId: currentPageId,
                     parentId: null,
