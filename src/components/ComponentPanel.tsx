@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, forwardRef, useMemo, useCallback } from 'react';
+import React, { useState, forwardRef, useMemo, useCallback, useRef } from 'react'; // Import useRef
 import { ComponentLibrary } from '../data/ComponentLibrary';
 import { Search, MousePointerClick } from 'lucide-react';
 import { ComponentType, SVGProps } from 'react';
@@ -61,6 +61,8 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { componentOrder, setComponentOrder, startDragging, endDragging } = useWebsiteStore(); // Get startDragging and endDragging actions
   const { isDragging: dndKitIsDragging } = useDndKitContext(); // Get isDragging from dnd-kit
+  const dragStartTimeout = useRef<NodeJS.Timeout | null>(null); // Ref for the timeout
+  const isDraggingIntent = useRef(false); // Ref to track drag intent
 
   const allComponentsArray = useMemo(() => {
     return Object.values(ComponentLibrary).flat();
@@ -101,13 +103,25 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
   };
 
   const handleDragStart = useCallback(() => {
-    startDragging(); // Call the Zustand action to set isDragging to true
-    if (onClosePanel) {
-      onClosePanel();
-    }
+    isDraggingIntent.current = true;
+    dragStartTimeout.current = setTimeout(() => {
+      if (isDraggingIntent.current) {
+        startDragging();
+        if (onClosePanel) {
+          onClosePanel();
+        }
+      }
+      isDraggingIntent.current = false;
+      dragStartTimeout.current = null;
+    }, 150); // Increased delay slightly
   }, [startDragging, onClosePanel]);
 
   const handleDragEnd = useCallback((event: any) => {
+    isDraggingIntent.current = false;
+    if (dragStartTimeout.current) {
+      clearTimeout(dragStartTimeout.current);
+      dragStartTimeout.current = null;
+    }
     endDragging(); // Call the Zustand action to set isDragging to false
     const { active, over } = event;
     if (active.id !== over?.id) {
