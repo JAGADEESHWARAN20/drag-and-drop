@@ -222,7 +222,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
           items={filteredComponents.map((component) => component.type)}
           strategy={horizontalListSortingStrategy} // Use horizontal sorting
         >
-          <div className={`flex space-x-2 overflow-x-auto ${dndKitIsDragging ? 'overflow-x-hidden' : ''}`}>
+          <div className={`flex space-x-2 overflow-x-auto ${dndKitIsDragging ? 'overflow-x-hidden overflow-y-hidden' : ''}`} style={{ touchAction: 'pan-x' }}>
             {filteredComponents.map((component) => (
               <SortableLibraryComponent
                 key={component.type}
