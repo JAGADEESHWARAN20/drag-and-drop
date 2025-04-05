@@ -47,9 +47,7 @@ interface MainLayoutProps {
      setBreakpoint: (bp: Breakpoint) => void;
 }
 
-const holdDuration = 500; // in milliseconds
 
-const holdTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
 const MainLayout: React.FC<MainLayoutProps> = ({
      pages,
