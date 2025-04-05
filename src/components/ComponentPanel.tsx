@@ -37,7 +37,6 @@ interface ComponentPanelProps {
 interface SortableLibraryComponentProps {
   component: LibraryComponent;
   onComponentClick: (type: string, defaultProps: Record<string, any>) => void;
-  // REMOVED: sensors: ReturnType<typeof useSensors>;
 }
 
 const SortableLibraryComponent = ({ component, onComponentClick }: SortableLibraryComponentProps) => {
@@ -57,7 +56,7 @@ const SortableLibraryComponent = ({ component, onComponentClick }: SortableLibra
       key={component.type}
       className="p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 flex-shrink-0 hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700"
     >
-      <DraggableComponent component={component} /> {/* NOT passing sensors here */}
+      <DraggableComponent component={component} />
     </div>
   );
 };
@@ -164,7 +163,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
   }, [componentOrder, orderedComponents, setComponentOrder, setDraggingComponent]);
 
   return (
-    <div className="p-4 h-full flex flex-col" ref={ref}>
+    <div className="p-4 flex flex-col h-full" ref={ref}>
       <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md flex items-center justify-between">
         <div>
           <div className="flex items-center mb-2 text-blue-700 dark:text-blue-300">
@@ -200,12 +199,15 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
         </div>
       )}
 
-     
+      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <SortableContext
           items={filteredComponents.map((component) => component.type)}
           strategy={horizontalListSortingStrategy}
         >
-          <div className={`flex space-x-2 overflow-x-auto ${dndKitIsDragging ? 'overflow-x-hidden pointer-events-none' : ''}`}>
+          <div
+            className="flex space-x-2 overflow-x-auto overflow-y-hidden"
+            style={{ minHeight: '0', flex: '1 1 auto' }} // Prevent vertical scrolling and allow horizontal only
+          >
             {filteredComponents.map((component) => (
               <SortableLibraryComponent
                 key={component.type}
@@ -215,9 +217,9 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
             ))}
           </div>
         </SortableContext>
+      </DndContext>
 
-
-      {Object.keys(filteredComponents).length === 0 && searchTerm && (
+      {filteredComponents.length === 0 && searchTerm && (
         <div className="text-center text-gray-500 dark:text-gray-400">
           No components found matching "{searchTerm}"
         </div>
