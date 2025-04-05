@@ -2,7 +2,8 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { useWebsiteStore, Breakpoint, Component } from '../store/WebsiteStore';
+import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
+import { Component } from "../types";
 import { ComponentRegistry } from '../utils/ComponentRegistry';
 import DroppableContainer from './DroppableContainer';
 import SortableItem from './SortableItem';

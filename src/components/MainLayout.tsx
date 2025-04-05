@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useWebsiteStore, Breakpoint, Page } from '../store/WebsiteStore';
+import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
+import { Page } from '@/types';
 import ComponentPanel from './ComponentPanel';
 import Canvas from './Canvas';
 import PropertyPanel from './PropertyPanel';

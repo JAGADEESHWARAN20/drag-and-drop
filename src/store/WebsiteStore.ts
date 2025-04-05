@@ -2,54 +2,8 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { immer } from 'zustand/middleware/immer'; // Optional: for immutable updates
 import { devtools } from 'zustand/middleware'; // Optional: for debugging
-
+import { WebsiteState } from '../types';
 export type Breakpoint = 'desktop' | 'tablet' | 'mobile';
-
-export interface Page {
-  id: string;
-  name: string;
-}
-
-export interface Component {
-  id: string;
-  pageId: string;
-  parentId: string | null;
-  type: string;
-  props: Record<string, string | number | boolean | object>;
-  children: string[];
-  responsiveProps: {
-    desktop: Record<string, string | number | boolean | object>;
-    tablet: Record<string, string | number | boolean | object>;
-    mobile: Record<string, string | number | boolean | object>;
-  };
-  style?: Record<string, string | number>;
-  allowChildren?: boolean;
-}
-
-interface WebsiteState {
-  pages: Page[];
-  currentPageId: string;
-  components: Component[];
-  selectedComponentId: string | null;
-  isPreviewMode: boolean;
-  breakpoint: Breakpoint;
-
-  setCurrentPageId: (id: string) => void;
-  addPage: (page: Page) => void;
-  removePage: (pageId: string) => void;
-  addComponent: (component: Omit<Component, 'children' | 'style' | 'allowChildren'>) => void;
-  removeComponent: (id: string) => void;
-  updateComponentProps: (id: string, props: Record<string, string | number | boolean | object>) => void;
-  updateResponsiveProps: (id: string, breakpoint: Breakpoint, props: Record<string, string | number | boolean | object>) => void;
-  setSelectedComponentId: (id: string | null) => void;
-  reorderComponents: (pageId: string, oldIndex: number, newIndex: number) => void;
-  moveComponent: (id: string, targetId: string | null, isContainer?: boolean) => void;
-  setIsPreviewMode: (isPreview: boolean) => void;
-  setBreakpoint: (breakpoint: Breakpoint) => void;
-  setAllowChildren: (id: string, allow: boolean) => void;
-  updateComponentParent: (id: string, parentId: string | null) => void;
-  reorderChildren: (parentId: string, oldIndex: number, newIndex: number) => void;
-}
 
 // Using immer middleware for immutable updates and devtools for debugging
 export const useWebsiteStore = create<WebsiteState>()(
@@ -83,7 +37,7 @@ export const useWebsiteStore = create<WebsiteState>()(
 
       addComponent: (component) =>
         set((state) => {
-          const newComponent: Component = {
+          const newComponent: import('../types').Component = { // Use the imported type
             ...component,
             children: [],
             style: {},
@@ -167,8 +121,11 @@ export const useWebsiteStore = create<WebsiteState>()(
           }
 
           const newParent = isContainer ? state.components.find((c) => c.id === targetId) : null;
-          if (newParent) {
+          if (newParent && newParent.allowChildren) {
             newParent.children.push(id);
+          } else if (isContainer && newParent && !newParent.allowChildren) {
+            console.warn(`Cannot move component ${id} into ${targetId} as it does not allow children.`);
+            return;
           }
 
           component.parentId = isContainer ? targetId : component.parentId;
@@ -203,22 +160,47 @@ export const useWebsiteStore = create<WebsiteState>()(
           }
 
           const newParent = parentId ? state.components.find((c) => c.id === parentId) : null;
-          if (newParent) {
+          if (newParent && newParent.allowChildren) {
             newParent.children.push(id);
+          } else if (parentId && newParent && !newParent.allowChildren) {
+            console.warn(`Cannot move component ${id} into ${parentId} as it does not allow children.`);
+            return;
           }
 
           component.parentId = parentId;
         }),
 
-      reorderChildren: (parentId, oldIndex, newIndex) =>
+      reorderChildren: (parentId, newOrder) =>
         set((state) => {
           const parent = state.components.find((c) => c.id === parentId);
-          if (!parent || !parent.children || parent.children.length <= 1) return;
+          if (parent) {
+            parent.children = newOrder;
+          } else if (parentId === null) {
+            // Handle reordering of root-level components
+            state.components = state.components.map(c =>
+              c.parentId === null && newOrder.includes(c.id)
+                ? { ...c, /* potentially update order property if you have one */ }
+                : c
+            );
+            // You might need a more robust way to track and update the order of root elements
+          }
+        }),
 
-          const newChildren = [...parent.children];
-          const [movedChild] = newChildren.splice(oldIndex, 1);
-          newChildren.splice(newIndex, 0, movedChild);
-          parent.children = newChildren;
+      updateComponentOrder: (parentId, newOrder) =>
+        set((state) => {
+          if (parentId === null) {
+            // Update the order of root-level components
+            state.components = state.components.map(c =>
+              c.parentId === null && newOrder.includes(c.id)
+                ? { ...c } // You might need to manage an explicit order property here
+                : c
+            );
+          } else {
+            const parent = state.components.find(c => c.id === parentId);
+            if (parent) {
+              parent.children = newOrder;
+            }
+          }
         }),
     })),
     { name: 'WebsiteStore' } // Devtools store name
