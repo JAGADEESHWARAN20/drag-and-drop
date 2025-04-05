@@ -4,14 +4,13 @@ import React, { useState, forwardRef, useMemo, useCallback } from 'react';
 import { ComponentLibrary } from '../data/ComponentLibrary';
 import { Search, MousePointerClick } from 'lucide-react';
 import { ComponentType, SVGProps } from 'react';
-import Button from '@/components/ui/button'; // Assuming you have a Button component
+import Button from '@/components/ui/button';
 import {
   DndContext,
-
 } from '@dnd-kit/core';
 import {
   SortableContext,
-  verticalListSortingStrategy,
+  horizontalListSortingStrategy, // Import horizontal strategy
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -58,7 +57,7 @@ const SortableLibraryComponent = ({ component, onComponentClick }: { component: 
 const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComponentClick }, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { componentOrder, setComponentOrder } = useWebsiteStore(); // Assuming you have these in your store
+  const { componentOrder, setComponentOrder } = useWebsiteStore();
 
   const allComponentsArray = useMemo(() => {
     return Object.values(ComponentLibrary).flat();
@@ -178,9 +177,9 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
       <DndContext onDragEnd={handleDragEnd}>
         <SortableContext
           items={filteredComponents.map((component) => component.type)}
-          strategy={verticalListSortingStrategy}
+          strategy={horizontalListSortingStrategy} // Use horizontal sorting
         >
-          <div className="space-y-2">
+          <div className="flex space-x-2 overflow-x-auto"> {/* Horizontal flex and overflow */}
             {filteredComponents.map((component) => (
               <SortableLibraryComponent
                 key={component.type}
