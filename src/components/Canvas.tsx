@@ -193,18 +193,14 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
     }
   };
 
-  const canvasStyle = {
-    minHeight: 'calc(100vh - 80px)',
-    width: '100%',
-    backgroundColor: isOver ? 'lightgreen' : 'transparent',
-  };
+
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <div
         ref={setNodeRef}
-        style={canvasStyle}
-        className={`h-[90%] mx-auto bg-white ${getCanvasWidth()} transition-all duration-300 ${isOver ? 'bg-green-100' : ''}`}
+       
+        className={`h-[90%] mt-5 mx-auto bg-white ${getCanvasWidth()} transition-all duration-300 ${isOver ? 'bg-green-100' : ''}`}
         {...(node && !(active || over) ? droppable : {})}
         id="canvas-drop-area"
       >
