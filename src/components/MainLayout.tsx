@@ -11,14 +11,14 @@ import {
      useSensor,
      useSensors,
      closestCenter,
+     useDraggable,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useWebsiteStore, Breakpoint, Page } from '../store/WebsiteStore';
-import ComponentPanel from './ComponentPanel';
 import Canvas from './Canvas';
 import PropertyPanel from './PropertyPanel';
 import ElementHierarchyViewer from './ElementHierarchyViewer';
-import { Menu, ChevronRight, ChevronLeft, X, Download, Smartphone, Tablet, Monitor, Layers, Code, Pen, Plus } from 'lucide-react';
+import { Menu, ChevronRight, ChevronLeft, X, Download, Smartphone, Tablet, Monitor, Layers, Code, Pen, Plus, Box } from 'lucide-react';
 import Button from '@/components/ui/button';
 import {
      Select,
@@ -34,6 +34,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toggle } from '@/components/ui/toggle';
+import { ComponentProps } from './DraggableComponent'; // Assuming this is still available
 
 interface MainLayoutProps {
      pages: Page[];
@@ -46,6 +47,42 @@ interface MainLayoutProps {
      breakpoint: Breakpoint;
      setBreakpoint: (bp: Breakpoint) => void;
 }
+
+// Simplified component library for testing
+const sampleComponents = [
+     { type: 'Button', label: 'Button', defaultProps: { text: 'Click me' } },
+     { type: 'Text', label: 'Text', defaultProps: { content: 'Hello World' } },
+     { type: 'Container', label: 'Container', defaultProps: { style: { padding: '10px' } } },
+];
+
+// Simplified DraggableComponent as a functional component
+const DraggableComponent: React.FC<{ type: string; label: string; defaultProps: ComponentProps }> = ({ type, label, defaultProps }) => {
+     const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+          id: `draggable-${type}`,
+          data: {
+               type: 'COMPONENT',
+               componentType: type,
+               defaultProps,
+          },
+     });
+
+     return (
+          <div
+               ref={setNodeRef}
+               {...listeners}
+               {...attributes}
+               className={`p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 flex-shrink-0 ${isDragging ? 'opacity-50 cursor-grabbing' : ''
+                    } hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700`}
+               style={{ touchAction: 'none', userSelect: 'none' }}
+               aria-label={`Drag ${label}`}
+          >
+               <div className="text-blue-500 mb-1 dark:text-white">
+                    <Box size={20} />
+               </div>
+               <span className="text-black dark:text-white text-center">{label}</span>
+          </div>
+     );
+};
 
 const MainLayout: React.FC<MainLayoutProps> = ({
      pages,
@@ -65,10 +102,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      const [isHierarchyOpen, setIsHierarchyOpen] = useState(false);
      const [isDarkMode, setIsDarkMode] = useState(false);
      const [isPageSheetOpen, setIsPageSheetOpen] = useState(false);
-     const componentPanelRef = useRef<HTMLDivElement>(null);
-     const componentPanelScrollRef = useRef<HTMLDivElement>(null);
 
-     // Configure sensors for drag-and-drop
      const sensors = useSensors(
           useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
           useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
@@ -84,7 +118,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           }
      }, [isDarkMode]);
 
-     // Show PropertyPanel if a component is selected or exists on the canvas
+     // Show PropertyPanel if a component is selected or exists
      useEffect(() => {
           if (selectedComponentId || components.length > 0) {
                setIsPropertyPanelOpen(true);
@@ -113,23 +147,23 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      };
 
      const handleDragStart = (event: DragStartEvent) => {
-          // Close the ComponentPanel sheet when dragging starts for better UX
-          setIsComponentPanelOpen(false);
+          console.log('Drag started:', event.active.id); // Debug log
+          setIsComponentPanelOpen(false); // Close panel on drag start
      };
 
      const handleDragEnd = (event: DragEndEvent) => {
           const { active, over } = event;
 
+          console.log('Drag ended:', { active, over }); // Debug log
+
           if (!active || !over) return;
 
-          // Handle drag from ComponentPanel
           if (active.data?.current?.type === 'COMPONENT') {
                const { componentType, defaultProps } = active.data.current;
                const currentPageId = useWebsiteStore.getState().currentPageId;
                const responsiveProps = { desktop: {}, tablet: {}, mobile: {} };
-               const newComponentId = uuidv4(); // Use UUID for unique IDs instead of Date.now()
+               const newComponentId = uuidv4();
 
-               // Drop on the canvas root
                if (over.id === 'canvas-drop-area') {
                     addComponent({
                          type: componentType,
@@ -143,9 +177,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                          title: 'Component Added',
                          description: `Added ${componentType} to canvas.`,
                     });
-               }
-               // Drop on a DroppableContainer (nested)
-               else if (over.id.toString().startsWith('droppable-')) {
+               } else if (over.id.toString().startsWith('droppable-')) {
                     const parentId = over.id.toString().replace('droppable-', '');
                     const parentComponent = useWebsiteStore.getState().components.find((c) => c.id === parentId);
 
@@ -193,10 +225,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                    <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-2">
                                         Component Library
                                    </h2>
-                                   <div className="relative scrollbar-hidden">
-                                        <div ref={componentPanelScrollRef} className="pb-2">
-                                             <ComponentPanel ref={componentPanelRef} />
-                                        </div>
+                                   <div className="flex flex-row gap-2 overflow-x-auto">
+                                        {sampleComponents.map((component) => (
+                                             <DraggableComponent
+                                                  key={component.type}
+                                                  type={component.type}
+                                                  label={component.label}
+                                                  defaultProps={component.defaultProps}
+                                             />
+                                        ))}
                                    </div>
                               </SheetContent>
                          </Sheet>
@@ -204,7 +241,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     </div>
 
                     <div className="flex items-center space-x-3">
-                         {/* Page Selector (Long-Press on Mobile, Select on Desktop) */}
+                         {/* Page Selector */}
                          <div className="block md:hidden">
                               <Sheet open={isPageSheetOpen} onOpenChange={setIsPageSheetOpen}>
                                    <SheetTrigger asChild>
@@ -237,7 +274,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                                                  variant="ghost"
                                                                  size="sm"
                                                                  onClick={() => handleDeletePage(page.id)}
-                                                                 className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-600"
+                                                                 className="text-red-500 hover:text-red-700"
                                                             >
                                                                  <X size={16} />
                                                             </Button>
@@ -269,7 +306,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                                             variant="ghost"
                                                             size="sm"
                                                             onClick={() => handleDeletePage(page.id)}
-                                                            className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-600"
+                                                            className="text-red-500 hover:text-red-700"
                                                        >
                                                             <X size={16} />
                                                        </Button>
@@ -287,7 +324,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               </Select>
                          </div>
 
-                         {/* Breakpoint Selector (Desktop Only in Navbar) */}
+                         {/* Breakpoint Selector */}
                          <ToggleGroup
                               type="single"
                               value={breakpoint}
@@ -341,15 +378,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                </nav>
 
                {/* Main Content */}
-               <div className="flex-1 flex overflow-hidden relative">
-                    <DndContext
-                         sensors={sensors}
-                         collisionDetection={closestCenter}
-                         onDragStart={handleDragStart}
-                         onDragEnd={handleDragEnd}
-                    >
+               <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+               >
+                    <div className="flex-1 flex overflow-hidden relative">
                          <div className="flex-1 overflow-auto relative">
-                              {/* Breakpoint Selector in Preview Mode (Mobile Only) */}
+                              {/* Breakpoint Selector in Preview Mode (Mobile) */}
                               <AnimatePresence>
                                    {isPreviewMode && (
                                         <motion.div
@@ -419,8 +456,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
                               <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
                          </div>
-                    </DndContext>
-               </div>
+                    </div>
+               </DndContext>
           </div>
      );
 };
