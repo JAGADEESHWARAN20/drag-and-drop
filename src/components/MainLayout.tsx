@@ -336,7 +336,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               <SheetContent side="right" className="w-80 p-4">
                 <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">
                   Element Hierarchy
-                </h2>
+                                        </h2>
+                                        
                 <ElementHierarchyViewer />
               </SheetContent>
             </Sheet>

@@ -189,12 +189,19 @@ export const useWebsiteStore = create<WebsiteState>()(
       updateComponentOrder: (parentId, newOrder) =>
         set((state) => {
           if (parentId === null) {
-            // Update the order of root-level components
-            state.components = state.components.map(c =>
-              c.parentId === null && newOrder.includes(c.id)
-                ? { ...c } // You might need to manage an explicit order property here
-                : c
-            );
+            const rootComponents = state.components.filter(c => c.parentId === null);
+            const nonRootComponents = state.components.filter(c => c.parentId !== null);
+
+            // Create a map for faster lookup of root components by ID
+            const rootComponentMap = new Map(rootComponents.map(c => [c.id, c]));
+
+            // Reorder root components based on newOrder
+            const orderedRootComponents = newOrder
+              .map(id => rootComponentMap.get(id))
+              .filter(Boolean) as import('../types').Component[]; // Ensure correct typing
+
+            // Combine the reordered root components with the non-root components
+            state.components = [...orderedRootComponents, ...nonRootComponents];
           } else {
             const parent = state.components.find(c => c.id === parentId);
             if (parent) {
