@@ -19,118 +19,122 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Toggle } from '@/components/ui/toggle';
 
 interface MainLayoutProps {
-  pages: Page[];
-  currentPageId: string;
-  onChangePage: (pageId: string) => void;
-  onAddPage: (name: string) => void;
-  onPreviewToggle: () => void;
-  isPreviewMode: boolean;
-  onExportCode: () => void;
-  breakpoint: Breakpoint;
-  setBreakpoint: (bp: Breakpoint) => void;
+     pages: Page[];
+     currentPageId: string;
+     onChangePage: (pageId: string) => void;
+     onAddPage: (name: string) => void;
+     onPreviewToggle: () => void;
+     isPreviewMode: boolean;
+     onExportCode: () => void;
+     breakpoint: Breakpoint;
+     setBreakpoint: (bp: Breakpoint) => void;
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({
-  pages,
-  currentPageId,
-  onChangePage,
-  onAddPage,
-  onPreviewToggle,
-  isPreviewMode,
-  onExportCode,
-  breakpoint,
-  setBreakpoint,
+     pages,
+     currentPageId,
+     onChangePage,
+     onAddPage,
+     onPreviewToggle,
+     isPreviewMode,
+     onExportCode,
+     breakpoint,
+     setBreakpoint,
 }) => {
-  const { components, selectedComponentId, addComponent, setSelectedComponentId } = useWebsiteStore();
+     const { components, selectedComponentId, addComponent, setSelectedComponentId } = useWebsiteStore();
 
-  const [isComponentPanelOpen, setIsComponentPanelOpen] = useState(false);
-  const [isPropertyPanelOpen, setIsPropertyPanelOpen] = useState(false);
-  const [isHierarchyOpen, setIsHierarchyOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isPageSheetOpen, setIsPageSheetOpen] = useState(false);
-  const componentPanelRef = useRef<HTMLDivElement>(null);
+     const [isComponentPanelOpen, setIsComponentPanelOpen] = useState(false);
+     const [isPropertyPanelOpen, setIsPropertyPanelOpen] = useState(false);
+     const [isHierarchyOpen, setIsHierarchyOpen] = useState(false);
+     const [isDarkMode, setIsDarkMode] = useState(false);
+     const [isPageSheetOpen, setIsPageSheetOpen] = useState(false);
+     const componentPanelRef = useRef<HTMLDivElement>(null);
 
-  // Toggle dark mode
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
+     // Toggle dark mode
+     useEffect(() => {
+          if (isDarkMode) {
+               document.documentElement.classList.add('dark');
+          } else {
+               document.documentElement.classList.remove('dark');
+          }
+     }, [isDarkMode]);
 
-  // Only open panels when a component is explicitly selected
-  useEffect(() => {
-    if (selectedComponentId) {
-      setIsPropertyPanelOpen(true);
-      setIsHierarchyOpen(false); // Optional: close hierarchy when property opens
-    } else {
-      setIsPropertyPanelOpen(false);
-      setIsHierarchyOpen(false);
-    }
-  }, [selectedComponentId]);
+     // Only open panels when a component is explicitly selected
+     useEffect(() => {
+          if (selectedComponentId) {
+               setIsPropertyPanelOpen(true);
+               setIsHierarchyOpen(false); // Optional: close hierarchy when property opens
+          } else {
+               setIsPropertyPanelOpen(false);
+               setIsHierarchyOpen(false);
+          }
+     }, [selectedComponentId]);
 
-  const handleAddPage = () => {
-    const newPageId = uuidv4();
-    onAddPage(`Page ${pages.length + 1}`);
-    setIsPageSheetOpen(false);
+     const handleAddPage = () => {
+          const newPageId = uuidv4();
+          onAddPage(`Page ${pages.length + 1}`);
+          setIsPageSheetOpen(false);
      };
+
+
+     const handleDeletePage = (pageId: string) => {
+          if (pages.length === 1) {
+               toast({ title: 'Cannot Delete', description: 'At least one page must exist' });
+               return;
+          }
+          useWebsiteStore.getState().removePage(pageId);
+          if (currentPageId === pageId) {
+               onChangePage(pages[0].id);
+          }
+          toast({ title: 'Page Deleted', description: 'Page has been deleted' });
+          setIsPageSheetOpen(false);
+     };
+
+     const handleComponentAdd = (type: string, defaultProps: Record<string, any>) => {
+          const newComponentId = uuidv4();
+          addComponent({
+               type,
+               props: defaultProps,
+               id: newComponentId,
+               pageId: currentPageId,
+               parentId: null,
+               responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
+          });
+          toast({
+               title: 'Component Added',
+               description: `Added ${type} to canvas.`,
+          });
+          setIsComponentPanelOpen(false); // Close sheet after adding
+          setSelectedComponentId(null); // Reset selection to require canvas click
+     };
+
+     const isMobile = breakpoint === 'mobile';
      
-     
-  const handleDeletePage = (pageId: string) => {
-    if (pages.length === 1) {
-      toast({ title: 'Cannot Delete', description: 'At least one page must exist' });
-      return;
-    }
-    useWebsiteStore.getState().removePage(pageId);
-    if (currentPageId === pageId) {
-      onChangePage(pages[0].id);
-    }
-    toast({ title: 'Page Deleted', description: 'Page has been deleted' });
-    setIsPageSheetOpen(false);
-  };
-
-  const handleComponentAdd = (type: string, defaultProps: Record<string, any>) => {
-    const newComponentId = uuidv4();
-    addComponent({
-      type,
-      props: defaultProps,
-      id: newComponentId,
-      pageId: currentPageId,
-      parentId: null,
-      responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
-    });
-    toast({
-      title: 'Component Added',
-      description: `Added ${type} to canvas.`,
-    });
-    setIsComponentPanelOpen(false); // Close sheet after adding
-    setSelectedComponentId(null); // Reset selection to require canvas click
-  };
-
-  const isMobile = breakpoint === 'mobile';
-
      return (
           <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
       {/* Navbar */}
       <nav className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 shadow-md">
         <div className="flex items-center space-x-3">
-          <Sheet open={isComponentPanelOpen} onOpenChange={setIsComponentPanelOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" className="text-gray-600 dark:text-gray-300 p-2">
-                <Menu size={20} />
-              </Button>
-            </SheetTrigger>
-            <SheetContent
-              side="top"
-              className={`w-full overflow-hidden scrollbar-hidden h-auto max-h-96 p-4 flex flex-col ${isMobile ? 'min-w-[100vw]' : 'min-w-[300px]'}`}
-            >
-              <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-2">
-                Component Library
-              </h2>
-              <ComponentPanel ref={componentPanelRef} onComponentClick={handleComponentAdd} />
-            </SheetContent>
-          </Sheet>
+                         <Sheet open={isComponentPanelOpen} onOpenChange={setIsComponentPanelOpen}>
+                              <SheetTrigger asChild>
+                                   <Button variant="ghost" className="text-gray-600 dark:text-gray-300 p-2">
+                                        <Menu size={20} />
+                                   </Button>
+                              </SheetTrigger>
+                              <SheetContent
+                                   side="top"
+                                   className={`w-full overflow-hidden scrollbar-hidden h-auto max-h-96 p-4 flex flex-col ${isMobile ? 'min-w-[100vw]' : 'min-w-[300px]'}`}
+                              >
+                                   <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-2">
+                                        Component Library
+                                   </h2>
+                                   <ComponentPanel
+                                        ref={componentPanelRef}
+                                        onComponentClick={handleComponentAdd}
+                                        onClosePanel={() => setIsComponentPanelOpen(false)} // Pass the onClosePanel function
+                                   />
+                              </SheetContent>
+                         </Sheet>
           <h1 className="text-lg font-bold text-black dark:text-white">WebBuilder</h1>
         </div>
 

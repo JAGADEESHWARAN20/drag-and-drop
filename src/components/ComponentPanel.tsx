@@ -7,6 +7,7 @@ import { ComponentType, SVGProps } from 'react';
 import Button from '@/components/ui/button';
 import {
   DndContext,
+  useDndContext, // Import useDndContext
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -26,6 +27,7 @@ interface LibraryComponent {
 
 interface ComponentPanelProps {
   onComponentClick: (type: string, defaultProps: Record<string, any>) => void;
+  onClosePanel?: () => void; // Add the onClosePanel prop here
 }
 
 const SortableLibraryComponent = ({ component, onComponentClick }: { component: LibraryComponent; onComponentClick: (type: string, defaultProps: Record<string, any>) => void }) => {
@@ -58,6 +60,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { componentOrder, setComponentOrder } = useWebsiteStore();
+  const { isDragging } = useDndContext(); // Get the isDragging state
 
   const allComponentsArray = useMemo(() => {
     return Object.values(ComponentLibrary).flat();
@@ -179,7 +182,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
           items={filteredComponents.map((component) => component.type)}
           strategy={horizontalListSortingStrategy} // Use horizontal sorting
         >
-          <div className="flex space-x-2 overflow-x-auto"> {/* Horizontal flex and overflow */}
+          <div className={`flex space-x-2 overflow-x-auto ${isDragging ? 'overflow-x-hidden' : ''}`}>
             {filteredComponents.map((component) => (
               <SortableLibraryComponent
                 key={component.type}

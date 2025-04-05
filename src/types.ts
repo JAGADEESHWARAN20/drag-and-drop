@@ -50,3 +50,9 @@ export interface WebsiteState {
      updateComponentOrder: (parentId: string | null, newOrder: string[]) => void;
      setComponentOrder: (order: string[]) => void; // Add this line
 }
+
+export type PublicContextDescriptor = {
+     // ... other properties
+     isDragging: boolean;
+     // ...
+};
