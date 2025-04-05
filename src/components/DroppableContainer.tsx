@@ -117,7 +117,7 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
   return (
     <div
       ref={setNodeRef}
-      className={`component-container ${isOver ? 'bg-blue-100' : ''} ${isSelected ? 'outline outline-2 outline-blue-500' : 'hover:outline hover:outline-1 hover:outline-blue-300'
+      className={`component-container ${isOver ? 'bg-slate-200' : ''} ${isSelected ? 'outline outline-[5px] py-3 px-2 outline-slate-700' : 'hover:outline hover:outline-1 hover:outline-blue-300'
         } ${isDragging ? 'shadow-lg' : ''}`}
       onClick={handleClick}
       style={style}
