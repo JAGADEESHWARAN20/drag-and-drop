@@ -32,7 +32,7 @@ const CustomToastProvider = ({ position, customPositionClass, children }: Custom
                className += ' top-2 right-2';
                break;
           case 'bottom-left':
-               className += ' bottom-2 left-2';
+               className += ' bottom-20 left-2';
                break;
           case 'bottom-center':
                className += ' bottom-2 left-1/2 -translate-x-1/2';

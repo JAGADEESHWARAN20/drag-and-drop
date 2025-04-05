@@ -10,8 +10,8 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <CustomToastProvider position="bottom-left" customPositionClass="fixed top-1/4 right-1/4 z-50"> {/* Configure your desired position */}
-        {/* You might not need Sonner if you're only using Shadcn UI's useToast */}
+      <CustomToastProvider position="bottom-left" customPositionClass="absolute  top-2/4 right-1/4 z-50"> {/* Configure your desired position */}
+        {/* If you are only using Shadcn UI's useToast, you can remove Sonner */}
         {/* <Sonner /> */}
         <BrowserRouter>
           <Routes>
