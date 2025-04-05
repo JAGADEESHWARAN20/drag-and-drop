@@ -96,30 +96,47 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      const handleDragEnd = (event: DragEndEvent) => {
           const { active, over } = event;
 
-          if (active && over && over.id === 'canvas-drop-area' && active.data?.current?.type === 'COMPONENT') {
-               const { componentType, defaultProps } = active.data.current;
+          if (!active || !over) return;
 
-               // Determine the currentPageId (you might need to get this from the store)
+          // Check if the dragged item is a component from the ComponentPanel
+          if (active.data?.current?.type === 'COMPONENT') {
+               const { componentType, defaultProps } = active.data.current;
                const currentPageId = useWebsiteStore.getState().currentPageId;
 
-               // For a top-level component dropped on the canvas, parentId should be null
-               const parentId = null;
+               // Handle drop on the canvas (top-level)
+               if (over.id === 'canvas-drop-area') {
+                    const parentId = null; // Top-level component
+                    const responsiveProps = { desktop: {}, tablet: {}, mobile: {} };
 
-               // Initialize responsiveProps with default empty objects
-               const responsiveProps = {
-                    desktop: {},
-                    tablet: {},
-                    mobile: {},
-               };
+                    addComponent({
+                         type: componentType,
+                         props: defaultProps,
+                         id: Date.now().toString(),
+                         pageId: currentPageId,
+                         parentId,
+                         responsiveProps,
+                    });
+               }
+               // Handle drop on a DroppableContainer (nested component)
+               else if (over.id.toString().startsWith('droppable-')) {
+                    const parentId = over.id.toString().replace('droppable-', '');
+                    const parentComponent = useWebsiteStore.getState().components.find((c) => c.id === parentId);
 
-               addComponent({
-                    type: componentType,
-                    props: defaultProps,
-                    id: Date.now().toString(), // Basic ID generation
-                    pageId: currentPageId,
-                    parentId: parentId,
-                    responsiveProps: responsiveProps,
-               });
+                    if (parentComponent && parentComponent.allowChildren) {
+                         const responsiveProps = { desktop: {}, tablet: {}, mobile: {} };
+
+                         addComponent({
+                              type: componentType,
+                              props: defaultProps,
+                              id: Date.now().toString(),
+                              pageId: currentPageId,
+                              parentId,
+                              responsiveProps,
+                         });
+                    } else {
+                         console.warn(`Cannot drop into component ${parentId}: it does not allow children or does not exist.`);
+                    }
+               }
           }
      };
      // Determine if the device is mobile based on breakpoint
