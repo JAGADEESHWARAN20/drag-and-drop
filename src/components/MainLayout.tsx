@@ -114,7 +114,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                description: `Added ${type} to canvas.`,
           });
           setSheetOpen(false);
-          setSelectedComponentId(null);
+          setSelectedComponentId(newComponentId);
+          return newComponentId;
      };
 
      const isMobile = breakpoint === 'mobile';
@@ -130,7 +131,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               
                setSheetOpen(false);
           }
-          handleComponentAdd(active.data.current.type, active.data.current.defaultProps);
+          setSelectedComponentId(handleComponentAdd(active.data.current.type, active.data.current.defaultProps)); 
+          
      };
 
      const handleDragEnd = (event: DragEndEvent) => {
