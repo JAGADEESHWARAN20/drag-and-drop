@@ -137,7 +137,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                const { componentType, defaultProps } = active.data.current;
                setDraggingComponent({ type: componentType, defaultProps });
                dragStartTime.current = Date.now();
-               // Set a timeout to close the sheet if dragging continues for 0.5s
+               handleComponentAdd(componentType, defaultProps);
+               setSelectedComponentId(uuidv4());
                dragTimeout.current = setTimeout(() => {
                     setSheetOpen(false);
                }, 500);
@@ -239,7 +240,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                         </SheetHeader>
                                         <ComponentPanel
                                              ref={componentPanelRef}
-                                             onHoldAdd={handleClickAndHoldToAddComponent} // ✅ New: for hold-to-add
+                                             
                                              onComponentClick={handleComponentAdd}
                                              onClosePanel={() => setSheetOpen(true)}
                                         />
