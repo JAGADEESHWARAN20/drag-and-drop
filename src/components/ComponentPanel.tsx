@@ -109,6 +109,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
         onClosePanel();
       }
     } else {
+      // Existing logic for reordering within the panel
       isDraggingIntent.current = true;
       dragStartTimeout.current = setTimeout(() => {
         if (isDraggingIntent.current) {
@@ -119,7 +120,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
       }, 150);
     }
   }, [startDragging, onClosePanel, setDraggingComponent]);
-
+  
   const handleDragEnd = useCallback((event: any) => {
     isDraggingIntent.current = false;
     if (dragStartTimeout.current) {

@@ -36,14 +36,13 @@ const DraggableComponent = ({ component }: DraggableComponentProps) => {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 md:w-24 md:h-24 flex-shrink-0 ${
-        isDragging ? 'opacity-50 cursor-grabbing' : ''
-      } hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700`}
+      className={`p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 md:w-24 md:h-24 flex-shrink-0 ${isDragging ? 'opacity-50 cursor-grabbing' : ''
+        } hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700`}
       style={{
         touchAction: 'none',
         userSelect: 'none',
       }}
-      aria-labelledby={`drag-label-${component.type}`} // Keep this
+      aria-labelledby={`drag-label-${component.type}`}
     >
       <div className="text-blue-500 mb-1 dark:text-white">
         <component.icon size={20} aria-hidden="true" />
