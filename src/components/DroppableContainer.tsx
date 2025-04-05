@@ -100,7 +100,7 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
       {...listeners}
     >
       {isSelected && (
-        <div className="absolute -top-6 right-0 flex text-slate-700 py-2 text-xs z-50">
+        <div className="absolute -top-2 right-0 flex text-slate-700 py-2 text-xs z-50">
           <span className="px-2 py-1 flex w-full items-center">
             <Move size={12} className="mr-1" />
           </span>
