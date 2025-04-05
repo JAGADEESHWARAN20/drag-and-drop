@@ -108,7 +108,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
       closePanelTimeout.current = setTimeout(() => {
         onClosePanel();
         closePanelTimeout.current = null;
-      }, 200); // Adjust the delay (milliseconds) as needed
+      }, 1000); // Adjust the delay (milliseconds) as needed
     }
   }, [onClosePanel, setDraggingComponent]);
 
@@ -198,7 +198,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
           items={filteredComponents.map((component) => component.type)}
           strategy={horizontalListSortingStrategy}
         >
-          <div className={`flex space-x-2 overflow-x-auto ${dndKitIsDragging ? 'overflow-x-hidden' : ''}`}>
+          <div className={`flex space-x-2 overflow-x-auto ${dndKitIsDragging ? 'overflow-x-hidden pointer-events-none' : ''}`}>
             {filteredComponents.map((component) => (
               <SortableLibraryComponent
                 key={component.type}

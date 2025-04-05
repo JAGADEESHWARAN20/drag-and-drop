@@ -41,7 +41,7 @@ const DraggableComponent = ({ component }: DraggableComponentProps) => {
   useEffect(() => {
     setNodeRef(dragRef.current as HTMLDivElement);
   }, [setNodeRef, dragRef]);
-  
+
   return (
     <div
       ref={dragRef}
@@ -50,7 +50,7 @@ const DraggableComponent = ({ component }: DraggableComponentProps) => {
       className={`p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 md:w-24 md:h-24 flex-shrink-0 ${isDragging ? 'opacity-50 cursor-grabbing' : ''
         } ${isPressing ? 'ring-2 ring-blue-500' : ''} hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700`}
       style={{
-        touchAction: 'none',
+        touchAction: 'pan-y',
         userSelect: 'none',
         transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
       }}
