@@ -31,6 +31,7 @@ export interface WebsiteState {
      isPreviewMode: boolean;
      breakpoint: Breakpoint;
      componentOrder: string[];
+     isDragging: boolean;
 
      setCurrentPageId: (id: string) => void;
      addPage: (page: Page) => void;
