@@ -200,7 +200,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
         </div>
       )}
 
-      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} sensors={sensors}>
+     
         <SortableContext
           items={filteredComponents.map((component) => component.type)}
           strategy={horizontalListSortingStrategy}
@@ -215,7 +215,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
             ))}
           </div>
         </SortableContext>
-      </DndContext>
+
 
       {Object.keys(filteredComponents).length === 0 && searchTerm && (
         <div className="text-center text-gray-500 dark:text-gray-400">
