@@ -1,9 +1,11 @@
 // --- Updated useWebsiteStore definition ---
-import { create } from 'zustand';
+import { create, useStore, StoreApi } from 'zustand'; // Import StoreApi
 import { v4 as uuidv4 } from 'uuid';
 import { immer } from 'zustand/middleware/immer';
 import { devtools } from 'zustand/middleware';
 import { WebsiteState as State, Component } from '../types'; // Import Component type
+import React, { ReactNode, createContext, useContext } from 'react'; // Correct imports
+
 
 export type Breakpoint = 'desktop' | 'tablet' | 'mobile';
 
@@ -11,10 +13,24 @@ interface WebsiteStoreActions {
   setCurrentPageId: (id: string) => void;
   addPage: (page: { id: string; name: string }) => void;
   removePage: (pageId: string) => void;
-  addComponent: (component: Omit<Component, 'id' | 'children' | 'style'> & { parentId?: string | null; allowChildren?: boolean; responsiveProps: { desktop: Record<string, any>; tablet: Record<string, any>; mobile: Record<string, any>; } }) => void;
+  addComponent: (
+    component: Omit<Component, 'id' | 'children' | 'style'> & {
+      parentId?: string | null;
+      allowChildren?: boolean;
+      responsiveProps: {
+        desktop: Record<string, any>;
+        tablet: Record<string, any>;
+        mobile: Record<string, any>;
+      };
+    }
+  ) => void;
   removeComponent: (id: string) => void;
   updateComponentProps: (id: string, props: Record<string, string | number | boolean | object>) => void;
-  updateResponsiveProps: (id: string, breakpoint: Breakpoint, props: Record<string, string | number | boolean | object>) => void;
+  updateResponsiveProps: (
+    id: string,
+    breakpoint: Breakpoint,
+    props: Record<string, string | number | boolean | object>
+  ) => void;
   setSelectedComponentId: (id: string | null) => void;
   reorderComponents: (pageId: string, oldIndex: number, newIndex: number) => void; // Removed parentId
   moveComponent: (id: string, targetId: string | null, isContainer?: boolean) => void;
@@ -48,8 +64,12 @@ export const useWebsiteStore = create<WebsiteState>()(
       isDragging: false,
       draggingComponent: { type: null, defaultProps: null },
 
-      setCurrentPageId: (id) => set((state) => { state.currentPageId = id; }),
-      addPage: (page) => set((state) => { state.pages.push(page); }),
+      setCurrentPageId: (id) => set((state) => {
+        state.currentPageId = id;
+      }),
+      addPage: (page) => set((state) => {
+        state.pages.push(page);
+      }),
       removePage: (pageId) => set((state) => {
         state.pages = state.pages.filter((page) => page.id !== pageId);
         state.components = state.components.filter((component) => component.pageId !== pageId);
@@ -76,7 +96,9 @@ export const useWebsiteStore = create<WebsiteState>()(
         if (parent && parent.allowChildren) {
           parent.children.push(newComponent.id);
         } else if (component.parentId) {
-          console.warn(`Attempted to add child to component ${component.parentId} which does not allow children or doesn't exist.`);
+          console.warn(
+            `Attempted to add child to component ${component.parentId} which does not allow children or doesn't exist.`
+          );
         }
         state.components.push(newComponent);
         state.selectedComponentId = newComponent.id;
@@ -115,13 +137,15 @@ export const useWebsiteStore = create<WebsiteState>()(
           };
         }
       }),
-      setSelectedComponentId: (id) => set((state) => { state.selectedComponentId = id; }),
+      setSelectedComponentId: (id) => set((state) => {
+        state.selectedComponentId = id;
+      }),
       reorderComponents: (pageId, oldIndex, newIndex) => set((state) => {
         const pageComponents = state.components.filter((c) => c.pageId === pageId && c.parentId === null);
         const [moved] = pageComponents.splice(oldIndex, 1);
         pageComponents.splice(newIndex, 0, moved);
-        state.components = state.components.map(c =>
-          c.pageId === pageId && c.parentId === null ? pageComponents.find(pc => pc.id === c.id) || c : c
+        state.components = state.components.map((c) =>
+          c.pageId === pageId && c.parentId === null ? pageComponents.find((pc) => pc.id === c.id) || c : c
         );
       }),
       moveComponent: (id, targetId, isContainer = false) => set((state) => {
@@ -143,8 +167,12 @@ export const useWebsiteStore = create<WebsiteState>()(
 
         component.parentId = isContainer ? targetId : component.parentId || null;
       }),
-      setIsPreviewMode: (isPreview) => set((state) => { state.isPreviewMode = isPreview; }),
-      setBreakpoint: (breakpoint) => set((state) => { state.breakpoint = breakpoint; }),
+      setIsPreviewMode: (isPreview) => set((state) => {
+        state.isPreviewMode = isPreview;
+      }),
+      setBreakpoint: (breakpoint) => set((state) => {
+        state.breakpoint = breakpoint;
+      }),
       setAllowChildren: (id, allow) => set((state) => {
         const component = state.components.find((c) => c.id === id);
         if (component) {
@@ -175,10 +203,10 @@ export const useWebsiteStore = create<WebsiteState>()(
         if (parent) {
           parent.children = newOrder;
         } else if (parentId === null) {
-          const rootComponents = state.components.filter(c => c.parentId === null);
-          const nonRootComponents = state.components.filter(c => c.parentId !== null);
+          const rootComponents = state.components.filter((c) => c.parentId === null);
+          const nonRootComponents = state.components.filter((c) => c.parentId !== null);
           const orderedRootComponents = newOrder
-            .map(id => rootComponents.find(c => c.id === id))
+            .map((id) => rootComponents.find((c) => c.id === id))
             .filter(Boolean) as Component[];
           state.components = [...orderedRootComponents, ...nonRootComponents];
         }
@@ -186,18 +214,18 @@ export const useWebsiteStore = create<WebsiteState>()(
       setComponentOrder: (order) => set((state) => ({ componentOrder: order })),
       updateComponentOrder: (parentId, newOrder) => set((state) => {
         if (parentId === null) {
-          const rootComponents = state.components.filter(c => c.parentId === null);
-          const nonRootComponents = state.components.filter(c => c.parentId !== null);
+          const rootComponents = state.components.filter((c) => c.parentId === null);
+          const nonRootComponents = state.components.filter((c) => c.parentId !== null);
 
-          const rootComponentMap = new Map(rootComponents.map(c => [c.id, c]));
+          const rootComponentMap = new Map(rootComponents.map((c) => [c.id, c]));
 
           const orderedRootComponents = newOrder
-            .map(id => rootComponentMap.get(id))
+            .map((id) => rootComponentMap.get(id))
             .filter(Boolean) as Component[];
 
           state.components = [...orderedRootComponents, ...nonRootComponents];
         } else {
-          const parent = state.components.find(c => c.id === parentId);
+          const parent = state.components.find((c) => c.id === parentId);
           if (parent) {
             parent.children = newOrder;
           }
@@ -207,3 +235,8 @@ export const useWebsiteStore = create<WebsiteState>()(
     { name: 'WebsiteStore' }
   )
 );
+
+
+
+
+

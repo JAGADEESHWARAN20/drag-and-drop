@@ -1,5 +1,7 @@
 // In your ../types/index.ts
 
+import { ReactNode } from "react";
+
 export type Breakpoint = 'desktop' | 'tablet' | 'mobile';
 
 export interface Page {
@@ -50,6 +52,10 @@ export interface WebsiteState {
      reorderChildren: (parentId: string | null, newOrder: string[]) => void;
      updateComponentOrder: (parentId: string | null, newOrder: string[]) => void;
      setComponentOrder: (order: string[]) => void; // Add this line
+}
+
+export interface WebsiteStoreProviderProps {
+     children?: ReactNode;
 }
 
 export type PublicContextDescriptor = {
