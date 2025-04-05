@@ -34,7 +34,9 @@ export interface WebsiteState {
      breakpoint: Breakpoint;
      componentOrder: string[];
      isDragging: boolean;
-
+     
+    
+     setDraggingComponent: (component: any) => void;
      setCurrentPageId: (id: string) => void;
      addPage: (page: Page) => void;
      removePage: (pageId: string) => void;
