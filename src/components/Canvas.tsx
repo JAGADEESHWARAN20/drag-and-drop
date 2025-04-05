@@ -28,7 +28,7 @@ import Button from '@/components/ui/button';
 import SelectionManager from './SelectionManager';
 import ContextMenu from './ContextMenu';
 import { v4 as uuidv4 } from 'uuid';
-import { ComponentProps } from './DraggableComponent'; // Ensure this type is imported
+import { ComponentProps } from './DraggableComponent';
 
 interface CanvasProps {
   isPreviewMode: boolean;
@@ -75,9 +75,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
 
   const { setNodeRef: setCanvasDropRef, isOver: isCanvasOver } = useDroppable({
     id: 'canvas-drop-area',
-    data: {
-      accepts: 'COMPONENT',
-    },
+    data: { accepts: 'COMPONENT' },
   });
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -103,7 +101,6 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
           componentType: string;
           defaultProps: ComponentProps;
         };
-
         const newComponentId = uuidv4();
         addComponent({
           id: newComponentId,
@@ -121,35 +118,48 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
         return;
       }
 
-      // Handle drop into a DroppableContainer
-      if (overIdStr?.startsWith('droppable-') && active.data.current?.type === 'COMPONENT') {
-        const parentId = overIdStr.replace('droppable-', '');
-        const parentComponent = components.find((c) => c.id === parentId);
+      // Handle drop from ComponentPanel or existing component into a DroppableContainer
+      if (overIdStr?.startsWith('droppable-')) {
+        const targetId = overIdStr.replace('droppable-', '');
+        const targetComponent = components.find((c) => c.id === targetId);
 
-        if (parentComponent && parentComponent.allowChildren) {
-          const componentData = active.data.current as {
-            type: 'COMPONENT';
-            componentType: string;
-            defaultProps: ComponentProps;
-          };
-
-          const newComponentId = uuidv4();
-          addComponent({
-            id: newComponentId,
-            pageId: currentPageId,
-            parentId,
-            type: componentData.componentType,
-            props: { ...componentData.defaultProps },
-            responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
-          });
-          toast({
-            title: 'Component Added',
-            description: `Added ${componentData.componentType} to ${parentComponent.type}.`,
-          });
+        if (targetComponent && targetComponent.allowChildren) {
+          // New component from ComponentPanel
+          if (active.data.current?.type === 'COMPONENT') {
+            const componentData = active.data.current as {
+              type: 'COMPONENT';
+              componentType: string;
+              defaultProps: ComponentProps;
+            };
+            const newComponentId = uuidv4();
+            addComponent({
+              id: newComponentId,
+              pageId: currentPageId,
+              parentId: targetId,
+              type: componentData.componentType,
+              props: { ...componentData.defaultProps },
+              responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
+            });
+            toast({
+              title: 'Component Added',
+              description: `Added ${componentData.componentType} to ${targetComponent.type}.`,
+            });
+          }
+          // Moving an existing component
+          else {
+            const activeComponent = components.find((c) => c.id === activeIdStr);
+            if (activeComponent && activeComponent.id !== targetId) {
+              updateComponentParent(activeIdStr, targetId);
+              toast({
+                title: 'Component Moved',
+                description: `Moved ${activeComponent.type} into ${targetComponent.type}.`,
+              });
+            }
+          }
         } else {
           toast({
             title: 'Drop Failed',
-            description: 'Target container does not allow children.',
+            description: 'Target does not allow children.',
             variant: 'destructive',
           });
         }
@@ -157,7 +167,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
         return;
       }
 
-      // Handle reordering (root or child)
+      // Handle reordering within the same level
       if (overIdStr && activeIdStr !== overIdStr) {
         const activeComponent = components.find((c) => c.id === activeIdStr);
         const overComponent = components.find((c) => c.id === overIdStr);
@@ -167,25 +177,21 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
           return;
         }
 
-        // Reordering root components
-        if (!activeComponent.parentId && !overComponent.parentId) {
-          const oldIndex = rootComponents.findIndex((c) => c.id === activeIdStr);
-          const newIndex = rootComponents.findIndex((c) => c.id === overIdStr);
+        if (activeComponent.parentId === overComponent.parentId) {
+          const parentId = activeComponent.parentId || null;
+          const siblings = parentId
+            ? components.find((c) => c.id === parentId)?.children || []
+            : rootComponents.map((c) => c.id);
+          const oldIndex = siblings.indexOf(activeIdStr);
+          const newIndex = siblings.indexOf(overIdStr);
+
           if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-            reorderComponents(currentPage.id, oldIndex, newIndex);
-            toast({ title: 'Component Reordered', description: 'Component order updated.' });
-          }
-        }
-        // Reordering child components
-        else if (activeComponent.parentId && activeComponent.parentId === overComponent.parentId) {
-          const parentId = activeComponent.parentId;
-          const parent = components.find((c) => c.id === parentId);
-          if (parent && parent.children) {
-            const oldIndex = parent.children.indexOf(activeIdStr);
-            const newIndex = parent.children.indexOf(overIdStr);
-            if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+            if (parentId) {
               reorderChildren(parentId, oldIndex, newIndex);
               toast({ title: 'Child Reordered', description: 'Child component order updated.' });
+            } else {
+              reorderComponents(currentPage.id, oldIndex, newIndex);
+              toast({ title: 'Component Reordered', description: 'Component order updated.' });
             }
           }
         }
@@ -198,9 +204,9 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
       currentPageId,
       rootComponents,
       addComponent,
+      updateComponentParent,
       reorderComponents,
       reorderChildren,
-      moveComponent,
     ]
   );
 
@@ -281,6 +287,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
       const mergedProps = { ...componentData.props, ...responsiveProps };
       const childComponents = components.filter((c) => c.parentId === componentData.id);
       const isSelected = selectedIds.includes(componentData.id);
+      const isDragging = activeId === componentData.id;
 
       return (
         <DroppableContainer
@@ -305,8 +312,8 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
             )}
             {componentData.allowChildren && !isPreviewMode && (
               <div
-                className="border-dashed border-2 p-2 border-gray-400 text-gray-500 text-center"
-                data-droppable-id={`placeholder-${componentData.id}`}
+                className={`border-dashed border-2 p-2 ${isDragging ? 'bg-blue-100' : 'border-gray-400'
+                  } text-gray-500 text-center`}
                 style={{ minHeight: '40px' }}
               >
                 Drop here to add child
@@ -333,6 +340,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
       selectedIds,
       handleComponentClick,
       setAllowChildren,
+      activeId,
     ]
   );
 
@@ -341,7 +349,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
       case 'mobile':
         return 'w-full min-w-[320px] max-w-[375px] mx-auto';
       case 'tablet':
-        return 'w-full min-w-[640px] max-w-[768px] mx-auto';
+        return 'w-full min  max-w-[768px] mx-auto';
       case 'desktop':
         return 'w-full max-w-[1200px] mx-auto';
       default:
