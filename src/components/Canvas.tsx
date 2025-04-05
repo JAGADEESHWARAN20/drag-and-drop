@@ -210,7 +210,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
         id="canvas-drop-area"
       >
         <div
-          className={`relative ${isPreviewMode ? 'bg-white' : 'bg-gray-50 border-dashed border-2 border-gray-300'} overflow-x-auto p-6`}
+          className={`relative h-full ${isPreviewMode ? 'bg-white' : 'bg-gray-50 border-dashed border-2 border-gray-300'} overflow-x-auto p-6`}
           onClick={() => !isPreviewMode && setSelectedComponentId(null)}
           onContextMenu={handleRightClick}
         >
