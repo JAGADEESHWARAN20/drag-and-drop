@@ -144,28 +144,29 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    // Handle dropping a new component from the library
     if (active?.id === 'library-component' && over?.id === 'canvas-drop-area' && draggingComponent) {
       const newComponentId = uuidv4();
       addComponent({
         type: draggingComponent.type,
         props: draggingComponent.defaultProps,
         pageId: currentPageId,
-        parentId: null, // Initially no parent
+        parentId: null,
         responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
-        // Access allowChildren from ComponentRegistry
         allowChildren: (ComponentRegistry[draggingComponent.type as keyof typeof ComponentRegistry]?.allowChildren) || false,
       });
-      setDraggingComponent(null); // Clear the dragged component
-      setSelectedComponentId(newComponentId); // Select the newly added component
+      setDraggingComponent(null);
+      setSelectedComponentId(newComponentId);
       toast({
         title: 'Component Added',
         description: `Added ${draggingComponent.type} to canvas.`,
       });
+
+      // Close the sheet after adding the component
+      useWebsiteStore.getState().setSheetOpen(false);
       return;
     }
 
-    // Existing reordering logic (if you have it)
+    // Existing reordering logic...
     if (active && over && active.id !== over.id) {
       const activeId = active.id;
       const overId = over.id;
@@ -176,17 +177,15 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
       if (activeComponent && overComponent && activeComponent.parentId === overComponent.parentId) {
         const parentId = activeComponent.parentId;
         const siblings = pageComponents.filter(c => c.parentId === parentId).map(c => c.id);
-        const oldIndex = siblings.indexOf(String(activeId)); // Cast activeId to string
-        const newIndex = siblings.indexOf(String(overId));   // Cast overId to string
+        const oldIndex = siblings.indexOf(String(activeId));
+        const newIndex = siblings.indexOf(String(overId));
 
         if (oldIndex !== -1 && newIndex !== -1) {
-          reorderComponents(currentPageId, oldIndex, newIndex); // Removed parentId
+          reorderComponents(currentPageId, oldIndex, newIndex);
         }
       } else if (activeComponent && !overComponent && activeComponent.parentId === null) {
         // Dragging to the root level (no over component)
         const oldIndex = rootComponents.findIndex(c => c.id === activeId);
-        // You might need to determine the new index based on drop position if not using SortableContext at the root
-        // For simplicity here, we won't change the order if dropped outside existing root components
         if (oldIndex !== -1) {
           // Optionally handle dropping at the end or beginning of root components
         }
@@ -206,11 +205,11 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
         ref={setNodeRef}
         style={canvasStyle}
         className={`h-full mx-auto bg-white ${getCanvasWidth()} transition-all duration-300 ${isOver ? 'bg-green-100' : ''}`}
-        
+        {...(node && !(active || over) ? droppable : {})}
         id="canvas-drop-area"
       >
         <div
-          className={`relative ${isPreviewMode ? 'bg-white' : 'bg-gray-50 border-dashed border-2 border-gray-300'} overflow-x-auto p-6`}
+          className={`relative h-full ${isPreviewMode ? 'bg-white' : 'bg-gray-50 border-dashed border-2 border-gray-300'} overflow-x-auto p-6`}
           onClick={() => !isPreviewMode && setSelectedComponentId(null)}
           onContextMenu={handleRightClick}
         >
@@ -235,7 +234,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
             )}
           </SortableContext>
           {rootComponents.length === 0 && !isPreviewMode && isOver && draggingComponent && (
-            <div className="absolute top-0 left-0 w-full h-full bg-neutral-100 backdrop-blur-md  opacity-50 flex items-center justify-center text-green-500">
+            <div className="absolute top-0 left-0 w-full h-full bg-green-100 opacity-50 flex items-center justify-center text-green-500">
               Drop here to add component
             </div>
           )}

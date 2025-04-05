@@ -114,7 +114,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                description: `Added ${type} to canvas.`,
           });
           setSheetOpen(false);
-          setSelectedComponentId(null);
+          setSelectedComponentId(newComponentId);
      };
 
      const isMobile = breakpoint === 'mobile';
@@ -128,8 +128,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                const { componentType, defaultProps } = active.data.current;
                setDraggingComponent({ type: componentType, defaultProps });
                // Force sheet closure with a slight delay to ensure state update
+               setSheetOpen(false)
           }
-          setSheetOpen(false)
      };
 
      const handleDragEnd = (event: DragEndEvent) => {
@@ -152,7 +152,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     title: 'Component Added',
                     description: `Added ${componentType} to canvas.`,
                });
-              
+               setSheetOpen(false)
           }
      };
 
@@ -179,7 +179,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                         <ComponentPanel
                                              ref={componentPanelRef}
                                              onComponentClick={handleComponentAdd}
-                                             onClosePanel={() => setSheetOpen(false)}
+                                             onClosePanel={() => setSheetOpen(true)}
                                         />
                                    </SheetContent>
                               </Sheet>
