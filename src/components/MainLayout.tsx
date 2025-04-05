@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { useWebsiteStore, Breakpoint, Page } from '../store/WebsiteStore';
 import ComponentPanel from './ComponentPanel';
 import Canvas from './Canvas';
@@ -46,7 +47,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      breakpoint,
      setBreakpoint,
 }) => {
-     const { components, selectedComponentId } = useWebsiteStore();
+     const { components, selectedComponentId,addComponent } = useWebsiteStore();
 
      const [isComponentPanelOpen, setIsComponentPanelOpen] = useState(false);
      const [isPropertyPanelOpen, setIsPropertyPanelOpen] = useState(false);
@@ -92,7 +93,35 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           toast({ title: 'Page Deleted', description: 'Page has been deleted' });
           setIsPageSheetOpen(false);
      };
+     const handleDragEnd = (event: DragEndEvent) => {
+          const { active, over } = event;
 
+          if (active && over && over.id === 'canvas-drop-area' && active.data?.current?.type === 'COMPONENT') {
+               const { componentType, defaultProps } = active.data.current;
+
+               // Determine the currentPageId (you might need to get this from the store)
+               const currentPageId = useWebsiteStore.getState().currentPageId;
+
+               // For a top-level component dropped on the canvas, parentId should be null
+               const parentId = null;
+
+               // Initialize responsiveProps with default empty objects
+               const responsiveProps = {
+                    desktop: {},
+                    tablet: {},
+                    mobile: {},
+               };
+
+               addComponent({
+                    type: componentType,
+                    props: defaultProps,
+                    id: Date.now().toString(), // Basic ID generation
+                    pageId: currentPageId,
+                    parentId: parentId,
+                    responsiveProps: responsiveProps,
+               });
+          }
+     };
      // Determine if the device is mobile based on breakpoint
      const isMobile = breakpoint === 'mobile';
 
@@ -349,7 +378,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               </Sheet>
                          )}
 
+                         <DndContext onDragEnd={handleDragEnd}>
+                         
                          <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
+                         </DndContext>
                     </div>
                </div>
           </div>

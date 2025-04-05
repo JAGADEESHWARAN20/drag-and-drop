@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+
 import { useDraggable } from '@dnd-kit/core';
-import { useWebsiteStore } from '../store/WebsiteStore';
+
 import { ComponentType, SVGProps } from 'react';
 
 // Create a unified type for component props
@@ -21,7 +21,7 @@ interface DraggableComponentProps {
 }
 
 const DraggableComponent = ({ component }: DraggableComponentProps) => {
-  const { addComponent } = useWebsiteStore();
+  
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `draggable-${component.type}`,
     data: {
