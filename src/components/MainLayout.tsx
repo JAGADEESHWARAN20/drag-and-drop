@@ -128,7 +128,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                const { componentType, defaultProps } = active.data.current;
                setDraggingComponent({ type: componentType, defaultProps });
                // Force sheet closure with a slight delay to ensure state update
-               setTimeout(() => setSheetOpen(false), 0); // Microtask to enforce re-render
+               setSheetOpen(false)
           }
      };
 
@@ -152,6 +152,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     title: 'Component Added',
                     description: `Added ${componentType} to canvas.`,
                });
+              
           }
      };
 
@@ -160,7 +161,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
                     <nav className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 shadow-md">
                          <div className="flex items-center space-x-3">
-                              <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}> {/* Remove ref */}
+                              <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}> 
                                    <SheetTrigger asChild>
                                         <Button variant="ghost" className="text-gray-600 dark:text-gray-300 p-2">
                                              <Menu size={20} />
