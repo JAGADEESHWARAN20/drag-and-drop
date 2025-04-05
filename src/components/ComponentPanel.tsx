@@ -53,7 +53,6 @@ const SortableLibraryComponent = ({ component, onComponentClick }: SortableLibra
       style={style}
       {...attributes}
       {...listeners}
-      key={component.type}
       className="p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 flex-shrink-0 hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700"
     >
       <DraggableComponent component={component} />
@@ -65,7 +64,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { componentOrder, setComponentOrder, setDraggingComponent } = useWebsiteStore();
-  const { isDragging: dndKitIsDragging } = useDndKitContext();
+  const { active } = useDndKitContext(); // Track active drag state
   const closePanelTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const sensors = useSensors(
@@ -205,8 +204,13 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
           strategy={horizontalListSortingStrategy}
         >
           <div
-            className="flex space-x-2 overflow-x-auto overflow-y-hidden"
-            style={{ minHeight: '0', flex: '1 1 auto' }} // Prevent vertical scrolling and allow horizontal only
+            className="flex space-x-2 overflow-x-auto"
+            style={{
+              overflowY: 'hidden', // Explicitly hide vertical scrolling
+              minHeight: '0', // Prevent flex container from growing beyond content
+              flex: '1 1 auto', // Allow flex to grow and shrink
+              touchAction: 'pan-x', // Allow horizontal panning only
+            }}
           >
             {filteredComponents.map((component) => (
               <SortableLibraryComponent
