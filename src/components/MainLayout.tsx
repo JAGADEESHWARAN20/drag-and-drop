@@ -64,16 +64,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           }
      }, [isDarkMode]);
 
-     // Only open panels when a component is explicitly selected
+     // Only open panels when a component is explicitly selected (for larger screens)
      useEffect(() => {
-          if (selectedComponentId) {
-               setIsPropertyPanelOpen(true);
-               setIsHierarchyOpen(false); // Optional: close hierarchy when property opens
-          } else {
-               setIsPropertyPanelOpen(false);
-               setIsHierarchyOpen(false);
+          if (breakpoint !== 'mobile') {
+               if (selectedComponentId) {
+                    setIsPropertyPanelOpen(true);
+                    setIsHierarchyOpen(false); // Optional: close hierarchy when property opens
+               } else {
+                    setIsPropertyPanelOpen(false);
+                    setIsHierarchyOpen(false);
+               }
           }
-     }, [selectedComponentId]);
+     }, [selectedComponentId, breakpoint]);
 
      const handleAddPage = () => {
           const newPageId = uuidv4();
@@ -116,14 +118,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
      // Gesture handlers for mobile drawer
      const handleTouchStart = (e: React.TouchEvent, type: 'property' | 'hierarchy') => {
-          if (!isMobile || isPreviewMode) return;
+          if (!isMobile || isPreviewMode || !selectedComponentId) return;
           setDragStartX(e.touches[0].clientX);
           setDragStartY(e.touches[0].clientY);
           setIsDragging(true);
      };
 
      const handleTouchMove = (e: React.TouchEvent, type: 'property' | 'hierarchy') => {
-          if (!isMobile || isPreviewMode || dragStartX === null || dragStartY === null || !isDragging) return;
+          if (!isMobile || isPreviewMode || dragStartX === null || dragStartY === null || !isDragging || !selectedComponentId) return;
           const currentX = e.touches[0].clientX;
           const currentY = e.touches[0].clientY;
           const deltaX = dragStartX - currentX;
@@ -131,13 +133,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
           // Only trigger on horizontal swipe with minimal vertical movement
           if (Math.abs(deltaX) > dragThreshold && deltaY < dragThreshold) {
-               if (deltaX > 0 && !isDragging) { // Swipe right to left to open
+               if (deltaX > 0) { // Swipe right to left to open
                     if (type === 'property' && !isPropertyPanelOpen) {
                          setIsPropertyPanelOpen(true);
                     } else if (type === 'hierarchy' && !isHierarchyOpen) {
                          setIsHierarchyOpen(true);
                     }
-               } else if (deltaX < 0 && isDragging) { // Swipe left to right to close
+               } else if (deltaX < 0) { // Swipe left to right to close
                     if (type === 'property' && isPropertyPanelOpen) {
                          setIsPropertyPanelOpen(false);
                     } else if (type === 'hierarchy' && isHierarchyOpen) {
@@ -145,6 +147,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     }
                }
                setIsDragging(false); // Reset dragging state after action
+               setDragStartX(null);
+               setDragStartY(null);
           }
      };
 
@@ -348,25 +352,62 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               )}
                          </AnimatePresence>
 
-                         {/* Property Panel */}
-                         {!isPreviewMode && selectedComponentId && (
+                         {/* Property Panel (Mobile Drawer) */}
+                         {isMobile && !isPreviewMode && selectedComponentId && (
+                              <AnimatePresence>
+                                   {isPropertyPanelOpen && (
+                                        <motion.div
+                                             initial={{ x: '100%' }}
+                                             animate={{ x: 0 }}
+                                             exit={{ x: '100%' }}
+                                             transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                                             className="fixed top-0 right-0 h-full w-screen bg-gray-100 dark:bg-gray-900 shadow-xl z-50 overflow-y-auto p-4"
+                                        >
+                                             <div className="flex justify-between items-center mb-4">
+                                                  <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300">Properties</h2>
+                                                  <Button variant="ghost" size="icon" onClick={() => setIsPropertyPanelOpen(false)}>
+                                                       <X size={20} />
+                                                  </Button>
+                                             </div>
+                                             <PropertyPanel />
+                                        </motion.div>
+                                   )}
+                              </AnimatePresence>
+                         )}
+
+                         {/* Element Hierarchy (Mobile Drawer) */}
+                         {isMobile && !isPreviewMode && selectedComponentId && (
+                              <AnimatePresence>
+                                   {isHierarchyOpen && (
+                                        <motion.div
+                                             initial={{ x: '100%' }}
+                                             animate={{ x: 0 }}
+                                             exit={{ x: '100%' }}
+                                             transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                                             className="fixed top-0 right-0 h-full w-screen bg-gray-100 dark:bg-gray-900 shadow-xl z-50 overflow-y-auto p-4"
+                                        >
+                                             <div className="flex justify-between items-center mb-4">
+                                                  <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300">Element Hierarchy</h2>
+                                                  <Button variant="ghost" size="icon" onClick={() => setIsHierarchyOpen(false)}>
+                                                       <X size={20} />
+                                                  </Button>
+                                             </div>
+                                             <ElementHierarchyViewer />
+                                        </motion.div>
+                                   )}
+                              </AnimatePresence>
+                         )}
+
+                         {/* Property Panel Trigger (Large Screens) */}
+                         {!isMobile && !isPreviewMode && selectedComponentId && (
                               <Sheet open={isPropertyPanelOpen} onOpenChange={setIsPropertyPanelOpen}>
                                    <SheetTrigger asChild>
-                                        {isMobile ? (
-                                             <div
-                                                  className="absolute top-0 right-0 w-10 h-full z-50 bg-gradient-to-l from-gray-200 to-transparent dark:from-gray-700 cursor-pointer"
-                                                  onTouchStart={(e) => handleTouchStart(e, 'property')}
-                                                  onTouchMove={(e) => handleTouchMove(e, 'property')}
-                                                  onTouchEnd={handleTouchEnd}
-                                             />
-                                        ) : (
-                                             <Button
-                                                  variant="ghost"
-                                                  className="absolute top-4 right-12 z-50 text-gray-600 dark:text-gray-300"
-                                             >
-                                                  {isPropertyPanelOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
-                                             </Button>
-                                        )}
+                                        <Button
+                                             variant="ghost"
+                                             className="absolute top-4 right-12 z-50 text-gray-600 dark:text-gray-300"
+                                        >
+                                             {isPropertyPanelOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
+                                        </Button>
                                    </SheetTrigger>
                                    <SheetContent side="right" className="w-80 p-4">
                                         <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">Properties</h2>
@@ -375,25 +416,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               </Sheet>
                          )}
 
-                         {/* Element Hierarchy */}
-                         {!isPreviewMode && selectedComponentId && (
+                         {/* Element Hierarchy Trigger (Large Screens) */}
+                         {!isMobile && !isPreviewMode && selectedComponentId && (
                               <Sheet open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen}>
                                    <SheetTrigger asChild>
-                                        {isMobile ? (
-                                             <div
-                                                  className="absolute top-0 right-0 w-10 h-full z-50 bg-gradient-to-l from-gray-200 to-transparent dark:from-gray-700 cursor-pointer"
-                                                  onTouchStart={(e) => handleTouchStart(e, 'hierarchy')}
-                                                  onTouchMove={(e) => handleTouchMove(e, 'hierarchy')}
-                                                  onTouchEnd={handleTouchEnd}
-                                             />
-                                        ) : (
-                                             <Button
-                                                  variant="ghost"
-                                                  className="absolute top-4 right-4 z-50 text-gray-600 dark:text-gray-300"
-                                             >
-                                                  <Layers size={24} />
-                                             </Button>
-                                        )}
+                                        <Button
+                                             variant="ghost"
+                                             className="absolute top-4 right-4 z-50 text-gray-600 dark:text-gray-300"
+                                        >
+                                             <Layers size={24} />
+                                        </Button>
                                    </SheetTrigger>
                                    <SheetContent side="right" className="w-80 p-4">
                                         <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">
@@ -402,6 +434,26 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                         <ElementHierarchyViewer />
                                    </SheetContent>
                               </Sheet>
+                         )}
+
+                         {/* Mobile Gesture Areas */}
+                         {isMobile && !isPreviewMode && selectedComponentId && (
+                              <>
+                                   {/* Left edge for Hierarchy */}
+                                   <div
+                                        className="fixed top-0 left-0 w-10 h-full z-40 cursor-grab active:cursor-grabbing"
+                                        onTouchStart={(e) => handleTouchStart(e, 'hierarchy')}
+                                        onTouchMove={(e) => handleTouchMove(e, 'hierarchy')}
+                                        onTouchEnd={handleTouchEnd}
+                                   />
+                                   {/* Right edge for Properties */}
+                                   <div
+                                        className="fixed top-0 right-0 w-10 h-full z-40 cursor-grab active:cursor-grabbing"
+                                        onTouchStart={(e) => handleTouchStart(e, 'property')}
+                                        onTouchMove={(e) => handleTouchMove(e, 'property')}
+                                        onTouchEnd={handleTouchEnd}
+                                   />
+                              </>
                          )}
 
                          <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
