@@ -145,48 +145,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           }
      };
 
-     const handleClickAndHoldToAddComponent = (
-          e: React.MouseEvent | React.TouchEvent,
-          componentType: string,
-          defaultProps: Record<string, any>
-     ) => {
-          const startHold = () => {
-               holdTimeoutRef.current = setTimeout(() => {
-                    const newComponentId = uuidv4();
-                    addComponent({
-                         type: componentType,
-                         props: defaultProps,
-                         id: newComponentId,
-                         pageId: currentPageId,
-                         parentId: null,
-                         responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
-                    });
-
-                    toast({
-                         title: 'Component Added',
-                         description: `Added ${componentType} to canvas.`,
-                    });
-
-                    setSheetOpen(false);
-                    setSelectedComponentId(newComponentId);
-               }, holdDuration);
-          };
-
-          const cancelHold = () => {
-               if (holdTimeoutRef.current) {
-                    clearTimeout(holdTimeoutRef.current);
-                    holdTimeoutRef.current = null;
-               }
-          };
-
-          // For both mouse and touch events
-          if (e.type === 'mousedown' || e.type === 'touchstart') {
-               startHold();
-          } else if (e.type === 'mouseup' || e.type === 'mouseleave' || e.type === 'touchend' || e.type === 'touchcancel') {
-               cancelHold();
-          }
-     };
-
+  
      const handleDragEnd = (event: DragEndEvent) => {
           const { active, over } = event;
           console.log('Drag End:', { active, over }); // Debug log
