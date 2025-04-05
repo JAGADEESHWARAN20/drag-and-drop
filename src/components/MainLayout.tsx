@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
+import { CustomToast } from '@/components/ui/CustomToast'; 
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -90,23 +91,29 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     setIsPageSheetOpen(false);
   };
 
-  const handleComponentAdd = (type: string, defaultProps: Record<string, any>) => {
-    const newComponentId = uuidv4();
-    addComponent({
-      type,
-      props: defaultProps,
-      id: newComponentId,
-      pageId: currentPageId,
-      parentId: null,
-      responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
-    });
-    toast({
-      title: 'Component Added',
-      description: `Added ${type} to canvas.`,
-    });
-    setIsComponentPanelOpen(false); // Close sheet after adding
-    setSelectedComponentId(null); // Reset selection to require canvas click
-  };
+     const handleComponentAdd = (type: string, defaultProps: Record<string, any>) => {
+          const newComponentId = uuidv4();
+          addComponent({
+               type,
+               props: defaultProps,
+               id: newComponentId,
+               pageId: currentPageId,
+               parentId: null,
+               responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
+          });
+          toast({
+               duration: 3000, // Adjust duration as needed
+               children: (
+                    <CustomToast
+                         title="Component Added"
+                         description={`Added a new ${type} to the canvas.`}
+                         status="success" // You can adjust the status based on the outcome
+                    />
+               ),
+          });
+          setIsComponentPanelOpen(false); // Close sheet after adding
+          setSelectedComponentId(null); // Reset selection to require canvas click
+     };
 
   const isMobile = breakpoint === 'mobile';
 
