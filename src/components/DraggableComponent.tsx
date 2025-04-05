@@ -31,29 +31,7 @@ const DraggableComponent = ({ component }: DraggableComponentProps) => {
     },
   });
 
-  const handleClick = () => {
-    const currentPageId = useWebsiteStore.getState().currentPageId;
-    const newComponentId = uuidv4();
-
-    addComponent({
-      id: newComponentId,
-      pageId: currentPageId,
-      parentId: null,
-      type: component.type,
-      props: { ...component.defaultProps },
-      children: [],
-      responsiveProps: {
-        desktop: {},
-        tablet: {},
-        mobile: {},
-      },
-    });
-
-    toast({
-      title: 'Component Added',
-      description: `Added ${component.type} to canvas. You can now drag it to position.`,
-    });
-  };
+ 
 
   return (
     // In DraggableComponent.jsx
@@ -61,7 +39,7 @@ const DraggableComponent = ({ component }: DraggableComponentProps) => {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      onClick={handleClick}
+     
       className={`p-2 border rounded cursor-pointer bg-white flex flex-col items-center justify-center text-sm w-20 h-20 md:w-24 md:h-24 flex-shrink-0 ${isDragging ? 'opacity-50 cursor-grabbing' : ''} hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700`}
       style={{
         touchAction: 'none',

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useMemo, useCallback } from 'react';
 import {
   DndContext,
@@ -9,6 +11,7 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
+  useDroppable,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -21,9 +24,11 @@ import DroppableContainer from './DroppableContainer';
 import SortableItem from './SortableItem';
 import { toast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
-import  Button  from '@/components/ui/button';
+import Button from '@/components/ui/button';
 import SelectionManager from './SelectionManager';
 import ContextMenu from './ContextMenu';
+import { v4 as uuidv4 } from 'uuid';
+import { ComponentProps } from './DraggableComponent'; // Import the type
 
 interface CanvasProps {
   isPreviewMode: boolean;
@@ -42,6 +47,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
     setAllowChildren,
     moveComponent,
     reorderChildren,
+    addComponent, // Import addComponent
   } = useWebsiteStore();
 
   const { selectedIds, handleComponentClick, setSelectedIds } = SelectionManager();
@@ -59,6 +65,13 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
+  const { setNodeRef: setCanvasDropRef, isOver: isCanvasOver } = useDroppable({
+    id: 'canvas-drop-area', // Unique ID for the canvas drop target
+    data: {
+      accepts: 'COMPONENT',
+    },
+  });
+
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id.toString());
   };
@@ -66,22 +79,50 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (!active || !over) {
+    if (!active) {
       setActiveId(null);
       return;
     }
 
     const activeIdStr = active.id.toString();
-    const overIdStr = over.id.toString();
+    const overIdStr = over?.id.toString();
+
+    // Handle drop from component panel onto the canvas root
+    if (overIdStr === 'canvas-drop-area') {
+      const componentData = active.data.current as
+        | { componentType: string; defaultProps: ComponentProps }
+        | undefined;
+
+      if (componentData) {
+        const newComponentId = uuidv4();
+        addComponent({
+          id: newComponentId,
+          pageId: currentPageId,
+          parentId: null, // Dropped at the root level
+          type: componentData.componentType,
+          props: { ...componentData.defaultProps },
+          responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
+        });
+        toast({
+          title: 'Component Added',
+          description: `Added ${componentData.componentType} to canvas.`,
+        });
+      }
+      setActiveId(null);
+      return;
+    }
 
     // Handle drop into a placeholder (move to container)
-    if (overIdStr.startsWith('placeholder-')) {
+    if (overIdStr?.startsWith('placeholder-')) {
       const containerId = overIdStr.split('-')[1];
       moveComponent(activeIdStr, containerId, true);
       toast({ title: 'Component Moved', description: 'Component added to container' });
+      setActiveId(null);
+      return;
     }
+
     // Handle reordering (root or child)
-    else {
+    if (overIdStr) {
       const activeComponent = components.find((c) => c.id === activeIdStr);
       const overComponent = components.find((c) => c.id === overIdStr);
 
@@ -176,65 +217,67 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
     setContextMenu(null);
   };
 
-  const renderComponent = useCallback((componentData: Component) => {
-    const DynamicComponent = ComponentRegistry[componentData.type] as React.ComponentType<any>; // ✅ Fix type
+  const renderComponent = useCallback(
+    (componentData: Component) => {
+      const DynamicComponent = ComponentRegistry[componentData.type] as React.ComponentType<any>;
 
-    if (!DynamicComponent) return null;
+      if (!DynamicComponent) return null;
 
-    const responsiveProps = componentData.responsiveProps?.[currentBreakpoint] || {};
-    const mergedProps = { ...componentData.props, ...responsiveProps };
-    const childComponents = components.filter((c) => c.parentId === componentData.id);
-    const isSelected = selectedIds.includes(componentData.id);
+      const responsiveProps = componentData.responsiveProps?.[currentBreakpoint] || {};
+      const mergedProps = { ...componentData.props, ...responsiveProps };
+      const childComponents = components.filter((c) => c.parentId === componentData.id);
+      const isSelected = selectedIds.includes(componentData.id);
 
-    return (
-      <DroppableContainer
-        key={componentData.id}
-        id={componentData.id}
-        isPreviewMode={isPreviewMode}
-        isSelected={isSelected}
-        onSelect={(e) => handleComponentClick(componentData.id, e)}
-      >
-        <DynamicComponent {...mergedProps} id={componentData.id} isPreviewMode={isPreviewMode}>
-          {childComponents.length > 0 && (
-            <SortableContext items={childComponents.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-              {childComponents.map((child) => (
-                <SortableItem key={child.id} id={child.id}>
-                  {renderComponent(child)}
-                </SortableItem>
-              ))}
-            </SortableContext>
+      return (
+        <DroppableContainer
+          key={componentData.id}
+          id={componentData.id}
+          isPreviewMode={isPreviewMode}
+          isSelected={isSelected}
+          onSelect={(e) => handleComponentClick(componentData.id, e)}
+        >
+          <DynamicComponent {...mergedProps} id={componentData.id} isPreviewMode={isPreviewMode}>
+            {childComponents.length > 0 && (
+              <SortableContext items={childComponents.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+                {childComponents.map((child) => (
+                  <SortableItem key={child.id} id={child.id}>
+                    {renderComponent(child)}
+                  </SortableItem>
+                ))}
+              </SortableContext>
+            )}
+            {componentData.allowChildren && (
+              <div
+                className="border-dashed border-2 p-4 border-gray-400"
+                data-droppable-id={`placeholder-${componentData.id}`}
+                style={{ minHeight: '50px' }} // Ensure it's always droppable
+              />
+            )}
+          </DynamicComponent>
+          {componentData.type === 'Container' && !isPreviewMode && (
+            <div className="mt-2">
+              <Button
+                variant={componentData.allowChildren ? 'default' : 'outline'}
+                onClick={() => setAllowChildren(componentData.id, !componentData.allowChildren)}
+              >
+                {componentData.allowChildren ? 'Disable Children' : 'Enable Children'}
+              </Button>
+            </div>
           )}
-          {componentData.allowChildren && (
-            <div
-              className="border-dashed border-2 p-4 border-gray-400"
-              data-droppable-id={`placeholder-${componentData.id}`}
-              style={{ height: '50px' }}
-            />
-          )}
-        </DynamicComponent>
-        {componentData.type === 'Container' && !isPreviewMode && (
-          <div className="mt-2">
-            <Button
-              variant={componentData.allowChildren ? 'default' : 'outline'}
-              onClick={() => setAllowChildren(componentData.id, !componentData.allowChildren)}
-            >
-              {componentData.allowChildren ? 'Disable Children' : 'Enable Children'}
-            </Button>
-          </div>
-        )}
-      </DroppableContainer>
-    );
-  }, [isPreviewMode, selectedIds, components, currentBreakpoint, setAllowChildren, handleComponentClick]);
-
+        </DroppableContainer>
+      );
+    },
+    [isPreviewMode, selectedIds, components, currentBreakpoint, setAllowChildren, handleComponentClick]
+  );
 
   const getCanvasWidth = useCallback(() => {
     switch (currentBreakpoint) {
       case 'mobile':
-        return 'w-full min-w-[320px] max-w-[375px] mx-auto'; // Ensure minimum width for small screens
+        return 'w-full min-w-[320px] max-w-[375px] mx-auto';
       case 'tablet':
         return 'w-full min-w-[640px] max-w-[768px] mx-auto';
       case 'desktop':
-        return 'w-full max-w-[1200px] mx-auto'; // Add a max-width for desktop
+        return 'w-full max-w-[1200px] mx-auto';
       default:
         return 'w-full max-w-[1200px] mx-auto';
     }
@@ -249,8 +292,12 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
     >
       <div className={`min-h-full mx-auto bg-white ${getCanvasWidth()} transition-all duration-300`}>
         <div
-          ref={setCanvasRef}
-          className={`min-h-[calc(100vh-80px)] relative ${isPreviewMode ? 'bg-white' : 'bg-gray-50 border-dashed border-2 border-gray-300'} overflow-x-auto`} // Add overflow-x-auto
+          ref={(node) => {
+            setCanvasRef(node);
+            setCanvasDropRef(node);
+          }}
+          className={`min-h-[calc(100vh-80px)] relative ${isPreviewMode ? 'bg-white' : 'bg-gray-50 border-dashed border-2 border-gray-300'
+            } overflow-x-auto ${isCanvasOver && !isPreviewMode ? 'bg-green-100' : ''}`}
           onClick={() => !isPreviewMode && setSelectedComponentId(null)}
           onContextMenu={handleRightClick}
         >
@@ -261,7 +308,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
                 animate={{ opacity: 1 }}
                 className="h-full flex items-center justify-center text-gray-500 mt-7 text-lg p-6"
               >
-                Click components to add them to the canvas
+                Click or drag components from the left panel to add them to the canvas.
               </motion.div>
             ) : (
               <div className="p-6">

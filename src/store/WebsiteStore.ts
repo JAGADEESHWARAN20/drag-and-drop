@@ -90,8 +90,10 @@ export const useWebsiteStore = create<WebsiteState>()(
             allowChildren: false,
           };
           const parent = state.components.find((c) => c.id === component.parentId);
-          if (parent) {
+          if (parent && parent.allowChildren) { // Only add if parent allows children
             parent.children.push(newComponent.id);
+          } else if (component.parentId) {
+            console.warn(`Attempted to add child to component ${component.parentId} which does not allow children or doesn't exist.`);
           }
           state.components.push(newComponent);
           state.selectedComponentId = newComponent.id;
