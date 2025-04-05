@@ -41,8 +41,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      breakpoint,
      setBreakpoint,
 }) => {
-     const { components, selectedComponentId, addComponent, setSelectedComponentId } = useWebsiteStore();
-
+     const { components, selectedComponentId, addComponent, setSelectedComponentId, isSheetOpen, setSheetOpen } = useWebsiteStore();
      const [isComponentPanelOpen, setIsComponentPanelOpen] = useState(false);
      const [isPropertyPanelOpen, setIsPropertyPanelOpen] = useState(false);
      const [isHierarchyOpen, setIsHierarchyOpen] = useState(false);
@@ -104,18 +103,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                title: 'Component Added',
                description: `Added ${type} to canvas.`,
           });
-          setIsComponentPanelOpen(false); // Close sheet after adding
-          setSelectedComponentId(null); // Reset selection to require canvas click
+          setSheetOpen(false); // Close sheet via store
+          setSelectedComponentId(null);
      };
 
      const isMobile = breakpoint === 'mobile';
-
+     
      return (
           <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
                {/* Navbar */}
                <nav className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 shadow-md">
                     <div className="flex items-center space-x-3">
-                         <Sheet open={isComponentPanelOpen} onOpenChange={setIsComponentPanelOpen}>
+                         <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
                               <SheetTrigger asChild>
                                    <Button variant="ghost" className="text-gray-600 dark:text-gray-300 p-2">
                                         <Menu size={20} />
@@ -125,15 +124,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                    side="top"
                                    className={`w-full overflow-hidden scrollbar-hidden h-auto max-h-96 p-4 flex flex-col ${isMobile ? 'min-w-[100vw]' : 'min-w-[300px]'}`}
                               >
-                                   <SheetHeader> {/* ADD THIS */}
-                                        <SheetTitle className="text-lg font-semibold text-blue-900 dark:text-blue-300"> {/* ADD THIS */}
+                                   <SheetHeader>
+                                        <SheetTitle className="text-lg font-semibold text-blue-900 dark:text-blue-300">
                                              Component Library
-                                        </SheetTitle> {/* ADD THIS */}
-                                   </SheetHeader> {/* ADD THIS */}
+                                        </SheetTitle>
+                                   </SheetHeader>
                                    <ComponentPanel
                                         ref={componentPanelRef}
                                         onComponentClick={handleComponentAdd}
-                                        onClosePanel={() => setIsComponentPanelOpen(false)} // Pass the onClosePanel function
+                                        onClosePanel={() => setSheetOpen(false)}
                                    />
                               </SheetContent>
                          </Sheet>

@@ -7,6 +7,8 @@ import { WebsiteState as State, Component } from '../types'; // Import Component
 import React, { ReactNode, createContext, useContext } from 'react'; // Correct imports
 
 
+// ... (previous imports remain the same)
+
 export type Breakpoint = 'desktop' | 'tablet' | 'mobile';
 
 interface WebsiteStoreActions {
@@ -32,7 +34,7 @@ interface WebsiteStoreActions {
     props: Record<string, string | number | boolean | object>
   ) => void;
   setSelectedComponentId: (id: string | null) => void;
-  reorderComponents: (pageId: string, oldIndex: number, newIndex: number) => void; // Removed parentId
+  reorderComponents: (pageId: string, oldIndex: number, newIndex: number) => void;
   moveComponent: (id: string, targetId: string | null, isContainer?: boolean) => void;
   setIsPreviewMode: (isPreview: boolean) => void;
   setBreakpoint: (breakpoint: Breakpoint) => void;
@@ -47,9 +49,12 @@ interface WebsiteStoreActions {
   endDragging: () => void;
   draggingComponent: { type: string | null; defaultProps: Record<string, any> | null };
   setDraggingComponent: (component: { type: string | null; defaultProps: Record<string, any> | null }) => void;
+  setSheetOpen: (isOpen: boolean) => void; // Already added
 }
 
-type WebsiteState = State & WebsiteStoreActions;
+type WebsiteState = State & WebsiteStoreActions & {
+  isSheetOpen: boolean; // Add this property to the WebsiteState type
+};
 
 export const useWebsiteStore = create<WebsiteState>()(
   devtools(
@@ -63,13 +68,10 @@ export const useWebsiteStore = create<WebsiteState>()(
       breakpoint: 'desktop',
       isDragging: false,
       draggingComponent: { type: null, defaultProps: null },
+      isSheetOpen: false, // Initialize isSheetOpen here
 
-      setCurrentPageId: (id) => set((state) => {
-        state.currentPageId = id;
-      }),
-      addPage: (page) => set((state) => {
-        state.pages.push(page);
-      }),
+      setCurrentPageId: (id) => set((state) => { state.currentPageId = id; }),
+      addPage: (page) => set((state) => { state.pages.push(page); }),
       removePage: (pageId) => set((state) => {
         state.pages = state.pages.filter((page) => page.id !== pageId);
         state.components = state.components.filter((component) => component.pageId !== pageId);
@@ -137,9 +139,7 @@ export const useWebsiteStore = create<WebsiteState>()(
           };
         }
       }),
-      setSelectedComponentId: (id) => set((state) => {
-        state.selectedComponentId = id;
-      }),
+      setSelectedComponentId: (id) => set((state) => { state.selectedComponentId = id; }),
       reorderComponents: (pageId, oldIndex, newIndex) => set((state) => {
         const pageComponents = state.components.filter((c) => c.pageId === pageId && c.parentId === null);
         const [moved] = pageComponents.splice(oldIndex, 1);
@@ -167,12 +167,8 @@ export const useWebsiteStore = create<WebsiteState>()(
 
         component.parentId = isContainer ? targetId : component.parentId || null;
       }),
-      setIsPreviewMode: (isPreview) => set((state) => {
-        state.isPreviewMode = isPreview;
-      }),
-      setBreakpoint: (breakpoint) => set((state) => {
-        state.breakpoint = breakpoint;
-      }),
+      setIsPreviewMode: (isPreview) => set((state) => { state.isPreviewMode = isPreview; }),
+      setBreakpoint: (breakpoint) => set((state) => { state.breakpoint = breakpoint; }),
       setAllowChildren: (id, allow) => set((state) => {
         const component = state.components.find((c) => c.id === id);
         if (component) {
@@ -231,12 +227,8 @@ export const useWebsiteStore = create<WebsiteState>()(
           }
         }
       }),
+      setSheetOpen: (isOpen: boolean) => set((state) => { state.isSheetOpen = isOpen; }),
     })),
     { name: 'WebsiteStore' }
   )
 );
-
-
-
-
-

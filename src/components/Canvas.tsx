@@ -144,28 +144,29 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    // Handle dropping a new component from the library
     if (active?.id === 'library-component' && over?.id === 'canvas-drop-area' && draggingComponent) {
       const newComponentId = uuidv4();
       addComponent({
         type: draggingComponent.type,
         props: draggingComponent.defaultProps,
         pageId: currentPageId,
-        parentId: null, // Initially no parent
+        parentId: null,
         responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
-        // Access allowChildren from ComponentRegistry
         allowChildren: (ComponentRegistry[draggingComponent.type as keyof typeof ComponentRegistry]?.allowChildren) || false,
       });
-      setDraggingComponent(null); // Clear the dragged component
-      setSelectedComponentId(newComponentId); // Select the newly added component
+      setDraggingComponent(null);
+      setSelectedComponentId(newComponentId);
       toast({
         title: 'Component Added',
         description: `Added ${draggingComponent.type} to canvas.`,
       });
+
+      // Close the sheet after adding the component
+      useWebsiteStore.getState().setSheetOpen(false);
       return;
     }
 
-    // Existing reordering logic (if you have it)
+    // Existing reordering logic...
     if (active && over && active.id !== over.id) {
       const activeId = active.id;
       const overId = over.id;
@@ -176,17 +177,15 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
       if (activeComponent && overComponent && activeComponent.parentId === overComponent.parentId) {
         const parentId = activeComponent.parentId;
         const siblings = pageComponents.filter(c => c.parentId === parentId).map(c => c.id);
-        const oldIndex = siblings.indexOf(String(activeId)); // Cast activeId to string
-        const newIndex = siblings.indexOf(String(overId));   // Cast overId to string
+        const oldIndex = siblings.indexOf(String(activeId));
+        const newIndex = siblings.indexOf(String(overId));
 
         if (oldIndex !== -1 && newIndex !== -1) {
-          reorderComponents(currentPageId, oldIndex, newIndex); // Removed parentId
+          reorderComponents(currentPageId, oldIndex, newIndex);
         }
       } else if (activeComponent && !overComponent && activeComponent.parentId === null) {
         // Dragging to the root level (no over component)
         const oldIndex = rootComponents.findIndex(c => c.id === activeId);
-        // You might need to determine the new index based on drop position if not using SortableContext at the root
-        // For simplicity here, we won't change the order if dropped outside existing root components
         if (oldIndex !== -1) {
           // Optionally handle dropping at the end or beginning of root components
         }
