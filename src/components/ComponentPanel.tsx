@@ -1,33 +1,35 @@
 'use client';
 
-import React, { useState, forwardRef, useMemo, useCallback, useRef } from 'react'; // Import useRef
+import React, { useState, forwardRef, useMemo, useCallback, useRef } from 'react';
 import { ComponentLibrary } from '../data/ComponentLibrary';
 import { Search, MousePointerClick } from 'lucide-react';
 import { ComponentType, SVGProps } from 'react';
 import Button from '@/components/ui/button';
 import {
   DndContext,
-  useDndContext as useDndKitContext, // Import useDndContext
+  useDndContext as useDndKitContext,
+  DragStartEvent,
 } from '@dnd-kit/core';
 import {
   SortableContext,
-  horizontalListSortingStrategy, // Import horizontal strategy
+  horizontalListSortingStrategy,
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useWebsiteStore } from '../store/WebsiteStore';
 import { toast } from '@/components/ui/use-toast';
+import DraggableComponent from './DraggableComponent'; // Ensure this path is correct
 
 interface LibraryComponent {
   type: string;
   label: string;
   icon: ComponentType<SVGProps<SVGSVGElement> & { size?: string | number }>;
-  defaultProps: Record<string, string | number | boolean | string[] | string[][] | Record<string, string | number>>;
+  defaultProps: Record<string, any>; // Keep as any for flexibility
 }
 
 interface ComponentPanelProps {
   onComponentClick: (type: string, defaultProps: Record<string, any>) => void;
-  onClosePanel?: () => void; // Add the onClosePanel prop here
+  onClosePanel?: () => void;
 }
 
 const SortableLibraryComponent = ({ component, onComponentClick }: { component: LibraryComponent; onComponentClick: (type: string, defaultProps: Record<string, any>) => void }) => {
@@ -45,13 +47,9 @@ const SortableLibraryComponent = ({ component, onComponentClick }: { component: 
       {...attributes}
       {...listeners}
       key={component.type}
-      onClick={() => onComponentClick(component.type, component.defaultProps)}
       className="p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 flex-shrink-0 hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700"
     >
-      <div className="text-blue-500 mb-1 dark:text-white">
-        <component.icon size={20} aria-hidden="true" />
-      </div>
-      <span className="text-black dark:text-white text-center">{component.label}</span>
+      <DraggableComponent component={component} />
     </div>
   );
 };
@@ -59,11 +57,11 @@ const SortableLibraryComponent = ({ component, onComponentClick }: { component: 
 const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComponentClick, onClosePanel }, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { componentOrder, setComponentOrder, startDragging, endDragging } = useWebsiteStore(); // Get startDragging and endDragging actions
-  const { isDragging: dndKitIsDragging } = useDndKitContext(); // Get isDragging from dnd-kit
-  const dragStartTimeout = useRef<NodeJS.Timeout | null>(null); // Ref for the timeout
-  const isDraggingIntent = useRef(false); // Ref to track drag intent
-  const [hasDraggedSignificantly, setHasDraggedSignificantly] = useState(false);
+  const { componentOrder, setComponentOrder, startDragging, endDragging, setDraggingComponent } = useWebsiteStore();
+  const { isDragging: dndKitIsDragging } = useDndKitContext();
+  const dragStartTimeout = useRef<NodeJS.Timeout | null>(null);
+  const isDraggingIntent = useRef(false);
+
   const allComponentsArray = useMemo(() => {
     return Object.values(ComponentLibrary).flat();
   }, []);
@@ -102,37 +100,25 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
     }
   };
 
-  const initialDragPosition = useRef({ x: 0, y: 0 });
-
-  const handleDragStart = useCallback((event) => {
-    isDraggingIntent.current = true;
-    initialDragPosition.current = event.client || { x: 0, y: 0 }; // Use event.client or adjust based on your event object
-    dragStartTimeout.current = setTimeout(() => {
-      if (isDraggingIntent.current && hasDraggedSignificantly) { // Only close if dragged
-        startDragging();
-        if (onClosePanel) {
-          onClosePanel();
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const { active } = event;
+    if (active.data?.current?.type === 'COMPONENT') {
+      const { componentType, defaultProps } = active.data.current;
+      setDraggingComponent({ type: componentType, defaultProps });
+      if (onClosePanel) {
+        onClosePanel();
+      }
+    } else {
+      isDraggingIntent.current = true;
+      dragStartTimeout.current = setTimeout(() => {
+        if (isDraggingIntent.current) {
+          startDragging();
         }
-      }
-      isDraggingIntent.current = false;
-      dragStartTimeout.current = null;
-      setHasDraggedSignificantly(false); // Reset for the next drag
-    }, 150);
-  }, [startDragging, onClosePanel, setHasDraggedSignificantly]);
-  const handleDragMove = useCallback((event) => {
-    if (isDraggingIntent.current) {
-      const currentPosition = event.client || { x: 0, y: 0 };
-      const deltaX = Math.abs(currentPosition.x - initialDragPosition.current.x);
-      const deltaY = Math.abs(currentPosition.y - initialDragPosition.current.y);
-
-      // Define a threshold for significant movement
-      const dragThreshold = 5; // Adjust this value
-
-      if (deltaX > dragThreshold || deltaY > dragThreshold) {
-        setHasDraggedSignificantly(true);
-      }
+        isDraggingIntent.current = false;
+        dragStartTimeout.current = null;
+      }, 150);
     }
-  }, [initialDragPosition, isDraggingIntent, setHasDraggedSignificantly]);
+  }, [startDragging, onClosePanel, setDraggingComponent]);
 
   const handleDragEnd = useCallback((event: any) => {
     isDraggingIntent.current = false;
@@ -140,7 +126,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
       clearTimeout(dragStartTimeout.current);
       dragStartTimeout.current = null;
     }
-    endDragging(); // Call the Zustand action to set isDragging to false
+    endDragging();
     const { active, over } = event;
     if (active.id !== over?.id) {
       const oldIndex = orderedComponents.findIndex(comp => comp.type === active.id);
@@ -178,7 +164,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
         setComponentOrder([...componentOrder, active.id]);
       }
     }
-  }, [componentOrder, orderedComponents, setComponentOrder, startDragging, endDragging]);
+  }, [componentOrder, orderedComponents, setComponentOrder, startDragging, endDragging, setDraggingComponent]);
 
   return (
     <div className="p-4 h-full flex flex-col" ref={ref}>
@@ -217,12 +203,12 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
         </div>
       )}
 
-      <DndContext onDragStart={handleDragStart} onDragMove={handleDragMove} onDragEnd={handleDragEnd}>
+      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <SortableContext
           items={filteredComponents.map((component) => component.type)}
-          strategy={horizontalListSortingStrategy} // Use horizontal sorting
+          strategy={horizontalListSortingStrategy}
         >
-          <div className={`flex space-x-2 overflow-x-auto ${dndKitIsDragging ? 'overflow-x-hidden overflow-y-hidden' : ''}`} style={{ touchAction: 'pan-x' }}>
+          <div className={`flex space-x-2 overflow-x-auto ${dndKitIsDragging ? 'overflow-x-hidden' : ''}`}>
             {filteredComponents.map((component) => (
               <SortableLibraryComponent
                 key={component.type}

@@ -28,6 +28,8 @@ interface WebsiteStoreActions {
   isDragging: boolean;
   startDragging: () => void;
   endDragging: () => void;
+  draggingComponent: { type: string | null; defaultProps: Record<string, any> | null };
+  setDraggingComponent: (component: { type: string | null; defaultProps: Record<string, any> | null }) => void;
 }
 
 type WebsiteState = State & WebsiteStoreActions;
@@ -43,6 +45,7 @@ export const useWebsiteStore = create<WebsiteState>()(
       isPreviewMode: false,
       breakpoint: 'desktop',
       isDragging: false,
+      draggingComponent: { type: null, defaultProps: null },
 
       setCurrentPageId: (id) => set((state) => { state.currentPageId = id; }),
       addPage: (page) => set((state) => { state.pages.push(page); }),
@@ -55,7 +58,7 @@ export const useWebsiteStore = create<WebsiteState>()(
       }),
       setIsDragging: (dragging: boolean) => set({ isDragging: dragging }),
       startDragging: () => set({ isDragging: true }),
-      endDragging: () => set({ isDragging: false }),// Action to set isDragging
+      endDragging: () => set({ isDragging: false }),
       addComponent: (component) => set((state) => {
         const newComponent: Component = {
           id: uuidv4(),
@@ -77,6 +80,7 @@ export const useWebsiteStore = create<WebsiteState>()(
         state.components.push(newComponent);
         state.selectedComponentId = newComponent.id;
       }),
+      setDraggingComponent: (component) => set({ draggingComponent: component }),
       removeComponent: (id) => set((state) => {
         const removeComponentAndChildren = (componentId: string): string[] => {
           const component = state.components.find((c) => c.id === componentId);
