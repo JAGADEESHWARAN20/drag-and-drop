@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, forwardRef, useMemo, useCallback, useRef } from 'react';
+import { useState, forwardRef, useMemo, useCallback, useRef } from 'react';
 import { ComponentLibrary } from '../data/ComponentLibrary';
 import { Search, MousePointerClick } from 'lucide-react';
 import { ComponentType, SVGProps } from 'react';
@@ -9,6 +9,9 @@ import {
   DndContext,
   useDndContext as useDndKitContext,
   DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -17,14 +20,13 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useWebsiteStore } from '../store/WebsiteStore';
-import { toast } from '@/components/ui/use-toast';
-import DraggableComponent from './DraggableComponent'; // Ensure this path is correct
+import DraggableComponent from './DraggableComponent';
 
 interface LibraryComponent {
   type: string;
   label: string;
   icon: ComponentType<SVGProps<SVGSVGElement> & { size?: string | number }>;
-  defaultProps: Record<string, any>; // Keep as any for flexibility
+  defaultProps: Record<string, any>;
 }
 
 interface ComponentPanelProps {
@@ -32,7 +34,13 @@ interface ComponentPanelProps {
   onClosePanel?: () => void;
 }
 
-const SortableLibraryComponent = ({ component, onComponentClick }: { component: LibraryComponent; onComponentClick: (type: string, defaultProps: Record<string, any>) => void }) => {
+interface SortableLibraryComponentProps {
+  component: LibraryComponent;
+  onComponentClick: (type: string, defaultProps: Record<string, any>) => void;
+  // REMOVED: sensors: ReturnType<typeof useSensors>;
+}
+
+const SortableLibraryComponent = ({ component, onComponentClick }: SortableLibraryComponentProps) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: component.type });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -49,7 +57,7 @@ const SortableLibraryComponent = ({ component, onComponentClick }: { component: 
       key={component.type}
       className="p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 flex-shrink-0 hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700"
     >
-      <DraggableComponent component={component} />
+      <DraggableComponent component={component} /> {/* NOT passing sensors here */}
     </div>
   );
 };
@@ -57,19 +65,26 @@ const SortableLibraryComponent = ({ component, onComponentClick }: { component: 
 const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComponentClick, onClosePanel }, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { componentOrder, setComponentOrder, startDragging, endDragging, setDraggingComponent } = useWebsiteStore();
+  const { componentOrder, setComponentOrder, setDraggingComponent } = useWebsiteStore();
   const { isDragging: dndKitIsDragging } = useDndKitContext();
-  const closePanelTimeout = useRef<NodeJS.Timeout | null>(null); // Ref for the close panel timeout
+  const closePanelTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  const allComponentsArray = useMemo(() => {
-    return Object.values(ComponentLibrary).flat();
-  }, []);
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 300,
+        tolerance: 5,
+      },
+    })
+  );
+
+  const allComponentsArray = useMemo(() => Object.values(ComponentLibrary).flat(), []);
 
   const orderedComponents = useMemo(() => {
     if (!componentOrder || componentOrder.length === 0) {
       return allComponentsArray;
     }
-    const ordered = [];
+    const ordered: LibraryComponent[] = [];
     const remaining = new Map(allComponentsArray.map(comp => [comp.type, comp]));
     for (const type of componentOrder) {
       const comp = remaining.get(type);
@@ -104,11 +119,10 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
     if (active.data?.current?.type === 'COMPONENT' && onClosePanel) {
       const { componentType, defaultProps } = active.data.current;
       setDraggingComponent({ type: componentType, defaultProps });
-      // Add a delay before closing the panel
       closePanelTimeout.current = setTimeout(() => {
         onClosePanel();
         closePanelTimeout.current = null;
-      }, 1000); // Adjust the delay (milliseconds) as needed
+      }, 1000);
     }
   }, [onClosePanel, setDraggingComponent]);
 
@@ -119,42 +133,35 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
     }
     const { active, over } = event;
     if (active.id !== over?.id) {
-      const oldIndex = orderedComponents.findIndex(comp => comp.type === active.id);
-      const newIndex = orderedComponents.findIndex(comp => comp.type === over?.id);
+      const activeComponent = orderedComponents.find(comp => comp.type === active.id);
+      const overComponent = orderedComponents.find(comp => comp.type === over?.id);
+
+      if (!activeComponent) return;
 
       const newOrder = Array.from(componentOrder);
-      const activeIdInOrder = newOrder.find(id => id === active.id);
-      const overIdInOrder = newOrder.find(id => id === over?.id);
+      const activeIdInOrder = newOrder.includes(active.id);
+      const overIdInOrder = overComponent ? newOrder.includes(over.id as string) : false;
 
-      if (activeIdInOrder && overIdInOrder) {
-        const oldOrderIndex = newOrder.indexOf(activeIdInOrder);
-        const newOrderIndex = newOrder.indexOf(overIdInOrder);
-        newOrder.splice(oldOrderIndex, 1);
-        newOrder.splice(newOrderIndex, 0, active.id);
+      if (activeIdInOrder && overIdInOrder && active.id !== over?.id) {
+        const oldIndex = newOrder.indexOf(active.id);
+        const newIndex = newOrder.indexOf(over!.id as string);
+        newOrder.splice(oldIndex, 1);
+        newOrder.splice(newIndex, 0, active.id);
         setComponentOrder(newOrder);
-        return;
-      }
-
-      if (activeIdInOrder && !overIdInOrder) {
-        const oldOrderIndex = newOrder.indexOf(activeIdInOrder);
-        newOrder.splice(oldOrderIndex, 1);
+      } else if (activeIdInOrder && !overIdInOrder) {
+        const oldIndex = newOrder.indexOf(active.id);
+        newOrder.splice(oldIndex, 1);
         newOrder.push(active.id);
         setComponentOrder(newOrder);
-        return;
-      }
-
-      if (!activeIdInOrder && overIdInOrder) {
-        const newOrderIndex = newOrder.indexOf(overIdInOrder);
-        newOrder.splice(newOrderIndex, 0, active.id);
+      } else if (!activeIdInOrder && overIdInOrder) {
+        const newIndex = newOrder.indexOf(over!.id as string);
+        newOrder.splice(newIndex, 0, active.id);
         setComponentOrder(newOrder);
-        return;
-      }
-
-      if (!activeIdInOrder && !overIdInOrder) {
+      } else if (!activeIdInOrder && !overIdInOrder) {
         setComponentOrder([...componentOrder, active.id]);
       }
     }
-  }, [componentOrder, orderedComponents, setComponentOrder, startDragging, endDragging, setDraggingComponent]);
+  }, [componentOrder, orderedComponents, setComponentOrder, setDraggingComponent]);
 
   return (
     <div className="p-4 h-full flex flex-col" ref={ref}>
@@ -193,7 +200,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
         </div>
       )}
 
-      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} sensors={sensors}>
         <SortableContext
           items={filteredComponents.map((component) => component.type)}
           strategy={horizontalListSortingStrategy}

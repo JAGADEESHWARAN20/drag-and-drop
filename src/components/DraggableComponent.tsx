@@ -29,14 +29,7 @@ const DraggableComponent = ({ component }: DraggableComponentProps) => {
     },
   });
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        delay: 300, // Adjust the hold duration (milliseconds)
-        tolerance: 5, // Optional: Add a small tolerance to prevent accidental activation
-      },
-    })
-  );
+  
 
   useEffect(() => {
     setNodeRef(dragRef.current as HTMLDivElement);
