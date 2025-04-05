@@ -6,14 +6,6 @@ import { Search, MousePointerClick } from 'lucide-react';
 import { ComponentType, SVGProps } from 'react';
 import Button from '@/components/ui/button';
 import {
-  DndContext,
-  useDndContext as useDndKitContext,
-  DragStartEvent,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import {
   SortableContext,
   horizontalListSortingStrategy,
   useSortable,
@@ -21,6 +13,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useWebsiteStore } from '../store/WebsiteStore';
 import DraggableComponent from './DraggableComponent';
+import { UniqueIdentifier } from '@dnd-kit/core'; // Import UniqueIdentifier
 
 interface LibraryComponent {
   type: string;
@@ -64,17 +57,6 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { componentOrder, setComponentOrder, setDraggingComponent } = useWebsiteStore();
-  const { active } = useDndKitContext(); // Track active drag state
-  const closePanelTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        delay: 300,
-        tolerance: 5,
-      },
-    })
-  );
 
   const allComponentsArray = useMemo(() => Object.values(ComponentLibrary).flat(), []);
 
@@ -85,10 +67,10 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
     const ordered: LibraryComponent[] = [];
     const remaining = new Map(allComponentsArray.map(comp => [comp.type, comp]));
     for (const type of componentOrder) {
-      const comp = remaining.get(type);
+      const comp = remaining.get(type.toString()); // Convert to string if needed
       if (comp) {
         ordered.push(comp);
-        remaining.delete(type);
+        remaining.delete(type.toString());
       }
     }
     ordered.push(...remaining.values());
@@ -111,55 +93,6 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
       setSearchTerm('');
     }
   };
-
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    const { active } = event;
-    if (active.data?.current?.type === 'COMPONENT' && onClosePanel) {
-      const { componentType, defaultProps } = active.data.current;
-      setDraggingComponent({ type: componentType, defaultProps });
-      closePanelTimeout.current = setTimeout(() => {
-        onClosePanel();
-        closePanelTimeout.current = null;
-      }, 1000);
-    }
-  }, [onClosePanel, setDraggingComponent]);
-
-  const handleDragEnd = useCallback((event: any) => {
-    if (closePanelTimeout.current) {
-      clearTimeout(closePanelTimeout.current);
-      closePanelTimeout.current = null;
-    }
-    const { active, over } = event;
-    if (active.id !== over?.id) {
-      const activeComponent = orderedComponents.find(comp => comp.type === active.id);
-      const overComponent = orderedComponents.find(comp => comp.type === over?.id);
-
-      if (!activeComponent) return;
-
-      const newOrder = Array.from(componentOrder);
-      const activeIdInOrder = newOrder.includes(active.id);
-      const overIdInOrder = overComponent ? newOrder.includes(over.id as string) : false;
-
-      if (activeIdInOrder && overIdInOrder && active.id !== over?.id) {
-        const oldIndex = newOrder.indexOf(active.id);
-        const newIndex = newOrder.indexOf(over!.id as string);
-        newOrder.splice(oldIndex, 1);
-        newOrder.splice(newIndex, 0, active.id);
-        setComponentOrder(newOrder);
-      } else if (activeIdInOrder && !overIdInOrder) {
-        const oldIndex = newOrder.indexOf(active.id);
-        newOrder.splice(oldIndex, 1);
-        newOrder.push(active.id);
-        setComponentOrder(newOrder);
-      } else if (!activeIdInOrder && overIdInOrder) {
-        const newIndex = newOrder.indexOf(over!.id as string);
-        newOrder.splice(newIndex, 0, active.id);
-        setComponentOrder(newOrder);
-      } else if (!activeIdInOrder && !overIdInOrder) {
-        setComponentOrder([...componentOrder, active.id]);
-      }
-    }
-  }, [componentOrder, orderedComponents, setComponentOrder, setDraggingComponent]);
 
   return (
     <div className="p-4 flex flex-col h-full" ref={ref}>
@@ -198,30 +131,28 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
         </div>
       )}
 
-      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <SortableContext
-          items={filteredComponents.map((component) => component.type)}
-          strategy={horizontalListSortingStrategy}
+      <SortableContext
+        items={filteredComponents.map((component) => component.type as UniqueIdentifier)} // Cast to UniqueIdentifier
+        strategy={horizontalListSortingStrategy}
+      >
+        <div
+          className="flex space-x-2 overflow-x-auto"
+          style={{
+            overflowY: 'hidden',
+            minHeight: '0',
+            flex: '1 1 auto',
+            touchAction: 'pan-x',
+          }}
         >
-          <div
-            className="flex space-x-2 overflow-x-auto"
-            style={{
-              overflowY: 'hidden', // Explicitly hide vertical scrolling
-              minHeight: '0', // Prevent flex container from growing beyond content
-              flex: '1 1 auto', // Allow flex to grow and shrink
-              touchAction: 'pan-x', // Allow horizontal panning only
-            }}
-          >
-            {filteredComponents.map((component) => (
-              <SortableLibraryComponent
-                key={component.type}
-                component={component}
-                onComponentClick={onComponentClick}
-              />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
+          {filteredComponents.map((component) => (
+            <SortableLibraryComponent
+              key={component.type}
+              component={component}
+              onComponentClick={onComponentClick}
+            />
+          ))}
+        </div>
+      </SortableContext>
 
       {filteredComponents.length === 0 && searchTerm && (
         <div className="text-center text-gray-500 dark:text-gray-400">
