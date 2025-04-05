@@ -103,7 +103,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           const newComponentId = uuidv4();
           addComponent({
                type,
-               props: defaultProps,
+               props: defaultProps || {},
                id: newComponentId,
                pageId: currentPageId,
                parentId: null,
@@ -129,7 +129,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                const { componentType, defaultProps } = active.data.current;
                const newComponentId = uuidv4();
 
-               // Add component immediately when drag starts
+               // Add component when drag starts
                addComponent({
                     type: componentType,
                     props: defaultProps || {},
@@ -147,10 +147,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     title: 'Component Added',
                     description: `Added ${componentType} to canvas.`,
                });
-          }
 
-          if (componentPanelRef.current) {
-               componentPanelRef.current.style.pointerEvents = 'none';
+               if (componentPanelRef.current) {
+                    componentPanelRef.current.style.pointerEvents = 'none';
+               }
           }
      };
 
@@ -188,7 +188,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                         </SheetHeader>
                                         <ComponentPanel
                                              ref={componentPanelRef}
-                                             onComponentClick={handleComponentAdd}
+                                             onComponentClick={handleComponentAdd} // Click will now add component
                                              onClosePanel={() => setSheetOpen(false)}
                                         />
                                    </SheetContent>
