@@ -4,6 +4,7 @@ import React, { useState, forwardRef } from 'react';
 import { ComponentLibrary } from '../data/ComponentLibrary';
 import { Search, MousePointerClick } from 'lucide-react';
 import { ComponentType, SVGProps } from 'react';
+import  Button  from '@/components/ui/button'; // Assuming you have a Button component
 
 interface LibraryComponent {
   type: string;
@@ -18,6 +19,7 @@ interface ComponentPanelProps {
 
 const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComponentClick }, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const filteredComponents = Object.entries(ComponentLibrary).reduce<
     Record<string, LibraryComponent[]>
@@ -29,32 +31,55 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
     return acc;
   }, {});
 
+  const handleSearchButtonClick = () => {
+    setIsSearchOpen(!isSearchOpen);
+    if (!isSearchOpen) {
+      // Focus on the input when it opens
+      setTimeout(() => {
+        document.querySelector<HTMLInputElement>('.component-panel-search-input')?.focus();
+      }, 100);
+    } else {
+      setSearchTerm(''); // Clear search term when closing
+    }
+  };
+
   return (
     <div className="p-4 h-full flex flex-col" ref={ref}>
-      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md">
-        <div className="flex items-center mb-2 text-blue-700 dark:text-blue-300">
-          <MousePointerClick size={16} className="mr-2" />
-          <span className="text-sm font-medium">Click to add</span>
+      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md flex items-center justify-between">
+        <div>
+          <div className="flex items-center mb-2 text-blue-700 dark:text-blue-300">
+            <MousePointerClick size={16} className="mr-2" />
+            <span className="text-sm font-medium">Click to add</span>
+          </div>
+          <p className="text-xs text-blue-600 dark:text-blue-400">
+            Click any component to add it to the canvas
+          </p>
         </div>
-        <p className="text-xs text-blue-600 dark:text-blue-400">
-          Click any component to add it to the canvas
-        </p>
+        <Button
+          variant="outline"
+          size="icon"
+          className="rounded-full"
+          onClick={handleSearchButtonClick}
+        >
+          <Search className="h-4 w-4" />
+        </Button>
       </div>
 
-      {/* Search Input */}
-      <div className="mb-4">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search components..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full p-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100"
-            
-          />
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400 dark:text-gray-500" />
+      {/* Search Input (Conditionally Rendered) */}
+      {isSearchOpen && (
+        <div className="mb-4">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search components..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="component-panel-search-input w-full p-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100"
+            />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400 dark:text-gray-500" />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Component Categories */}
       <div className="space-x-2 flex flex-row overflow-x-scroll scrollbar-hidden">
@@ -84,7 +109,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
             No components found matching "{searchTerm}"
           </div>
         )}
-        {Object.keys(ComponentLibrary).length > 0 && Object.keys(filteredComponents).length === 0 && !searchTerm && (
+        {Object.keys(ComponentLibrary).length > 0 && Object.keys(filteredComponents).length === 0 && !searchTerm && !isSearchOpen && (
           <div className="text-center text-gray-500 dark:text-gray-400">
             Browse components by category. Click to add to the canvas.
           </div>
