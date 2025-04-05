@@ -61,6 +61,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      const [isDarkMode, setIsDarkMode] = useState(false);
      const [isPageSheetOpen, setIsPageSheetOpen] = useState(false);
      const componentPanelRef = useRef<HTMLDivElement>(null);
+     const dragStartTime = useRef<number | null>(null);
+     const dragTimeout = useRef<NodeJS.Timeout | null>(null);
 
      useEffect(() => {
           if (isDarkMode) {
@@ -127,14 +129,24 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           if (active.data?.current?.type === 'COMPONENT') {
                const { componentType, defaultProps } = active.data.current;
                setDraggingComponent({ type: componentType, defaultProps });
-               // Force sheet closure with a slight delay to ensure state update
-               setSheetOpen(!true)
+               dragStartTime.current = Date.now();
+               // Set a timeout to close the sheet if dragging continues for 0.5s
+               dragTimeout.current = setTimeout(() => {
+                    setSheetOpen(false);
+               }, 500);
           }
      };
 
      const handleDragEnd = (event: DragEndEvent) => {
           const { active, over } = event;
           console.log('Drag End:', { active, over }); // Debug log
+          // Clear the timeout as drag ended
+          if (dragTimeout.current) {
+               clearTimeout(dragTimeout.current);
+               dragTimeout.current = null;
+          }
+          dragStartTime.current = null;
+
           if (over?.id === 'canvas-drop-area' && active.data?.current?.type === 'COMPONENT') {
                const { componentType, defaultProps } = active.data.current;
                const newComponentId = uuidv4();
@@ -152,7 +164,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     title: 'Component Added',
                     description: `Added ${componentType} to canvas.`,
                });
-               setSheetOpen(false)
+               setSheetOpen(false);
           }
      };
 
@@ -161,7 +173,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
                     <nav className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 shadow-md">
                          <div className="flex items-center space-x-3">
-                              <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}> 
+                              <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
                                    <SheetTrigger asChild>
                                         <Button variant="ghost" className="text-gray-600 dark:text-gray-300 p-2">
                                              <Menu size={20} />
@@ -376,24 +388,24 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
                               {!isPreviewMode && selectedComponentId && (
                                    <Sheet open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen}>
-                                        <SheetTrigger asChild>
-                                             <Button
-                                                  variant="ghost"
-                                                  className="absolute bottom-12 right-5 z-50 text-gray-600 dark:text-gray-300"
-                                             >
-                                                  <Layers size={24} />
-                                             </Button>
-                                        </SheetTrigger>
-                                        <SheetContent side="right" className="w-80 p-4">
-                                             <SheetHeader>
-                                                  <SheetTitle className="text-lg font-semibold text-blue-900 dark:text-blue-300">
-                                                       Element Hierarchy
-                                                  </SheetTitle>
-                                             </SheetHeader>
-                                             <ElementHierarchyViewer />
-                                        </SheetContent>
-                                   </Sheet>
-                              )}
+                                   <SheetTrigger asChild>
+                                        <Button
+                                             variant="ghost"
+                                             className="absolute bottom-12 right-5 z-50 text-gray-600 dark:text-gray-300"
+                                        >
+                                             <Layers size={24} />
+                                        </Button>
+                                   </SheetTrigger>
+                                   <SheetContent side="right" className="w-80 p-4">
+                                        <SheetHeader>
+                                             <SheetTitle className="text-lg font-semibold text-blue-900 dark:text-blue-300">
+                                                  Element Hierarchy
+                                             </SheetTitle>
+                                        </SheetHeader>
+                                        <ElementHierarchyViewer />
+                                   </SheetContent>
+                              </Sheet>
+                        )}
 
                               <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
                          </div>
