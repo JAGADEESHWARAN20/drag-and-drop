@@ -109,8 +109,11 @@ const ElementHierarchyViewer: React.FC = () => {
                 const rootComponents = components.filter(c => c.parentId === null).map(c => c.id);
                 const oldIndex = rootComponents.indexOf(activeId);
                 const newIndex = rootComponents.indexOf(over.id as string);
-                const updatedOrder = arrayMove(rootComponents, oldIndex, newIndex);
-                updateComponentOrder(null, updatedOrder);
+
+                if (oldIndex !== -1 && newIndex !== -1) {
+                    const updatedOrder = arrayMove(rootComponents, oldIndex, newIndex);
+                    updateComponentOrder(null, updatedOrder);
+                }
             }
         }
     };
