@@ -129,7 +129,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
         </DroppableContainer>
       );
     },
-    [components, currentBreakpoint, isPreviewMode, selectedIds, handleComponentClick, setAllowChildren, rootComponents, currentPageId, reorderComponents]
+    [components, currentBreakpoint, isPreviewMode, selectedIds, handleComponentClick, setAllowChildren, rootComponents, currentPageId]
   );
 
   const getCanvasWidth = useCallback(() => {
@@ -177,22 +177,44 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
     }
     setNodeRef(null); // Reset droppable ref
 
-    if (active?.data?.current?.type === 'COMPONENT' && over?.id === 'canvas-drop-area') {
-      addComponent({
-        type: active.data.current.componentType,
-        props: active.data.current.defaultProps || {},
-        pageId: currentPageId,
-        parentId: null,
-        responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
-      });
-      setSelectedComponentId(
-        useWebsiteStore.getState().components.find((c) => c.type === active.data.current.componentType && c.pageId === currentPageId)?.id || null
-      );
-      toast({
-        title: 'Component Added',
-        description: `Added ${active.data.current.componentType} to canvas.`,
-      });
+    if (active && over && active.id !== over.id) {
+      const activeId = active.id as string;
+      const overId = over.id as string;
+
+      const activeComponent = components.find((c) => c.id === activeId);
+      const overComponent = components.find((c) => c.id === overId);
+
+      if (!activeComponent) return;
+
+      // Case 1: Moving within the same parent
+      if (activeComponent.parentId === overComponent?.parentId) {
+        const parentId = activeComponent.parentId;
+        const childrenOfParent = components.filter((c) => c.parentId === parentId).map(c => c.id);
+        const oldIndex = childrenOfParent.indexOf(activeId);
+        const newIndex = childrenOfParent.indexOf(overId);
+
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const updatedOrder = arrayMove(childrenOfParent, oldIndex, newIndex);
+          reorderComponents(parentId, updatedOrder);
+        }
+      }
+      // Case 2: Moving to a new parent (dropping onto another component)
+      else if (overComponent) {
+        updateComponentParent(activeId, overComponent.id);
+        const newChildrenOrder = [...components.filter(c => c.parentId === overComponent.id).map(c => c.id), activeId];
+        updateComponentOrder(overComponent.id, newChildrenOrder);
+      }
+      // Case 3: Moving to the root (no over component with an ID)
+      else if (over && over.id === 'canvas-drop-area') {
+        updateComponentParent(activeId, null);
+        const rootComponents = components.filter(c => c.parentId === null).map(c => c.id);
+        const oldIndex = rootComponents.indexOf(activeId);
+        const newIndex = rootComponents.indexOf(over.id as string); // Cast over.id as well
+        const updatedOrder = arrayMove(rootComponents, oldIndex, newIndex);
+        updateComponentOrder(null, updatedOrder);
+      }
     }
+
     setHasDragAttempted(false);
     setActiveId(null);
   };

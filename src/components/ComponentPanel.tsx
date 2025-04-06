@@ -1,196 +1,135 @@
-'use client';
-
-import { useState, forwardRef, useMemo } from 'react';
-import { ComponentLibrary } from '../data/ComponentLibrary';
-import { Search, MousePointerClick } from 'lucide-react';
-import { ComponentType, SVGProps } from 'react';
-import Button from '@/components/ui/button';
-import {
-  SortableContext,
-  horizontalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import React from 'react';
 import { useWebsiteStore } from '../store/WebsiteStore';
-import DraggableComponent from './DraggableComponent';
+import { DndContext, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { Component } from '@/types';
 
-interface LibraryComponent {
-  type: string;
-  label: string;
-  icon: ComponentType<SVGProps<SVGSVGElement> & { size?: string | number }>;
-  defaultProps: Record<string, any>;
+interface SortableHierarchyItemProps {
+  component: Component;
+  level: number;
 }
 
-interface ComponentPanelProps {
-  onComponentClick: (type: string, defaultProps: Record<string, any>) => void;
-  onClosePanel?: () => void;
-}
-
-interface SortableLibraryComponentProps {
-  component: LibraryComponent;
-  onComponentClick: (type: string, defaultProps: Record<string, any>) => void;
-}
-
-const SortableLibraryComponent = ({ component, onComponentClick }: SortableLibraryComponentProps) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id: component.type,
-    data: {
-      type: 'COMPONENT_LIB_ITEM',
-      componentType: component.type,
-      defaultProps: component.defaultProps,
-    }
-  });
+const SortableHierarchyItem: React.FC<SortableHierarchyItemProps> = ({ component, level }) => {
+  const { components, selectedComponentId, setSelectedComponentId } = useWebsiteStore();
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    isDragging,
+  } = useSortable({ id: component.id });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.5 : 1,
+    paddingLeft: `${level * 20}px`,
     cursor: 'grab',
   };
 
+  const children = components.filter((c) => c.parentId === component.id);
+
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 flex-shrink-0 hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
-      onClick={(e) => {
-        e.stopPropagation();
-        onComponentClick(component.type, component.defaultProps);
-      }}
-    >
-      <div className="mb-2">
-        {component.icon && <component.icon size={24} />}
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <div
+        onClick={() => setSelectedComponentId(component.id)}
+        className={`p-1 hover:bg-gray-100 ${component.id === selectedComponentId ? 'bg-blue-100' : ''}`}
+      >
+        {component.type} ({component.id.slice(0, 8)}...)
       </div>
-      <div className="text-xs font-medium text-center">{component.label}</div>
+      {children.length > 0 && (
+        <SortableHierarchy
+          parentId={component.id}
+          level={level + 1}
+        />
+      )}
     </div>
   );
 };
 
-const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComponentClick, onClosePanel }, ref) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { componentOrder, setComponentOrder } = useWebsiteStore();
+interface SortableHierarchyProps {
+  parentId: string | null;
+  level?: number;
+}
 
-  const allComponentsArray = useMemo(() => Object.values(ComponentLibrary).flat(), []);
+const SortableHierarchy: React.FC<SortableHierarchyProps> = ({ parentId, level = 0 }) => {
+  const { components } = useWebsiteStore();
+  const children = components.filter((c) => c.parentId === parentId);
+  const childIds = children.map((child) => child.id);
 
-  const orderedComponents = useMemo(() => {
-    if (!componentOrder || componentOrder.length === 0) {
-      return allComponentsArray;
-    }
-    const ordered: LibraryComponent[] = [];
-    const remaining = new Map(allComponentsArray.map(comp => [comp.type, comp]));
-    for (const type of componentOrder) {
-      const comp = remaining.get(type);
-      if (comp) {
-        ordered.push(comp);
-        remaining.delete(type);
+  return (
+    <SortableContext id={parentId ? `parent-${parentId}` : 'root'} items={childIds}>
+      {children.map((component) => (
+        <SortableHierarchyItem
+          key={component.id}
+          component={component}
+          level={level}
+        />
+      ))}
+    </SortableContext>
+  );
+};
+
+const ElementHierarchyViewer: React.FC = () => {
+  const { components, updateComponentParent, updateComponentOrder } = useWebsiteStore();
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active && over && active.id !== over.id) {
+      const activeId = active.id as string; // Explicitly cast to string
+      const overId = over.id as string;   // Explicitly cast to string
+
+      const activeComponent = components.find((c) => c.id === activeId);
+      const overComponent = components.find((c) => c.id === overId);
+
+      if (!activeComponent) return;
+
+      // Case 1: Moving within the same parent
+      if (activeComponent.parentId === overComponent?.parentId) {
+        const parentId = activeComponent.parentId;
+        const childrenOfParent = components.filter((c) => c.parentId === parentId).map(c => c.id);
+        const oldIndex = childrenOfParent.indexOf(activeId);
+        const newIndex = childrenOfParent.indexOf(overId);
+
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const updatedOrder = arrayMove(childrenOfParent, oldIndex, newIndex);
+          updateComponentOrder(parentId, updatedOrder);
+        }
       }
-    }
-    ordered.push(...remaining.values());
-    return ordered;
-  }, [allComponentsArray, componentOrder]);
-
-  const filteredComponents = useMemo(() => {
-    return orderedComponents.filter((comp) =>
-      comp.label.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [orderedComponents, searchTerm]);
-
-  const handleSearchButtonClick = () => {
-    setIsSearchOpen(!isSearchOpen);
-    if (!isSearchOpen) {
-      setTimeout(() => {
-        document.querySelector<HTMLInputElement>('.component-panel-search-input')?.focus();
-      }, 100);
-    } else {
-      setSearchTerm('');
+      // Case 2: Moving to a new parent (dropping onto another component)
+      else if (overComponent) {
+        updateComponentParent(activeId, overComponent.id);
+        const newChildrenOrder = [...components.filter(c => c.parentId === overComponent.id).map(c => c.id), activeId];
+        updateComponentOrder(overComponent.id, newChildrenOrder);
+      }
+      // Case 3: Moving to the root (no over component with an ID)
+      else if (over && over.id === 'root') {
+        updateComponentParent(activeId, null);
+        const rootComponents = components.filter(c => c.parentId === null).map(c => c.id);
+        const oldIndex = rootComponents.indexOf(activeId);
+        const newIndex = rootComponents.indexOf(over.id as string); // Cast over.id as well
+        const updatedOrder = arrayMove(rootComponents, oldIndex, newIndex);
+        updateComponentOrder(null, updatedOrder);
+      }
     }
   };
 
   return (
-    <div className="p-4 flex flex-col h-full" ref={ref}>
-      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md flex items-center justify-between">
-        <div>
-          <div className="flex items-center mb-2 text-blue-700 dark:text-blue-300">
-            <MousePointerClick size={16} className="mr-2" />
-            <span className="text-sm font-medium">Click or Drag</span>
-          </div>
-          <p className="text-xs text-blue-600 dark:text-blue-400">
-            Click to add component to canvas, or drag to position it precisely where you want.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="icon"
-          className="rounded-full"
-          onClick={handleSearchButtonClick}
-        >
-          <Search className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {isSearchOpen && (
-        <div className="mb-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search components..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="component-panel-search-input w-full p-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100"
-            />
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400 dark:text-gray-500" />
-          </div>
-        </div>
-      )}
-
-      <SortableContext
-        items={filteredComponents.map((component) => component.type)}
-        strategy={horizontalListSortingStrategy}
-      >
-        <div
-          className="grid grid-cols-3 gap-3 overflow-y-auto"
-          style={{
-            overflowY: 'auto',
-            minHeight: '0',
-            flex: '1 1 auto',
-            touchAction: 'pan-y',
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'thin',
-          }}
-        >
-          {filteredComponents.map((component) => (
-            <SortableLibraryComponent
-              key={component.type}
+    <div style={{ width: '300px', borderLeft: '1px solid #ccc', padding: '10px' }}>
+      <DndContext onDragEnd={handleDragEnd}>
+        <SortableContext id="root" items={components.filter(c => c.parentId === null).map(c => c.id)}>
+          {components.filter(c => c.parentId === null).map((component) => (
+            <SortableHierarchyItem
+              key={component.id}
               component={component}
-              onComponentClick={onComponentClick}
+              level={0}
             />
           ))}
-        </div>
-      </SortableContext>
-
-      {filteredComponents.length === 0 && searchTerm && (
-        <div className="text-center text-gray-500 dark:text-gray-400 mt-4">
-          No components found matching "{searchTerm}"
-        </div>
-      )}
-
-      {Object.keys(ComponentLibrary).length > 0 && filteredComponents.length === 0 && !searchTerm && !isSearchOpen && (
-        <div className="text-center text-gray-500 dark:text-gray-400 mt-4">
-          No components available. Try adjusting your search.
-        </div>
-      )}
-
-      {Object.keys(ComponentLibrary).length === 0 && (
-        <div className="text-center text-gray-500 dark:text-gray-400 mt-4">
-          No components available in the library.
-        </div>
-      )}
+        </SortableContext>
+      </DndContext>
     </div>
   );
-});
+};
 
-ComponentPanel.displayName = 'ComponentPanel';
-
-export default ComponentPanel;
+export default ElementHierarchyViewer;

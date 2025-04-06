@@ -1,73 +1,99 @@
-# Welcome to your Lovable project
+# Drag and Drop
 
-## Project info
+[![Vercel](https://img.shields.io/badge/vercel-deployed-brightgreen)](https://simpledragdrop.vercel.app)
+[![TypeScript](https://img.shields.io/badge/lang-typescript-blue)](https://www.typescriptlang.org/)
 
-**URL**: https://lovable.dev/projects/d1c7f041-435b-44e7-b37f-fce230383740
+A simple and intuitive drag-and-drop interface built using TypeScript, designed to provide seamless and efficient user interactions. This project is hosted on Vercel and can be accessed [here](https://simpledragdrop.vercel.app).
 
-## How can I edit this code?
+## Table of Contents
 
-There are several ways of editing your application.
+- [About](#about)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
 
-**Use Lovable**
+## About
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/d1c7f041-435b-44e7-b37f-fce230383740) and start prompting.
+This project implements a drag-and-drop interface using modern web technologies such as React and TypeScript. It is designed to be lightweight, flexible, and easily customizable to fit a variety of use cases.
 
-Changes made via Lovable will be committed automatically to this repo.
+## Features
 
-**Use your preferred IDE**
+- **Drag and Drop**: Easily drag and drop components within the interface.
+- **Responsive Design**: Works seamlessly across different screen sizes and devices.
+- **Component Registry**: Easily add and manage components using a centralized registry.
+- **Context Menu**: Right-click context menu for additional actions and options.
+- **Preview Mode**: Toggle between edit and preview modes to see the final output.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+To get started with this project, follow the steps below:
 
-Follow these steps:
+1. **Clone the repository**:
+    ```bash
+    git clone https://github.com/JAGADEESHWARAN20/drag-and-drop.git
+    cd drag-and-drop
+    ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. **Install dependencies**:
+    ```bash
+    npm install
+    ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. **Start the development server**:
+    ```bash
+    npm run dev
+    ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+## Usage
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+### Adding Components
 
-**Edit a file directly in GitHub**
+1. Drag a component from the component list.
+2. Drop it into the canvas area to add it to the interface.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Reordering Components
 
-**Use GitHub Codespaces**
+1. Drag an existing component within the canvas.
+2. Drop it in the desired position to reorder it.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Context Menu
 
-## What technologies are used for this project?
+1. Right-click on a component to open the context menu.
+2. Select actions such as "Add to Parent", "Move Above", or "Move Below".
 
-This project is built with:
+## Contributing
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Contributions are welcome! Follow the steps below to contribute to this project:
 
-## How can I deploy this project?
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix:
+    ```bash
+    git checkout -b feature-name
+    ```
+3. Commit your changes:
+    ```bash
+    git commit -m "Add some feature"
+    ```
+4. Push to the branch:
+    ```bash
+    git push origin feature-name
+    ```
+5. Open a pull request to the `main` branch.
 
-Simply open [Lovable](https://lovable.dev/projects/d1c7f041-435b-44e7-b37f-fce230383740) and click on Share -> Publish.
+## License
 
-## Can I connect a custom domain to my Lovable project?
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-Yes it is!
+## Contact
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Feel free to reach out if you have any questions or suggestions:
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- **Email**: [jagadeeshwaransp5@gmail.com](mailto:jagadeeshwaransp5@gmail.com)
+- **GitHub**: [JAGADEESHWARAN20](https://github.com/JAGADEESHWARAN20)
+
+---
+
+Thank you for using this drag-and-drop interface! We hope it meets your needs and enhances your projects.
