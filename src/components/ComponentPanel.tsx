@@ -56,7 +56,7 @@ const SortableLibraryComponent = ({ component, onComponentClick }: SortableLibra
 const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComponentClick, onClosePanel }, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { componentOrder, setComponentOrder, setDraggingComponent } = useWebsiteStore();
+  const { componentOrder, setComponentOrder, setDraggingComponent, setHasDragAttempted, startDragging } = useWebsiteStore();
 
   const allComponentsArray = useMemo(() => Object.values(ComponentLibrary).flat(), []);
 
@@ -93,6 +93,12 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
       setSearchTerm('');
     }
   };
+
+  // Listener for drag start in ComponentPanel
+  const handleDragStart = useCallback(() => {
+    setHasDragAttempted(true); // Mark that a drag attempt has occurred
+    startDragging(); // Update isDragging state
+  }, [setHasDragAttempted, startDragging]);
 
   return (
     <div className="p-4 flex flex-col h-full" ref={ref}>
@@ -143,6 +149,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
             flex: '1 1 auto',
             touchAction: 'pan-x',
           }}
+          onDragStart={handleDragStart} // Trigger drag start listener
         >
           {filteredComponents.map((component) => (
             <SortableLibraryComponent

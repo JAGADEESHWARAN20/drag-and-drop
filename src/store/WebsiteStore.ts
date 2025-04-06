@@ -46,6 +46,7 @@ interface WebsiteStoreActions {
   draggingComponent: { type: string | null; defaultProps: Record<string, any> | null };
   setDraggingComponent: (component: { type: string | null; defaultProps: Record<string, any> | null }) => void;
   setSheetOpen: (isOpen: boolean) => void;
+  setHasDragAttempted: (hasAttempted: boolean) => void; // Added action
 }
 
 type WebsiteState = WebsiteStoreActions & {
@@ -56,6 +57,7 @@ type WebsiteState = WebsiteStoreActions & {
   isPreviewMode: boolean;
   breakpoint: Breakpoint;
   isSheetOpen: boolean;
+  hasDragAttempted: boolean; // Added state
 };
 
 export const useWebsiteStore = create<WebsiteState>()(
@@ -71,6 +73,7 @@ export const useWebsiteStore = create<WebsiteState>()(
       isDragging: false,
       draggingComponent: { type: null, defaultProps: null },
       isSheetOpen: false,
+      hasDragAttempted: false, // Initialize new state
 
       setCurrentPageId: (id) => set((state) => { state.currentPageId = id; }),
       addPage: (page) => set((state) => { state.pages.push(page); }),
@@ -229,6 +232,7 @@ export const useWebsiteStore = create<WebsiteState>()(
       endDragging: () => set((state) => { state.isDragging = false; }),
       setDraggingComponent: (component) => set((state) => { state.draggingComponent = component; }),
       setSheetOpen: (isOpen: boolean) => set((state) => { state.isSheetOpen = isOpen; }),
+      setHasDragAttempted: (hasAttempted: boolean) => set((state) => { state.hasDragAttempted = hasAttempted; }), // Implemented action
     })),
     { name: 'WebsiteStore' }
   ));

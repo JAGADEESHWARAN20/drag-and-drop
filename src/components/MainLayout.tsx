@@ -55,7 +55,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      breakpoint,
      setBreakpoint,
 }) => {
-     const { components, selectedComponentId, addComponent, setSelectedComponentId, isSheetOpen, setSheetOpen, setDraggingComponent } = useWebsiteStore();
+     const { components, selectedComponentId, addComponent, setSelectedComponentId, isSheetOpen, setSheetOpen, setDraggingComponent, hasDragAttempted, setHasDragAttempted } = useWebsiteStore();
      const [isPropertyPanelOpen, setIsPropertyPanelOpen] = useState(false);
      const [isHierarchyOpen, setIsHierarchyOpen] = useState(false);
      const [isDarkMode, setIsDarkMode] = useState(false);
@@ -123,36 +123,35 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           const { active } = event;
           if (active.data?.current?.type === 'COMPONENT') {
                const { componentType, defaultProps } = active.data.current;
-
-               // Add component to canvas when drag starts
-               addComponent({
-                    type: componentType,
-                    props: defaultProps || {},
-                    pageId: currentPageId,
-                    parentId: null,
-                    responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
-               });
                setDraggingComponent({ type: componentType, defaultProps });
-               setSelectedComponentId(useWebsiteStore.getState().components.find(c => c.type === componentType && c.pageId === currentPageId)?.id || null);
-               toast({
-                    title: 'Component Added',
-                    description: `Added ${componentType} to canvas.`,
-               });
-
                if (componentPanelRef.current) {
                     componentPanelRef.current.style.pointerEvents = 'none';
                }
+               setHasDragAttempted(true); // Set drag attempt on start
           }
      };
 
      const handleDragEnd = (event: DragEndEvent) => {
           const { active, over } = event;
 
-          if (active?.data?.current?.type === 'COMPONENT') {
-               setDraggingComponent(null);
+          if (active?.data?.current?.type === 'COMPONENT' && over?.id === 'canvas-drop-area') {
+               addComponent({
+                    type: active.data.current.componentType,
+                    props: active.data.current.defaultProps || {},
+                    pageId: currentPageId,
+                    parentId: null,
+                    responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
+               });
+               setSelectedComponentId(useWebsiteStore.getState().components.find(c => c.type === active.data.current.componentType && c.pageId === currentPageId)?.id || null);
+               toast({
+                    title: 'Component Added',
+                    description: `Added ${active.data.current.componentType} to canvas.`,
+               });
                setSheetOpen(false);
           }
 
+          setDraggingComponent(null);
+          setHasDragAttempted(false); // Reset drag attempt on end
           if (componentPanelRef.current) {
                componentPanelRef.current.style.pointerEvents = 'auto';
           }

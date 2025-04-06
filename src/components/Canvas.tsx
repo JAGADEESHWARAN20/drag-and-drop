@@ -21,6 +21,7 @@ import Button from '@/components/ui/button';
 import SelectionManager from './SelectionManager';
 import ContextMenu from './ContextMenu';
 import { X } from "lucide-react";
+import { useSensors, useSensor, PointerSensor } from '@dnd-kit/core'; // Import sensors
 
 interface CanvasProps {
   isPreviewMode: boolean;
@@ -39,6 +40,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
     setDraggingComponent,
     addComponent,
     reorderComponents,
+    setHasDragAttempted, // Access the new action
   } = useWebsiteStore();
 
   const { selectedIds, handleComponentClick, setSelectedIds } = SelectionManager();
@@ -46,6 +48,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
   const { setNodeRef, isOver, ...droppable } = useDroppable({
     id: 'canvas-drop-area',
   });
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { delay: 300, tolerance: 5 } }));
 
   const currentPage = useMemo(
     () => pages.find((page) => page.id === currentPageId) || pages[0],
@@ -191,10 +194,18 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
         }
       }
     }
+    setHasDragAttempted(false); // Reset on drag end if no drop occurs
   };
 
+  // Listener for drag over in Canvas
+  const handleDragOver = useCallback(() => {
+    if (!isOver && draggingComponent) {
+      setHasDragAttempted(true); // Update if a drag is over the canvas
+    }
+  }, [isOver, draggingComponent, setHasDragAttempted]);
+
   return (
-    <DndContext onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd} onDragOver={handleDragOver}>
       <div
         ref={setNodeRef}
         className={`h-[90%] mt-5 mx-auto bg-gray-200 ${getCanvasWidth()} transition-all duration-300 ${isOver ? 'bg-green-100' : ''}`}

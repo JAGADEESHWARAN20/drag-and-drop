@@ -34,6 +34,7 @@ export interface WebsiteState {
      isDragging: boolean;
      draggingComponent: { type: string | null; defaultProps: Record<string, any> | null };
      isSheetOpen: boolean;
+     hasDragAttempted: boolean; // Added new state
      setCurrentPageId: (id: string) => void;
      addPage: (page: Page) => void;
      removePage: (pageId: string) => void;
@@ -65,6 +66,7 @@ export interface WebsiteState {
      endDragging: () => void;
      setDraggingComponent: (component: { type: string | null; defaultProps: Record<string, any> | null }) => void;
      setSheetOpen: (isOpen: boolean) => void;
+     setHasDragAttempted: (hasAttempted: boolean) => void; // Added new action
 }
 
 export interface WebsiteStoreProviderProps {
