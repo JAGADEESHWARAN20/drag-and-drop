@@ -5,7 +5,6 @@ import {
   DndContext,
   DragEndEvent,
   useDroppable,
-  UniqueIdentifier,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -22,7 +21,7 @@ import Button from '@/components/ui/button';
 import SelectionManager from './SelectionManager';
 import ContextMenu from './ContextMenu';
 import { v4 as uuidv4 } from 'uuid';
-import {X} from "lucide-react"
+import { X } from "lucide-react";
 
 interface CanvasProps {
   isPreviewMode: boolean;
@@ -45,7 +44,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
 
   const { selectedIds, handleComponentClick, setSelectedIds } = SelectionManager();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
-  const { setNodeRef, isOver, active, over, ...droppable } = useDroppable({
+  const { setNodeRef, isOver, ...droppable } = useDroppable({
     id: 'canvas-drop-area',
   });
 
@@ -261,8 +260,8 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
             selectedIds={selectedIds}
             onClose={() => setContextMenu(null)}
             onAddToParent={(parentId) => selectedIds.forEach((id) => useWebsiteStore.getState().updateComponentParent(id, parentId))}
-            onMoveAbove={(componentId) => reorderComponents(currentPageId, rootComponents.findIndex((c) => c.id === String(componentId)), rootComponents.findIndex((c) => c.id === String(componentId)) [...]
-            onMoveBelow={(componentId) => reorderComponents(currentPageId, rootComponents.findIndex((c) => c.id === String(componentId)), rootComponents.findIndex((c) => c.id === String(componentId)) [...]
+            onMoveAbove={(componentId) => reorderComponents(currentPageId, rootComponents.findIndex((c) => c.id === String(componentId)), rootComponents.findIndex((c) => c.id === String(componentId)))}
+            onMoveBelow={(componentId) => reorderComponents(currentPageId, rootComponents.findIndex((c) => c.id === String(componentId)), rootComponents.findIndex((c) => c.id === String(componentId)))}
           />
         )}
       </div>
