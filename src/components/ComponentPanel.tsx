@@ -47,6 +47,7 @@ const SortableLibraryComponent = ({ component, onComponentClick }: SortableLibra
       {...attributes}
       {...listeners}
       className="p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 flex-shrink-0 hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700"
+      onClick={() => onComponentClick(component.type, component.defaultProps)}
     >
       <DraggableComponent component={component} />
     </div>
