@@ -36,7 +36,7 @@ interface WebsiteStoreActions {
     props: Record<string, any>
   ) => void;
   setSelectedComponentId: (id: string | null) => void;
-  reorderComponents: (pageId: string, oldIndex: number, newIndex: number) => void;
+  reorderComponents: (parentId: string | null, oldIndex: number, newIndex: number) => void;
   moveComponent: (id: string, targetId: string | null, isContainer?: boolean) => void;
   setIsPreviewMode: (isPreview: boolean) => void;
   setBreakpoint: (breakpoint: Breakpoint) => void;
@@ -168,7 +168,6 @@ export const useWebsiteStore = create<WebsiteState>()(
             state.componentOrder = updated;
           }
         }),
-
 
       moveComponent: (id, targetId, isContainer = false) => set((state) => {
         const component = state.components.find((c) => c.id === id);
