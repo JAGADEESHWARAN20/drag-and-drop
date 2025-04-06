@@ -259,20 +259,20 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
             onAddToParent={(parentId) =>
               selectedIds.forEach((id) => useWebsiteStore.getState().updateComponentParent(id, parentId))
             }
-            onMoveAbove={(componentId) =>
-              reorderComponents(
-                currentPageId,
-                rootComponents.findIndex((c) => c.id === String(componentId)),
-                rootComponents.findIndex((c) => c.id === String(componentId)) // Fix: This logic seems incorrect; should use a different index
-              )
-            }
-            onMoveBelow={(componentId) =>
-              reorderComponents(
-                currentPageId,
-                rootComponents.findIndex((c) => c.id === String(componentId)),
-                rootComponents.findIndex((c) => c.id === String(componentId)) // Fix: This logic seems incorrect; should use a different index
-              )
-            }
+            onMoveAbove={(componentId) => {
+              const currentIndex = rootComponents.findIndex((c) => c.id === String(componentId));
+              const aboveIndex = currentIndex - 1;
+              if (aboveIndex >= 0) {
+                reorderComponents(currentPageId, currentIndex, aboveIndex);
+              }
+            }}
+            onMoveBelow={(componentId) => {
+              const currentIndex = rootComponents.findIndex((c) => c.id === String(componentId));
+              const belowIndex = currentIndex + 1;
+              if (belowIndex < rootComponents.length) {
+                reorderComponents(currentPageId, currentIndex, belowIndex);
+              }
+            }}
           />
         )}
       </div>
