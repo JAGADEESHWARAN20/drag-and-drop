@@ -241,7 +241,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                              <Menu size={20} />
                                         </Button>
                                    </DrawerTrigger>
-                                   <DrawerContent className="bottom-0 left-0 right-0 top-auto h-[80vh] max-h-[80vh] p-4">
+                                   <DrawerContent className="bottom-0 left-0 right-0 top-auto h-[40vh] max-h-[50vh] p-4">
                                         <DrawerHeader>
                                              <DrawerTitle className="text-lg font-semibold text-blue-900 dark:text-blue-300">
                                                   Component Library
