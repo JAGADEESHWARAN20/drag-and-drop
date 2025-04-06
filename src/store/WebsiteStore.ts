@@ -217,6 +217,8 @@ export const useWebsiteStore = create<WebsiteState>()(
         const parent = parentId ? state.components.find((c) => c.id === parentId) : null;
         if (parent) {
           parent.children = newOrder;
+        } else {
+          state.componentOrder = newOrder;
         }
       }),
 
