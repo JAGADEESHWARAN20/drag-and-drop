@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
 import { Page } from '@/types';
@@ -33,6 +32,7 @@ import {
      useSensor,
      PointerSensor,
 } from '@dnd-kit/core';
+import { useSwipeable } from 'react-swipeable';
 
 interface MainLayoutProps {
      pages: Page[];
@@ -92,7 +92,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
      const handleAddPage = () => {
           const newPageId = uuidv4();
-          onAddPage(`Page ${pages.length + 1}`);
+          onAddPage(`Page ${ pages.length + 1 } `);
           setIsPageSheetOpen(false);
      };
 
@@ -119,9 +119,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           });
           toast({
                title: 'Component Added',
-               description: `Added ${type} to canvas.`,
+               description: `Added ${ type } to canvas.`,
           });
-          setSheetOpen(false);
+          setSheetOpen(false); 
           setSelectedComponentId(
                useWebsiteStore.getState().components.find((c) => c.type === type && c.pageId === currentPageId)?.id || null
           );
@@ -159,7 +159,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                setSelectedComponentId(newComponentId);
                toast({
                     title: 'Component Added',
-                    description: `Added ${active.data.current.componentType} to canvas.`,
+                    description: `Added ${ active.data.current.componentType } to canvas.`,
                });
 
                setSheetOpen(false);
@@ -171,8 +171,27 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           }
      };
 
+     const swipeHandlers = useSwipeable({
+          onSwipedLeft: (eventData) => {
+               if (eventData.initial[1] > window.innerHeight * 0.8) {
+                    setIsPropertyPanelOpen(true);
+               } else if (eventData.initial[1] < window.innerHeight * 0.2) {
+                    setIsHierarchyOpen(true);
+               }
+          },
+          onSwipedRight: (eventData) => {
+               if (eventData.initial[1] > window.innerHeight * 0.8) {
+                    setIsPropertyPanelOpen(false);
+               } else if (eventData.initial[1] < window.innerHeight * 0.2) {
+                    setIsHierarchyOpen(false);
+               }
+          },
+          
+          trackTouch: true,
+     });
+
      return (
-          <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
+          <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900" {...swipeHandlers}>
                <nav className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 shadow-md">
                     <div className="flex items-center space-x-3">
                          <Drawer open={isSheetOpen} onOpenChange={setSheetOpen}>
@@ -318,7 +337,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               aria-label="Toggle Preview Mode"
                               pressed={isPreviewMode}
                               onPressedChange={onPreviewToggle}
-                              className={`flex items-center space-x-2 data-[state=pressed]:bg-blue-600 text-gray-600 dark:text-gray-300 rounded-md px-3 py-1`}
+                              className={`flex items - center space - x - 2 data - [state = pressed]: bg - blue - 600 text - gray - 600 dark: text - gray - 300 rounded - md px - 3 py - 1`}
                          >
                               {isPreviewMode ? <Pen size={16} /> : <Code size={16} />}
                          </Toggle>
