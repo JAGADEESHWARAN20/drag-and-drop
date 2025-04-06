@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, forwardRef, useMemo, useCallback, useRef } from 'react';
+import { useState, forwardRef, useMemo } from 'react';
 import { ComponentLibrary } from '../data/ComponentLibrary';
 import { Search, MousePointerClick } from 'lucide-react';
 import { ComponentType, SVGProps } from 'react';
 import Button from '@/components/ui/button';
-import { DragEndEvent } from '@dnd-kit/core';
 import {
   SortableContext,
   horizontalListSortingStrategy,
@@ -14,7 +13,6 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useWebsiteStore } from '../store/WebsiteStore';
 import DraggableComponent from './DraggableComponent';
-import { UniqueIdentifier } from '@dnd-kit/core';
 
 interface LibraryComponent {
   type: string;
@@ -28,14 +26,21 @@ interface ComponentPanelProps {
   onClosePanel?: () => void;
 }
 
-
 interface SortableLibraryComponentProps {
   component: LibraryComponent;
   onComponentClick: (type: string, defaultProps: Record<string, any>) => void;
 }
 
 const SortableLibraryComponent = ({ component, onComponentClick }: SortableLibraryComponentProps) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: component.type });
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: component.type,
+    data: {
+      type: 'COMPONENT_LIB_ITEM',
+      componentType: component.type,
+      defaultProps: component.defaultProps,
+    }
+  });
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -48,10 +53,16 @@ const SortableLibraryComponent = ({ component, onComponentClick }: SortableLibra
       style={style}
       {...attributes}
       {...listeners}
-      className="p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 flex-shrink-0 hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700"
-      onClick={() => onComponentClick(component.type, component.defaultProps)}
+      className="p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 flex-shrink-0 hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
+      onClick={(e) => {
+        e.stopPropagation();
+        onComponentClick(component.type, component.defaultProps);
+      }}
     >
-      <DraggableComponent component={component} />
+      <div className="mb-2">
+        {component.icon && <component.icon size={24} />}
+      </div>
+      <div className="text-xs font-medium text-center">{component.label}</div>
     </div>
   );
 };
@@ -97,30 +108,16 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
     }
   };
 
-  const handleReorder = (activeId: UniqueIdentifier, overId: UniqueIdentifier) => {
-    if (activeId !== overId) {
-      const oldIndex = componentOrder.indexOf(activeId as string);
-      const newIndex = componentOrder.indexOf(overId as string);
-
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const newOrder = [...componentOrder];
-        newOrder.splice(oldIndex, 1);
-        newOrder.splice(newIndex, 0, activeId as string);
-        setComponentOrder(newOrder);
-      }
-    }
-  };
-
   return (
     <div className="p-4 flex flex-col h-full" ref={ref}>
       <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md flex items-center justify-between">
         <div>
           <div className="flex items-center mb-2 text-blue-700 dark:text-blue-300">
             <MousePointerClick size={16} className="mr-2" />
-            <span className="text-sm font-medium">Click to add</span>
+            <span className="text-sm font-medium">Click or Drag</span>
           </div>
           <p className="text-xs text-blue-600 dark:text-blue-400">
-            Click on a component to add it to the canvas. Drag and drop to reorder the components in this panel.
+            Click to add component to canvas, or drag to position it precisely where you want.
           </p>
         </div>
         <Button
@@ -149,16 +146,18 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
       )}
 
       <SortableContext
-        items={filteredComponents.map((component) => component.type as UniqueIdentifier)}
+        items={filteredComponents.map((component) => component.type)}
         strategy={horizontalListSortingStrategy}
       >
         <div
-          className="flex space-x-2 overflow-x-auto"
+          className="grid grid-cols-3 gap-3 overflow-y-auto"
           style={{
-            overflowY: 'hidden',
+            overflowY: 'auto',
             minHeight: '0',
             flex: '1 1 auto',
-            touchAction: 'pan-x',
+            touchAction: 'pan-y',
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'thin',
           }}
         >
           {filteredComponents.map((component) => (
@@ -172,17 +171,19 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
       </SortableContext>
 
       {filteredComponents.length === 0 && searchTerm && (
-        <div className="text-center text-gray-500 dark:text-gray-400">
+        <div className="text-center text-gray-500 dark:text-gray-400 mt-4">
           No components found matching "{searchTerm}"
         </div>
       )}
+
       {Object.keys(ComponentLibrary).length > 0 && filteredComponents.length === 0 && !searchTerm && !isSearchOpen && (
-        <div className="text-center text-gray-500 dark:text-gray-400">
-          Click on a component to add it to the canvas. Drag and drop to reorder the components in this panel.
+        <div className="text-center text-gray-500 dark:text-gray-400 mt-4">
+          No components available. Try adjusting your search.
         </div>
       )}
+
       {Object.keys(ComponentLibrary).length === 0 && (
-        <div className="text-center text-gray-500 dark:text-gray-400">
+        <div className="text-center text-gray-500 dark:text-gray-400 mt-4">
           No components available in the library.
         </div>
       )}
