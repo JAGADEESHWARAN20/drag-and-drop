@@ -25,7 +25,6 @@ interface LibraryComponent {
 interface ComponentPanelProps {
   onComponentClick: (type: string, defaultProps: Record<string, any>) => void;
   onClosePanel?: () => void;
-  
 }
 
 interface SortableLibraryComponentProps {

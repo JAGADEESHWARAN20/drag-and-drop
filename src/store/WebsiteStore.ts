@@ -2,7 +2,7 @@ import { create, useStore, StoreApi } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { immer } from 'zustand/middleware/immer';
 import { devtools } from 'zustand/middleware';
-import { WebsiteState as State, Component } from '../types';
+import { Component, Page } from '../types';
 import React, { ReactNode, createContext, useContext } from 'react';
 
 export type Breakpoint = 'desktop' | 'tablet' | 'mobile';
@@ -48,7 +48,13 @@ interface WebsiteStoreActions {
   setSheetOpen: (isOpen: boolean) => void;
 }
 
-type WebsiteState = State & WebsiteStoreActions & {
+type WebsiteState = WebsiteStoreActions & {
+  pages: Page[];
+  currentPageId: string;
+  components: Component[];
+  selectedComponentId: string | null;
+  isPreviewMode: boolean;
+  breakpoint: Breakpoint;
   isSheetOpen: boolean;
 };
 
@@ -75,18 +81,15 @@ export const useWebsiteStore = create<WebsiteState>()(
           state.currentPageId = state.pages[0].id;
         }
       }),
-      setIsDragging: (dragging: boolean) => set({ isDragging: dragging }),
-      startDragging: () => set({ isDragging: true }),
-      endDragging: () => set({ isDragging: false }),
       addComponent: (component) => set((state) => {
         const newComponent: Component = {
           id: uuidv4(),
           pageId: state.currentPageId,
           parentId: component.parentId || null,
           type: component.type,
-          props: component.props || {}, // Ensure props is defined
+          props: component.props || {},
           children: [],
-          responsiveProps: component.responsiveProps || { desktop: {}, tablet: {}, mobile: {} }, // Ensure responsiveProps is defined
+          responsiveProps: component.responsiveProps || { desktop: {}, tablet: {}, mobile: {} },
           style: {},
           allowChildren: component.allowChildren || false,
         };
@@ -101,7 +104,6 @@ export const useWebsiteStore = create<WebsiteState>()(
         state.components.push(newComponent);
         state.selectedComponentId = newComponent.id;
       }),
-      setDraggingComponent: (component) => set({ draggingComponent: component }),
       removeComponent: (id) => set((state) => {
         const removeComponentAndChildren = (componentId: string): string[] => {
           const component = state.components.find((c) => c.id === componentId);
@@ -223,7 +225,10 @@ export const useWebsiteStore = create<WebsiteState>()(
           }
         }
       }),
+      startDragging: () => set((state) => { state.isDragging = true; }),
+      endDragging: () => set((state) => { state.isDragging = false; }),
+      setDraggingComponent: (component) => set((state) => { state.draggingComponent = component; }),
       setSheetOpen: (isOpen: boolean) => set((state) => { state.isSheetOpen = isOpen; }),
     })),
     { name: 'WebsiteStore' }
-));
+  ));

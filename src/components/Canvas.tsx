@@ -5,7 +5,7 @@ import {
   DndContext,
   DragEndEvent,
   useDroppable,
-  UniqueIdentifier, // Import UniqueIdentifier
+  UniqueIdentifier,
   Active,
   Over,
 } from '@dnd-kit/core';
@@ -16,7 +16,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
-import { Component } from "../types";
+import { Component } from '../types';
 import { ComponentRegistry } from '../utils/ComponentRegistry';
 import DroppableContainer from './DroppableContainer';
 import SortableItem from './SortableItem';
@@ -26,7 +26,7 @@ import Button from '@/components/ui/button';
 import SelectionManager from './SelectionManager';
 import ContextMenu from './ContextMenu';
 import { v4 as uuidv4 } from 'uuid';
-import { MutableRefObject } from 'react';
+import {X} from "lucide-react"
 
 interface CanvasProps {
   isPreviewMode: boolean;
@@ -44,12 +44,12 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
     draggingComponent,
     setDraggingComponent,
     addComponent,
-    reorderComponents, // Import reorderComponents
+    reorderComponents,
   } = useWebsiteStore();
 
   const { selectedIds, handleComponentClick, setSelectedIds } = SelectionManager();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
-  const { setNodeRef, isOver, active, rect, node, over, ...droppable } = useDroppable({ // Destructure all relevant properties
+  const { setNodeRef, isOver, active, over, ...droppable } = useDroppable({
     id: 'canvas-drop-area',
   });
 
@@ -112,6 +112,41 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
               </div>
             )}
           </DynamicComponent>
+          {!isPreviewMode && (
+            <div className="flex justify-end mt-2 space-x-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  const newIndex = rootComponents.findIndex(c => c.id === componentData.id);
+                  reorderComponents(currentPageId, newIndex, newIndex - 1);
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 10L12 3L19 10M12 3V21" />
+                </svg>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  const newIndex = rootComponents.findIndex(c => c.id === componentData.id);
+                  reorderComponents(currentPageId, newIndex, newIndex + 1);
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 14L12 21L19 14M12 21V3" />
+                </svg>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => useWebsiteStore.getState().removeComponent(componentData.id)}
+              >
+                <X size={16} className="text-red-500" />
+              </Button>
+            </div>
+          )}
           {componentData.type === 'Container' && !isPreviewMode && (
             <div className="mt-2">
               <Button
@@ -125,7 +160,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
         </DroppableContainer>
       );
     },
-    [components, currentBreakpoint, isPreviewMode, selectedIds, handleComponentClick, setAllowChildren]
+    [components, currentBreakpoint, isPreviewMode, selectedIds, handleComponentClick, setAllowChildren, rootComponents, currentPageId, reorderComponents]
   );
 
   const getCanvasWidth = useCallback(() => {
@@ -148,7 +183,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
       const newComponentId = uuidv4();
       addComponent({
         type: draggingComponent.type,
-        props: draggingComponent.defaultProps,
+        props: draggingComponent.defaultProps || { value: 'Heading' }, // Default heading value
         pageId: currentPageId,
         parentId: null,
         responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
@@ -161,12 +196,10 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
         description: `Added ${draggingComponent.type} to canvas.`,
       });
 
-      // Close the sheet after adding the component
       useWebsiteStore.getState().setSheetOpen(false);
       return;
     }
 
-    // Existing reordering logic...
     if (active && over && active.id !== over.id) {
       const activeId = active.id;
       const overId = over.id;
@@ -183,51 +216,41 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
         if (oldIndex !== -1 && newIndex !== -1) {
           reorderComponents(currentPageId, oldIndex, newIndex);
         }
-      } else if (activeComponent && !overComponent && activeComponent.parentId === null) {
-        // Dragging to the root level (no over component)
-        const oldIndex = rootComponents.findIndex(c => c.id === activeId);
-        if (oldIndex !== -1) {
-          // Optionally handle dropping at the end or beginning of root components
-        }
       }
     }
   };
-
-
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <div
         ref={setNodeRef}
-       
-        className={`h-[90%] mt-5 mx-auto bg-white ${getCanvasWidth()} transition-all duration-300 ${isOver ? 'bg-green-100' : ''}`}
-        {...(node && !(active || over) ? droppable : {})}
+        className={`h-[90%] mt-5 mx-auto bg-gray-200 ${getCanvasWidth()} transition-all duration-300 ${isOver ? 'bg-green-100' : ''}`}
+        {...droppable}
         id="canvas-drop-area"
       >
         <div
-          className={`relative h-[90%] ${isPreviewMode ? 'bg-white' : 'bg-gray-50 border-dashed border-2 border-gray-300'} overflow-x-auto p-6`}
+          className={`relative h-[90%] ${isPreviewMode ? 'bg-white' : 'border-dashed border-2 border-gray-400'} overflow-x-auto p-6`}
           onClick={() => !isPreviewMode && setSelectedComponentId(null)}
           onContextMenu={handleRightClick}
         >
+          {rootComponents.length === 0 && !isPreviewMode && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="h-full flex items-center justify-center text-gray-500 text-lg p-6"
+            >
+              Click to Drop Your component here or Drag a component to add here
+            </motion.div>
+          )}
           <SortableContext
             items={rootComponents.map((c) => c.id)}
             strategy={verticalListSortingStrategy}
           >
-            {rootComponents.length === 0 && !isPreviewMode ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="h-full flex items-center justify-center text-gray-500 mt-7 text-lg p-6"
-              >
-                Click components in the panel to add them to the canvas.
-              </motion.div>
-            ) : (
-              rootComponents.map((component) => (
-                <SortableItem key={component.id} id={component.id}>
-                  {renderComponent(component)}
-                </SortableItem>
-              ))
-            )}
+            {rootComponents.map((component) => (
+              <SortableItem key={component.id} id={component.id}>
+                {renderComponent(component)}
+              </SortableItem>
+            ))}
           </SortableContext>
           {rootComponents.length === 0 && !isPreviewMode && isOver && draggingComponent && (
             <div className="absolute top-0 left-0 w-full h-full bg-green-100 opacity-50 flex items-center justify-center text-green-500">

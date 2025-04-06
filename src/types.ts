@@ -1,5 +1,3 @@
-// In your ../types/index.ts
-
 import { ReactNode } from "react";
 
 export type Breakpoint = 'desktop' | 'tablet' | 'mobile';
@@ -34,13 +32,22 @@ export interface WebsiteState {
      breakpoint: Breakpoint;
      componentOrder: string[];
      isDragging: boolean;
-     
-    
-     setDraggingComponent: (component: any) => void;
+     draggingComponent: { type: string | null; defaultProps: Record<string, any> | null };
+     isSheetOpen: boolean;
      setCurrentPageId: (id: string) => void;
      addPage: (page: Page) => void;
      removePage: (pageId: string) => void;
-     addComponent: (component: Omit<Component, 'children' | 'style' | 'allowChildren'>) => void;
+     addComponent: (
+          component: Omit<Component, 'id' | 'children' | 'style'> & {
+               parentId?: string | null;
+               allowChildren?: boolean;
+               responsiveProps: {
+                    desktop: Record<string, any>;
+                    tablet: Record<string, any>;
+                    mobile: Record<string, any>;
+               };
+          }
+     ) => void;
      removeComponent: (id: string) => void;
      updateComponentProps: (id: string, props: Record<string, string | number | boolean | object>) => void;
      updateResponsiveProps: (id: string, breakpoint: Breakpoint, props: Record<string, string | number | boolean | object>) => void;
@@ -53,7 +60,11 @@ export interface WebsiteState {
      updateComponentParent: (id: string, parentId: string | null) => void;
      reorderChildren: (parentId: string | null, newOrder: string[]) => void;
      updateComponentOrder: (parentId: string | null, newOrder: string[]) => void;
-     setComponentOrder: (order: string[]) => void; // Add this line
+     setComponentOrder: (order: string[]) => void;
+     startDragging: () => void;
+     endDragging: () => void;
+     setDraggingComponent: (component: { type: string | null; defaultProps: Record<string, any> | null }) => void;
+     setSheetOpen: (isOpen: boolean) => void;
 }
 
 export interface WebsiteStoreProviderProps {
@@ -61,11 +72,9 @@ export interface WebsiteStoreProviderProps {
 }
 
 export type PublicContextDescriptor = {
-     // ... other properties
      isDragging: boolean;
-     // ...
+     // ... other properties
 };
+
 export type ValidProp = string | number | boolean | string[] | string[][] | { [key: string]: string | number };
 export type ComponentProps = Record<string, ValidProp>;
-
-
