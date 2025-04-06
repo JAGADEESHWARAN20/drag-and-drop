@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
 import { Page } from '@/types';
 import ComponentPanel from './ComponentPanel';
@@ -486,7 +486,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                          </div>
                     </div>
                </div>
-          </DndContext>
+          </DndContext >
      );
 };
 

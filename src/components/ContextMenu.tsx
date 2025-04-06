@@ -2,7 +2,6 @@ import React, { useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useWebsiteStore } from '../store/WebsiteStore';
 import Button from '@/components/ui/button';
-import type { Component } from '../types';
 
 interface ContextMenuProps {
      x: number;
@@ -149,4 +148,4 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
      );
 };
 
-export default ContextMenu;
+export default ContextMenu
