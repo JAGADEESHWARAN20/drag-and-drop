@@ -235,4 +235,5 @@ export const useWebsiteStore = create<WebsiteState>()(
       setHasDragAttempted: (hasAttempted: boolean) => set((state) => { state.hasDragAttempted = hasAttempted; }), // Implemented action
     })),
     { name: 'WebsiteStore' }
-  ));
+  )
+);

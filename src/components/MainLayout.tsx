@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
+import { ComponentRegistry } from '@/utils/ComponentRegistry';
 import {
      Drawer,
      DrawerTrigger,
@@ -27,7 +28,6 @@ import { Toggle } from '@/components/ui/toggle';
 import {
      DndContext,
      DragStartEvent,
-     DragOverEvent,
      DragEndEvent,
      useSensors,
      useSensor,
@@ -65,10 +65,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           isSheetOpen,
           setSheetOpen,
           setDraggingComponent,
-          hasDragAttempted,
-          setHasDragAttempted,
-          startDragging,
-          endDragging,
      } = useWebsiteStore();
      const [isPropertyPanelOpen, setIsPropertyPanelOpen] = useState(false);
      const [isHierarchyOpen, setIsHierarchyOpen] = useState(false);
@@ -125,7 +121,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                title: 'Component Added',
                description: `Added ${type} to canvas.`,
           });
-          setSheetOpen(false); // Note: 'setSheetOpen' is now 'setSheetOpen' from the store, but we'll use Drawer state
+          setSheetOpen(false);
           setSelectedComponentId(
                useWebsiteStore.getState().components.find((c) => c.type === type && c.pageId === currentPageId)?.id || null
           );
@@ -140,18 +136,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           if (active.data?.current?.type === 'COMPONENT') {
                const { componentType, defaultProps } = active.data.current;
                setDraggingComponent({ type: componentType, defaultProps });
-               startDragging();
-               setHasDragAttempted(true);
                if (componentPanelRef.current) {
                     componentPanelRef.current.style.pointerEvents = 'none';
                }
-          }
-     };
-
-     const handleDragOver = (event: DragOverEvent) => {
-          const { over } = event;
-          if (over?.id === 'canvas-drop-area' && !hasDragAttempted) {
-               setHasDragAttempted(true);
           }
      };
 
@@ -159,25 +146,26 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           const { active, over } = event;
 
           if (active?.data?.current?.type === 'COMPONENT' && over?.id === 'canvas-drop-area') {
+               const newComponentId = uuidv4();
                addComponent({
                     type: active.data.current.componentType,
-                    props: active.data.current.defaultProps || {},
+                    props: active.data.current.defaultProps || { value: 'Heading' }, // Default heading value
                     pageId: currentPageId,
                     parentId: null,
                     responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
+                    allowChildren: (ComponentRegistry[active.data.current.componentType as keyof typeof ComponentRegistry]?.allowChildren) || false,
                });
-               setSelectedComponentId(
-                    useWebsiteStore.getState().components.find((c) => c.type === active.data.current.componentType && c.pageId === currentPageId)?.id || null
-               );
+               setDraggingComponent(null);
+               setSelectedComponentId(newComponentId);
                toast({
                     title: 'Component Added',
                     description: `Added ${active.data.current.componentType} to canvas.`,
                });
+
+               setSheetOpen(false);
           }
 
-          endDragging();
           setDraggingComponent(null);
-          setHasDragAttempted(false);
           if (componentPanelRef.current) {
                componentPanelRef.current.style.pointerEvents = 'auto';
           }
@@ -206,7 +194,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                    </DrawerHeader>
                                    <ComponentPanel
                                         ref={componentPanelRef}
-                                        onComponentClick={handleComponentAdd}
+                                        onComponentClick={(type, defaultProps) => {
+                                             handleComponentAdd(type, defaultProps);
+                                             setSheetOpen(false);
+                                        }}
                                         onClosePanel={() => setSheetOpen(false)}
                                    />
                               </DrawerContent>
@@ -441,7 +432,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                          <DndContext
                               sensors={sensors}
                               onDragStart={handleDragStart}
-                              onDragOver={handleDragOver}
                               onDragEnd={handleDragEnd}
                          >
                               <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
