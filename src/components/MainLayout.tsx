@@ -96,6 +96,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           }
      }, [selectedComponentId]);
 
+     useEffect(() => {
+          if (draggingComponent) {
+               setSheetOpen(false); // Close the drawer when dragging starts
+          }
+     }, [draggingComponent]);
+
      const handleAddPage = () => {
           const newPageId = uuidv4();
           onAddPage(`Page ${pages.length + 1}`);
@@ -246,7 +252,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                                   </Button>
                                              </DrawerClose>
                                         </DrawerHeader>
-                                        <ComponentPanel /> {/* Removed ref here, handled via forwardRef if needed */}
+                                        <ComponentPanel onComponentClick={handleComponentAdd} /> {/* Removed ref here, handled via forwardRef if needed */}
                                    </DrawerContent>
                               </Drawer>
                               <h1 className="text-lg font-bold text-black dark:text-white">QuickSite</h1>

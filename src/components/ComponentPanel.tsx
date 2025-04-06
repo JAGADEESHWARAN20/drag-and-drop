@@ -97,8 +97,9 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
 
   // Listener for drag start in ComponentPanel
   const handleDragStart = useCallback(() => {
-    setHasDragAttempted(true); // Mark that a drag attempt has occurred
-    startDragging(); // Update isDragging state
+    setHasDragAttempted(true); 
+    startDragging(); 
+    
   }, [setHasDragAttempted, startDragging]);
 
   return (
