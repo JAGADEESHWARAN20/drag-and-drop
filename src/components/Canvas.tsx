@@ -6,15 +6,11 @@ import {
   DragEndEvent,
   useDroppable,
   UniqueIdentifier,
-  Active,
-  Over,
 } from '@dnd-kit/core';
 import {
   SortableContext,
   verticalListSortingStrategy,
-  useSortable,
 } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
 import { Component } from '../types';
 import { ComponentRegistry } from '../utils/ComponentRegistry';
@@ -179,21 +175,21 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (active?.id === 'library-component' && over?.id === 'canvas-drop-area' && draggingComponent) {
+    if (active?.data?.current?.type === 'COMPONENT' && over?.id === 'canvas-drop-area') {
       const newComponentId = uuidv4();
       addComponent({
-        type: draggingComponent.type,
-        props: draggingComponent.defaultProps || { value: 'Heading' }, // Default heading value
+        type: active.data.current.componentType,
+        props: active.data.current.defaultProps || { value: 'Heading' }, // Default heading value
         pageId: currentPageId,
         parentId: null,
         responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
-        allowChildren: (ComponentRegistry[draggingComponent.type as keyof typeof ComponentRegistry]?.allowChildren) || false,
+        allowChildren: (ComponentRegistry[active.data.current.componentType as keyof typeof ComponentRegistry]?.allowChildren) || false,
       });
       setDraggingComponent(null);
       setSelectedComponentId(newComponentId);
       toast({
         title: 'Component Added',
-        description: `Added ${draggingComponent.type} to canvas.`,
+        description: `Added ${active.data.current.componentType} to canvas.`,
       });
 
       useWebsiteStore.getState().setSheetOpen(false);
@@ -265,8 +261,8 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
             selectedIds={selectedIds}
             onClose={() => setContextMenu(null)}
             onAddToParent={(parentId) => selectedIds.forEach((id) => useWebsiteStore.getState().updateComponentParent(id, parentId))}
-            onMoveAbove={(componentId) => reorderComponents(currentPageId, rootComponents.findIndex((c) => c.id === String(componentId)), rootComponents.findIndex((c) => c.id === String(componentId)) - 1)}
-            onMoveBelow={(componentId) => reorderComponents(currentPageId, rootComponents.findIndex((c) => c.id === String(componentId)), rootComponents.findIndex((c) => c.id === String(componentId)) + 1)}
+            onMoveAbove={(componentId) => reorderComponents(currentPageId, rootComponents.findIndex((c) => c.id === String(componentId)), rootComponents.findIndex((c) => c.id === String(componentId)) [...]
+            onMoveBelow={(componentId) => reorderComponents(currentPageId, rootComponents.findIndex((c) => c.id === String(componentId)), rootComponents.findIndex((c) => c.id === String(componentId)) [...]
           />
         )}
       </div>
