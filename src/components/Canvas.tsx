@@ -86,16 +86,23 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
                 >
                     <DynamicComponent {...mergedProps} id={componentData.id} isPreviewMode={isPreviewMode}>
                         {childComponents.length > 0 && (
-                            <SortableContext
-                                items={childComponents.map((c) => c.id)}
-                                strategy={verticalListSortingStrategy}
-                            >
-                                {childComponents.map((child) => (
-                                    <SortableItem key={child.id} id={child.id}>
-                                        {renderComponent(child)}
-                                    </SortableItem>
-                                ))}
-                            </SortableContext>
+                           <SortableContext
+                                      items={rootComponents.map((c) => c.id)}
+                                      strategy={verticalListSortingStrategy}
+                                    >
+                                      {rootComponents.map((component) => (
+                                        <SortableItem key={component.id} id={component.id}>
+                                          <DroppableContainer
+                                            id={component.id}
+                                            isPreviewMode={isPreviewMode}
+                                            isSelected={selectedIds.includes(component.id)}
+                                            onSelect={handleComponentClick}
+                                          >
+                                            {renderComponent(component)}
+                                          </DroppableContainer>
+                                        </SortableItem>
+                                      ))}
+                                    </SortableContext>
                         )}
                         {ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren && !isPreviewMode && (
                             <div
