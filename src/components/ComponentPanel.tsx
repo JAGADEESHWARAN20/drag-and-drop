@@ -5,6 +5,7 @@ import { ComponentLibrary } from '../data/ComponentLibrary';
 import { Search, MousePointerClick } from 'lucide-react';
 import { ComponentType, SVGProps } from 'react';
 import Button from '@/components/ui/button';
+import { DragEndEvent } from '@dnd-kit/core';
 import {
   SortableContext,
   horizontalListSortingStrategy,
@@ -26,6 +27,7 @@ interface ComponentPanelProps {
   onComponentClick: (type: string, defaultProps: Record<string, any>) => void;
   onClosePanel?: () => void;
 }
+
 
 interface SortableLibraryComponentProps {
   component: LibraryComponent;
@@ -57,7 +59,7 @@ const SortableLibraryComponent = ({ component, onComponentClick }: SortableLibra
 const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComponentClick, onClosePanel }, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { componentOrder, setComponentOrder, setDraggingComponent, setHasDragAttempted, startDragging } = useWebsiteStore();
+  const { componentOrder, setComponentOrder } = useWebsiteStore();
 
   const allComponentsArray = useMemo(() => Object.values(ComponentLibrary).flat(), []);
 
@@ -95,11 +97,19 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
     }
   };
 
-  // Listener for drag start in ComponentPanel
-  const handleDragStart = useCallback(() => {
-    setHasDragAttempted(true); // Mark that a drag attempt has occurred
-    startDragging(); // Update isDragging state
-  }, [setHasDragAttempted, startDragging]);
+  const handleReorder = (activeId: UniqueIdentifier, overId: UniqueIdentifier) => {
+    if (activeId !== overId) {
+      const oldIndex = componentOrder.indexOf(activeId as string);
+      const newIndex = componentOrder.indexOf(overId as string);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newOrder = [...componentOrder];
+        newOrder.splice(oldIndex, 1);
+        newOrder.splice(newIndex, 0, activeId as string);
+        setComponentOrder(newOrder);
+      }
+    }
+  };
 
   return (
     <div className="p-4 flex flex-col h-full" ref={ref}>
@@ -107,10 +117,10 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
         <div>
           <div className="flex items-center mb-2 text-blue-700 dark:text-blue-300">
             <MousePointerClick size={16} className="mr-2" />
-            <span className="text-sm font-medium">Drag to reorder, Click to add</span>
+            <span className="text-sm font-medium">Click to add</span>
           </div>
           <p className="text-xs text-blue-600 dark:text-blue-400">
-            Drag and drop components to change their order in the panel. Click to add to the canvas.
+            Click on a component to add it to the canvas. Drag and drop to reorder the components in this panel.
           </p>
         </div>
         <Button
@@ -150,7 +160,6 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
             flex: '1 1 auto',
             touchAction: 'pan-x',
           }}
-          onDragStart={handleDragStart} // Trigger drag start listener
         >
           {filteredComponents.map((component) => (
             <SortableLibraryComponent
@@ -169,7 +178,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
       )}
       {Object.keys(ComponentLibrary).length > 0 && filteredComponents.length === 0 && !searchTerm && !isSearchOpen && (
         <div className="text-center text-gray-500 dark:text-gray-400">
-          Drag and drop to reorder components. Click to add to the canvas.
+          Click on a component to add it to the canvas. Drag and drop to reorder the components in this panel.
         </div>
       )}
       {Object.keys(ComponentLibrary).length === 0 && (

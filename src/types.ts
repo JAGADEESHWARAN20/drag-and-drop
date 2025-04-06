@@ -1,4 +1,6 @@
 import { ReactNode } from "react";
+import { UniqueIdentifier, DragEndEvent } from '@dnd-kit/core';
+import { SortingStrategy } from '@dnd-kit/sortable'; 
 
 export type Breakpoint = 'desktop' | 'tablet' | 'mobile';
 
@@ -6,6 +8,7 @@ export interface Page {
      id: string;
      name: string;
 }
+
 
 export interface Component {
      id: string;
@@ -80,3 +83,10 @@ export type PublicContextDescriptor = {
 
 export type ValidProp = string | number | boolean | string[] | string[][] | { [key: string]: string | number };
 export type ComponentProps = Record<string, ValidProp>;
+
+export interface SortableContextProps {
+     children: ReactNode;
+     items: UniqueIdentifier[];
+     strategy: SortingStrategy;
+     onDragEnd: (event: DragEndEvent) => void;
+}
