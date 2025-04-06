@@ -124,22 +124,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           if (active.data?.current?.type === 'COMPONENT') {
                const { componentType, defaultProps } = active.data.current;
 
-               addComponent({
-                    type: componentType,
-                    props: defaultProps || {},
-                    pageId: currentPageId,
-                    parentId: null,
-                    responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
-               });
-
                setDraggingComponent({ type: componentType, defaultProps });
-               setSelectedComponentId(useWebsiteStore.getState().components.find(c => c.type === componentType && c.pageId === currentPageId)?.id || null);
-               setSheetOpen(false);
-
-               toast({
-                    title: 'Component Added',
-                    description: `Added ${componentType} to canvas.`,
-               });
 
                if (componentPanelRef.current) {
                     componentPanelRef.current.style.pointerEvents = 'none';
@@ -148,6 +133,27 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      };
 
      const handleDragEnd = (event: DragEndEvent) => {
+          const { active, over } = event;
+
+          if (active?.data?.current?.type === 'COMPONENT' && over?.id === 'canvas-drop-area') {
+               const newComponentId = uuidv4();
+               addComponent({
+                    type: active.data.current.componentType,
+                    props: active.data.current.defaultProps || { value: 'Heading' }, // Default heading value
+                    pageId: currentPageId,
+                    parentId: null,
+                    responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
+               });
+               setDraggingComponent(null);
+               setSelectedComponentId(newComponentId);
+               toast({
+                    title: 'Component Added',
+                    description: `Added ${active.data.current.componentType} to canvas.`,
+               });
+
+               setSheetOpen(false);
+          }
+
           setDraggingComponent(null);
           if (componentPanelRef.current) {
                componentPanelRef.current.style.pointerEvents = 'auto';
