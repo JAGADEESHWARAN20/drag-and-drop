@@ -115,7 +115,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
               </div>
             )}
           </DynamicComponent>
-          
+
           {componentData.type === 'Container' && !isPreviewMode && (
             <div className="mt-2">
               <Button
