@@ -1,5 +1,7 @@
 import React, { useRef, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { useWebsiteStore } from '../store/WebsiteStore';
+import  Button  from '@/components/ui/button';
 
 interface ContextMenuProps {
      x: number;
@@ -7,8 +9,8 @@ interface ContextMenuProps {
      selectedIds: string[];
      onClose: () => void;
      onAddToParent: (parentId: string) => void;
-     onMoveAbove: (componentId: string) => void; // New prop
-     onMoveBelow: (componentId: string) => void; // New prop
+     onMoveAbove: (componentId: string) => void;
+     onMoveBelow: (componentId: string) => void;
 }
 
 const ContextMenu: React.FC<ContextMenuProps> = ({
@@ -20,8 +22,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
      onMoveAbove,
      onMoveBelow,
 }) => {
-     const { components } = useWebsiteStore();
      const menuRef = useRef<HTMLDivElement>(null);
+     const { components, removeComponent } = useWebsiteStore();
 
      useEffect(() => {
           const handleClickOutside = (event: MouseEvent) => {
@@ -37,9 +39,9 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
           (c) => c.allowChildren && !selectedIds.includes(c.id)
      );
 
-     // Only show move options if a single component is selected
      const showMoveOptions = selectedIds.length === 1;
      const selectedComponentId = selectedIds[0];
+     const selectedComponent = components.find((c) => c.id === selectedComponentId);
 
      return (
           <div
@@ -59,24 +61,54 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
                     })}
                </ul>
 
-               {showMoveOptions && (
+               {showMoveOptions && selectedComponent && (
                     <>
                          <hr className="my-1" />
                          <h4 className="text-sm font-semibold mb-1">Move Position</h4>
-                         <ul>
-                              <li
-                                   className="text-sm cursor-pointer hover:bg-gray-100 p-1"
-                                   onClick={() => onMoveAbove(selectedComponentId)}
+                         <div className="flex justify-end mt-2 space-x-2">
+                              <Button
+                                   variant="ghost"
+                                   size="icon"
+                                   onClick={() => onMoveAbove(selectedComponent.id)}
+                                   title="Move Up"
                               >
-                                   Move Above
-                              </li>
-                              <li
-                                   className="text-sm cursor-pointer hover:bg-gray-100 p-1"
-                                   onClick={() => onMoveBelow(selectedComponentId)}
+                                   <svg
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                   >
+                                        <path d="M5 10L12 3L19 10M12 3V21" />
+                                   </svg>
+                              </Button>
+                              <Button
+                                   variant="ghost"
+                                   size="icon"
+                                   onClick={() => onMoveBelow(selectedComponent.id)}
+                                   title="Move Down"
                               >
-                                   Move Below
-                              </li>
-                         </ul>
+                                   <svg
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                   >
+                                        <path d="M5 14L12 21L19 14M12 21V3" />
+                                   </svg>
+                              </Button>
+                              <Button
+                                   variant="ghost"
+                                   size="icon"
+                                   onClick={() => removeComponent(selectedComponent.id)}
+                                   title="Delete"
+                              >
+                                   <X size={16} className="text-red-500" />
+                              </Button>
+                         </div>
                     </>
                )}
 

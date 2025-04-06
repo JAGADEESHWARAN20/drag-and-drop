@@ -112,41 +112,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
               </div>
             )}
           </DynamicComponent>
-          {!isPreviewMode && (
-            <div className="flex justify-end mt-2 space-x-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  const newIndex = rootComponents.findIndex((c) => c.id === componentData.id);
-                  reorderComponents(currentPageId, newIndex, newIndex - 1);
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 10L12 3L19 10M12 3V21" />
-                </svg>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  const newIndex = rootComponents.findIndex((c) => c.id === componentData.id);
-                  reorderComponents(currentPageId, newIndex, newIndex + 1);
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 14L12 21L19 14M12 21V3" />
-                </svg>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => useWebsiteStore.getState().removeComponent(componentData.id)}
-              >
-                <X size={16} className="text-red-500" />
-              </Button>
-            </div>
-          )}
+          
           {componentData.type === 'Container' && !isPreviewMode && (
             <div className="mt-2">
               <Button
