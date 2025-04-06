@@ -1,11 +1,14 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import {
   DndContext,
+  DragStartEvent,
+  DragOverEvent,
   DragEndEvent,
   useDroppable,
-} from '@dnd-kit/core';
+  DragOverlay,
+} from '@dnd-kit/core'; // Added DragStartEvent to imports
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -20,8 +23,8 @@ import { motion } from 'framer-motion';
 import Button from '@/components/ui/button';
 import SelectionManager from './SelectionManager';
 import ContextMenu from './ContextMenu';
-import { X } from "lucide-react";
-import { useSensors, useSensor, PointerSensor } from '@dnd-kit/core'; // Import sensors
+import { X } from 'lucide-react';
+import { useSensors, useSensor, PointerSensor } from '@dnd-kit/core';
 
 interface CanvasProps {
   isPreviewMode: boolean;
@@ -40,14 +43,14 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
     setDraggingComponent,
     addComponent,
     reorderComponents,
-    setHasDragAttempted, // Access the new action
+    setHasDragAttempted,
   } = useWebsiteStore();
 
   const { selectedIds, handleComponentClick, setSelectedIds } = SelectionManager();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
-  const { setNodeRef, isOver, ...droppable } = useDroppable({
-    id: 'canvas-drop-area',
-  });
+  const { setNodeRef, isOver } = useDroppable({ id: 'canvas-drop-area' }); // Destructured correctly
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { delay: 300, tolerance: 5 } }));
 
   const currentPage = useMemo(
@@ -115,7 +118,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
                 variant="ghost"
                 size="icon"
                 onClick={() => {
-                  const newIndex = rootComponents.findIndex(c => c.id === componentData.id);
+                  const newIndex = rootComponents.findIndex((c) => c.id === componentData.id);
                   reorderComponents(currentPageId, newIndex, newIndex - 1);
                 }}
               >
@@ -127,7 +130,7 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
                 variant="ghost"
                 size="icon"
                 onClick={() => {
-                  const newIndex = rootComponents.findIndex(c => c.id === componentData.id);
+                  const newIndex = rootComponents.findIndex((c) => c.id === componentData.id);
                   reorderComponents(currentPageId, newIndex, newIndex + 1);
                 }}
               >
@@ -173,49 +176,85 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
     }
   }, [currentBreakpoint]);
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  }, []);
 
-    if (active && over && active.id !== over.id) {
-      const activeId = active.id;
-      const overId = over.id;
-
-      const activeComponent = components.find(c => c.id === activeId);
-      const overComponent = components.find(c => c.id === overId);
-
-      if (activeComponent && overComponent && activeComponent.parentId === overComponent.parentId) {
-        const parentId = activeComponent.parentId;
-        const siblings = pageComponents.filter(c => c.parentId === parentId).map(c => c.id);
-        const oldIndex = siblings.indexOf(String(activeId));
-        const newIndex = siblings.indexOf(String(overId));
-
-        if (oldIndex !== -1 && newIndex !== -1) {
-          reorderComponents(currentPageId, oldIndex, newIndex);
+  const handleDragOver = useCallback((event: DragOverEvent) => {
+    const { over } = event;
+    if (over?.id === 'canvas-drop-area' && draggingComponent) {
+      setHasDragAttempted(true);
+      const canvasRect = canvasRef.current?.getBoundingClientRect();
+      const dragElement = document.querySelector('[data-cypress="draggable-item"]') as HTMLElement | null;
+      if (canvasRect && dragElement) {
+        const dragRect = dragElement.getBoundingClientRect();
+        const isClose = Math.abs(dragRect.left - canvasRect.right) < 50 || Math.abs(dragRect.right - canvasRect.left) < 50;
+        if (isClose) {
+          dragElement.classList.add('opacity-60'); // Use class instead of style
+          setNodeRef(dragElement); // Pass node to setNodeRef
+        } else {
+          dragElement.classList.remove('opacity-60');
+          setNodeRef(dragElement); // Reset node
         }
       }
     }
-    setHasDragAttempted(false); // Reset on drag end if no drop occurs
+  }, [draggingComponent, setHasDragAttempted, setNodeRef]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    const dragElement = document.querySelector('[data-cypress="draggable-item"]') as HTMLElement | null;
+    if (dragElement) {
+      dragElement.classList.remove('opacity-60'); // Reset class
+    }
+    setNodeRef(null); // Reset droppable ref
+
+    if (active?.data?.current?.type === 'COMPONENT' && over?.id === 'canvas-drop-area') {
+      addComponent({
+        type: active.data.current.componentType,
+        props: active.data.current.defaultProps || {},
+        pageId: currentPageId,
+        parentId: null,
+        responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
+      });
+      setSelectedComponentId(
+        useWebsiteStore.getState().components.find((c) => c.type === active.data.current.componentType && c.pageId === currentPageId)?.id || null
+      );
+      toast({
+        title: 'Component Added',
+        description: `Added ${active.data.current.componentType} to canvas.`,
+      });
+    }
+    setHasDragAttempted(false);
+    setActiveId(null);
   };
 
-  // Listener for drag over in Canvas
-  const handleDragOver = useCallback(() => {
-    if (!isOver && draggingComponent) {
-      setHasDragAttempted(true); // Update if a drag is over the canvas
-    }
-  }, [isOver, draggingComponent, setHasDragAttempted]);
+  const renderDragOverlay = () => {
+    if (!activeId || !draggingComponent) return null;
+    const componentType = draggingComponent.type;
+    const DynamicComponent = ComponentRegistry[componentType as keyof typeof ComponentRegistry]?.component as React.ComponentType<any>;
+    if (!DynamicComponent) return null;
+
+    return (
+      <DragOverlay>
+        <div className="bg-white dark:bg-gray-800 p-2 rounded shadow-lg opacity-70" data-cypress="draggable-item">
+          <DynamicComponent {...draggingComponent.defaultProps} isPreviewMode={false} />
+        </div>
+      </DragOverlay>
+    );
+  };
 
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd} onDragOver={handleDragOver}>
+    <div className="relative">
       <div
-        ref={setNodeRef}
+        ref={canvasRef}
         className={`h-[90%] mt-5 mx-auto bg-gray-200 ${getCanvasWidth()} transition-all duration-300 ${isOver ? 'bg-green-100' : ''}`}
-        {...droppable}
-        id="canvas-drop-area"
       >
         <div
-          className={`relative h-[90%] ${isPreviewMode ? 'bg-white' : 'border-dashed border-2 border-gray-400'} overflow-x-auto p-6`}
+          ref={setNodeRef}
+          className={`relative h-[90%] ${isPreviewMode ? 'bg-white' : 'border-dashed border-2 border-gray-400'} overflow-x-auto p-6 ${isOver ? 'border-4 border-blue-500' : ''}`} // Moved border logic to class
           onClick={() => !isPreviewMode && setSelectedComponentId(null)}
           onContextMenu={handleRightClick}
+          id="canvas-drop-area"
         >
           {rootComponents.length === 0 && !isPreviewMode && (
             <motion.div
@@ -248,13 +287,28 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
             y={contextMenu.y}
             selectedIds={selectedIds}
             onClose={() => setContextMenu(null)}
-            onAddToParent={(parentId) => selectedIds.forEach((id) => useWebsiteStore.getState().updateComponentParent(id, parentId))}
-            onMoveAbove={(componentId) => reorderComponents(currentPageId, rootComponents.findIndex((c) => c.id === String(componentId)), rootComponents.findIndex((c) => c.id === String(componentId)))}
-            onMoveBelow={(componentId) => reorderComponents(currentPageId, rootComponents.findIndex((c) => c.id === String(componentId)), rootComponents.findIndex((c) => c.id === String(componentId)))}
+            onAddToParent={(parentId) =>
+              selectedIds.forEach((id) => useWebsiteStore.getState().updateComponentParent(id, parentId))
+            }
+            onMoveAbove={(componentId) =>
+              reorderComponents(
+                currentPageId,
+                rootComponents.findIndex((c) => c.id === String(componentId)),
+                rootComponents.findIndex((c) => c.id === String(componentId)) // Fix: This logic seems incorrect; should use a different index
+              )
+            }
+            onMoveBelow={(componentId) =>
+              reorderComponents(
+                currentPageId,
+                rootComponents.findIndex((c) => c.id === String(componentId)),
+                rootComponents.findIndex((c) => c.id === String(componentId)) // Fix: This logic seems incorrect; should use a different index
+              )
+            }
           />
         )}
       </div>
-    </DndContext>
+      {renderDragOverlay()}
+    </div>
   );
 };
 

@@ -14,18 +14,20 @@ import { Switch } from '@/components/ui/switch';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
 import {
-     Sheet,
-     SheetContent,
-     SheetTrigger,
-     SheetTitle,
-     SheetHeader
-} from '@/components/ui/sheet';
+     Drawer,
+     DrawerTrigger,
+     DrawerContent,
+     DrawerClose,
+     DrawerTitle,
+     DrawerHeader,
+} from '@/components/ui/drawer'; // Import Drawer components
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toggle } from '@/components/ui/toggle';
 import {
      DndContext,
      DragStartEvent,
+     DragOverEvent,
      DragEndEvent,
      useSensors,
      useSensor,
@@ -55,7 +57,19 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      breakpoint,
      setBreakpoint,
 }) => {
-     const { components, selectedComponentId, addComponent, setSelectedComponentId, isSheetOpen, setSheetOpen, setDraggingComponent, hasDragAttempted, setHasDragAttempted } = useWebsiteStore();
+     const {
+          components,
+          selectedComponentId,
+          addComponent,
+          setSelectedComponentId,
+          isSheetOpen,
+          setSheetOpen,
+          setDraggingComponent,
+          hasDragAttempted,
+          setHasDragAttempted,
+          startDragging,
+          endDragging,
+     } = useWebsiteStore();
      const [isPropertyPanelOpen, setIsPropertyPanelOpen] = useState(false);
      const [isHierarchyOpen, setIsHierarchyOpen] = useState(false);
      const [isDarkMode, setIsDarkMode] = useState(false);
@@ -111,8 +125,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                title: 'Component Added',
                description: `Added ${type} to canvas.`,
           });
-          setSheetOpen(false);
-          setSelectedComponentId(useWebsiteStore.getState().components.find(c => c.type === type && c.pageId === currentPageId)?.id || null);
+          setSheetOpen(false); // Note: 'setSheetOpen' is now 'setSheetOpen' from the store, but we'll use Drawer state
+          setSelectedComponentId(
+               useWebsiteStore.getState().components.find((c) => c.type === type && c.pageId === currentPageId)?.id || null
+          );
      };
 
      const isMobile = breakpoint === 'mobile';
@@ -124,10 +140,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           if (active.data?.current?.type === 'COMPONENT') {
                const { componentType, defaultProps } = active.data.current;
                setDraggingComponent({ type: componentType, defaultProps });
+               startDragging();
+               setHasDragAttempted(true);
                if (componentPanelRef.current) {
                     componentPanelRef.current.style.pointerEvents = 'none';
                }
-               setHasDragAttempted(true); // Set drag attempt on start
+          }
+     };
+
+     const handleDragOver = (event: DragOverEvent) => {
+          const { over } = event;
+          if (over?.id === 'canvas-drop-area' && !hasDragAttempted) {
+               setHasDragAttempted(true);
           }
      };
 
@@ -142,16 +166,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     parentId: null,
                     responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
                });
-               setSelectedComponentId(useWebsiteStore.getState().components.find(c => c.type === active.data.current.componentType && c.pageId === currentPageId)?.id || null);
+               setSelectedComponentId(
+                    useWebsiteStore.getState().components.find((c) => c.type === active.data.current.componentType && c.pageId === currentPageId)?.id || null
+               );
                toast({
                     title: 'Component Added',
                     description: `Added ${active.data.current.componentType} to canvas.`,
                });
-               setSheetOpen(false);
           }
 
+          endDragging();
           setDraggingComponent(null);
-          setHasDragAttempted(false); // Reset drag attempt on end
+          setHasDragAttempted(false);
           if (componentPanelRef.current) {
                componentPanelRef.current.style.pointerEvents = 'auto';
           }
@@ -161,35 +187,37 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
                <nav className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 shadow-md">
                     <div className="flex items-center space-x-3">
-                         <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
-                              <SheetTrigger asChild>
+                         <Drawer open={isSheetOpen} onOpenChange={setSheetOpen}>
+                              <DrawerTrigger asChild>
                                    <Button variant="ghost" className="text-gray-600 dark:text-gray-300 p-2">
                                         <Menu size={20} />
                                    </Button>
-                              </SheetTrigger>
-                              <SheetContent
-                                   side="top"
-                                   className={`w-full overflow-hidden scrollbar-hidden h-auto max-h-96 p-4 flex flex-col ${isMobile ? 'min-w-[100vw]' : 'min-w-[300px]'}`}
-                              >
-                                   <SheetHeader>
-                                        <SheetTitle className="text-lg font-semibold text-blue-900 dark:text-blue-300">
+                              </DrawerTrigger>
+                              <DrawerContent className="bottom-0 left-0 right-0 top-auto h-[80vh] max-h-[80vh] p-4">
+                                   <DrawerHeader>
+                                        <DrawerTitle className="text-lg font-semibold text-blue-900 dark:text-blue-300">
                                              Component Library
-                                        </SheetTitle>
-                                   </SheetHeader>
+                                        </DrawerTitle>
+                                        <DrawerClose asChild>
+                                             <Button variant="ghost" className="absolute right-4 top-4 text-gray-600 dark:text-gray-300">
+                                                  <X size={20} />
+                                             </Button>
+                                        </DrawerClose>
+                                   </DrawerHeader>
                                    <ComponentPanel
                                         ref={componentPanelRef}
                                         onComponentClick={handleComponentAdd}
                                         onClosePanel={() => setSheetOpen(false)}
                                    />
-                              </SheetContent>
-                         </Sheet>
+                              </DrawerContent>
+                         </Drawer>
                          <h1 className="text-lg font-bold text-black dark:text-white">QuickSite</h1>
                     </div>
 
                     <div className="flex items-center space-x-3">
                          <div className="block md:hidden">
-                              <Sheet open={isPageSheetOpen} onOpenChange={setIsPageSheetOpen}>
-                                   <SheetTrigger asChild>
+                              <Drawer open={isPageSheetOpen} onOpenChange={setIsPageSheetOpen}>
+                                   <DrawerTrigger asChild>
                                         <Button
                                              variant="outline"
                                              size="icon"
@@ -201,13 +229,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                         >
                                              <Plus size={20} className="text-gray-600 dark:text-gray-300" />
                                         </Button>
-                                   </SheetTrigger>
-                                   <SheetContent side="top" className="w-full p-4">
-                                        <SheetHeader>
-                                             <SheetTitle className="text-lg font-semibold text-blue-900 dark:text-blue-300">
+                                   </DrawerTrigger>
+                                   <DrawerContent className="bottom-0 left-0 right-0 top-auto h-[50vh] max-h-[50vh] p-4">
+                                        <DrawerHeader>
+                                             <DrawerTitle className="text-lg font-semibold text-blue-900 dark:text-blue-300">
                                                   Pages
-                                             </SheetTitle>
-                                        </SheetHeader>
+                                             </DrawerTitle>
+                                             <DrawerClose asChild>
+                                                  <Button variant="ghost" className="absolute right-4 top-4 text-gray-600 dark:text-gray-300">
+                                                       <X size={20} />
+                                                  </Button>
+                                             </DrawerClose>
+                                        </DrawerHeader>
                                         <div className="space-y-2 mb-4">
                                              {pages.map((page) => (
                                                   <div key={page.id} className="flex items-center justify-between">
@@ -238,8 +271,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                                   + Add Page
                                              </Button>
                                         </div>
-                                   </SheetContent>
-                              </Sheet>
+                                   </DrawerContent>
+                              </Drawer>
                          </div>
                          <div className="hidden md:block">
                               <Select value={currentPageId} onValueChange={onChangePage}>
@@ -354,48 +387,63 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                          </AnimatePresence>
 
                          {!isPreviewMode && selectedComponentId && (
-                              <Sheet open={isPropertyPanelOpen} onOpenChange={setIsPropertyPanelOpen}>
-                                   <SheetTrigger asChild>
+                              <Drawer open={isPropertyPanelOpen} onOpenChange={setIsPropertyPanelOpen}>
+                                   <DrawerTrigger asChild>
                                         <Button
                                              variant="ghost"
                                              className="absolute bottom-2 right-5 z-50 text-gray-600 dark:text-gray-300"
                                         >
                                              {isPropertyPanelOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
                                         </Button>
-                                   </SheetTrigger>
-                                   <SheetContent side="right" className="w-80 p-4">
-                                        <SheetHeader>
-                                             <SheetTitle className="text-lg font-semibold text-blue-900 dark:text-blue-300">
+                                   </DrawerTrigger>
+                                   <DrawerContent className="right-0 top-0 bottom-0 w-80 p-4">
+                                        <DrawerHeader>
+                                             <DrawerTitle className="text-lg font-semibold text-blue-900 dark:text-blue-300">
                                                   Properties
-                                             </SheetTitle>
-                                        </SheetHeader>
+                                             </DrawerTitle>
+                                             <DrawerClose asChild>
+                                                  <Button variant="ghost" className="absolute right-4 top-4 text-gray-600 dark:text-gray-300">
+                                                       <X size={20} />
+                                                  </Button>
+                                             </DrawerClose>
+                                        </DrawerHeader>
                                         <PropertyPanel />
-                                   </SheetContent>
-                              </Sheet>
+                                   </DrawerContent>
+                              </Drawer>
                          )}
 
                          {!isPreviewMode && selectedComponentId && (
-                              <Sheet open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen}>
-                                   <SheetTrigger asChild>
+                              <Drawer open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen}>
+                                   <DrawerTrigger asChild>
                                         <Button
                                              variant="ghost"
                                              className="absolute bottom-12 right-5 z-50 text-gray-600 dark:text-gray-300"
                                         >
                                              <Layers size={24} />
                                         </Button>
-                                   </SheetTrigger>
-                                   <SheetContent side="right" className="w-80 p-4">
-                                        <SheetHeader>
-                                             <SheetTitle className="text-lg font-semibold text-blue-900 dark:text-blue-300">
+                                   </DrawerTrigger>
+                                   <DrawerContent className="right-0 top-0 bottom-0 w-80 p-4">
+                                        <DrawerHeader>
+                                             <DrawerTitle className="text-lg font-semibold text-blue-900 dark:text-blue-300">
                                                   Element Hierarchy
-                                             </SheetTitle>
-                                        </SheetHeader>
+                                             </DrawerTitle>
+                                             <DrawerClose asChild>
+                                                  <Button variant="ghost" className="absolute right-4 top-4 text-gray-600 dark:text-gray-300">
+                                                       <X size={20} />
+                                                  </Button>
+                                             </DrawerClose>
+                                        </DrawerHeader>
                                         <ElementHierarchyViewer />
-                                   </SheetContent>
-                              </Sheet>
+                                   </DrawerContent>
+                              </Drawer>
                          )}
 
-                         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                         <DndContext
+                              sensors={sensors}
+                              onDragStart={handleDragStart}
+                              onDragOver={handleDragOver}
+                              onDragEnd={handleDragEnd}
+                         >
                               <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
                          </DndContext>
                     </div>
