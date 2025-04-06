@@ -146,14 +146,29 @@ export const useWebsiteStore = create<WebsiteState>()(
 
       setSelectedComponentId: (id) => set((state) => { state.selectedComponentId = id; }),
 
-      reorderComponents: (pageId, oldIndex, newIndex) => set((state) => {
-        const pageComponents = state.components.filter((c) => c.pageId === pageId && c.parentId === null);
-        const [moved] = pageComponents.splice(oldIndex, 1);
-        pageComponents.splice(newIndex, 0, moved);
-        state.components = state.components.map((c) =>
-          c.pageId === pageId && c.parentId === null ? pageComponents.find((pc) => pc.id === c.id) || c : c
-        );
-      }),
+      reorderComponents: (parentId: string | null, oldIndex: number, newIndex: number) =>
+        set((state) => {
+          const parent = parentId
+            ? state.components.find((c) => c.id === parentId)
+            : null;
+
+          const siblings = parent
+            ? parent.children
+            : state.components
+              .filter((c) => c.pageId === state.currentPageId && c.parentId === null)
+              .map((c) => c.id);
+
+          const updated = [...siblings];
+          const [moved] = updated.splice(oldIndex, 1);
+          updated.splice(newIndex, 0, moved);
+
+          if (parent) {
+            parent.children = updated;
+          } else {
+            state.componentOrder = updated;
+          }
+        }),
+
 
       moveComponent: (id, targetId, isContainer = false) => set((state) => {
         const component = state.components.find((c) => c.id === id);

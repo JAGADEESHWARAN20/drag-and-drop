@@ -81,6 +81,9 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
       const mergedProps = { ...componentData.props, ...responsiveProps };
       const childComponents = components.filter((c) => c.parentId === componentData.id);
       const isSelected = selectedIds.includes(componentData.id);
+      const orderedChildren = componentData.children.map(childId =>
+        components.find(c => c.id === childId)
+      );
 
       return (
         <DroppableContainer
