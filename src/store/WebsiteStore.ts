@@ -1,11 +1,17 @@
-import { create, useStore, StoreApi } from 'zustand';
+import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { immer } from 'zustand/middleware/immer';
 import { devtools } from 'zustand/middleware';
 import { Component, Page } from '../types';
-import React, { ReactNode, createContext, useContext } from 'react';
 
 export type Breakpoint = 'desktop' | 'tablet' | 'mobile';
+
+type ComponentBlock = {
+  id: string;
+  type: string;
+  props: any;
+  children?: ComponentBlock[];
+};
 
 interface WebsiteStoreActions {
   setCurrentPageId: (id: string) => void;
@@ -23,11 +29,11 @@ interface WebsiteStoreActions {
     }
   ) => void;
   removeComponent: (id: string) => void;
-  updateComponentProps: (id: string, props: Record<string, string | number | boolean | object>) => void;
+  updateComponentProps: (id: string, props: Record<string, any>) => void;
   updateResponsiveProps: (
     id: string,
     breakpoint: Breakpoint,
-    props: Record<string, string | number | boolean | object>
+    props: Record<string, any>
   ) => void;
   setSelectedComponentId: (id: string | null) => void;
   reorderComponents: (pageId: string, oldIndex: number, newIndex: number) => void;
@@ -38,15 +44,12 @@ interface WebsiteStoreActions {
   updateComponentParent: (id: string, parentId: string | null) => void;
   reorderChildren: (parentId: string | null, newOrder: string[]) => void;
   setComponentOrder: (order: string[]) => void;
-  componentOrder: string[];
   updateComponentOrder: (parentId: string | null, newOrder: string[]) => void;
-  isDragging: boolean;
   startDragging: () => void;
   endDragging: () => void;
-  draggingComponent: { type: string | null; defaultProps: Record<string, any> | null };
   setDraggingComponent: (component: { type: string | null; defaultProps: Record<string, any> | null }) => void;
   setSheetOpen: (isOpen: boolean) => void;
-  setHasDragAttempted: (hasAttempted: boolean) => void; // Added action
+  setHasDragAttempted: (hasAttempted: boolean) => void;
 }
 
 type WebsiteState = WebsiteStoreActions & {
@@ -57,7 +60,10 @@ type WebsiteState = WebsiteStoreActions & {
   isPreviewMode: boolean;
   breakpoint: Breakpoint;
   isSheetOpen: boolean;
-  hasDragAttempted: boolean; // Added state
+  hasDragAttempted: boolean;
+  isDragging: boolean;
+  draggingComponent: { type: string | null; defaultProps: Record<string, any> | null };
+  componentOrder: string[];
 };
 
 export const useWebsiteStore = create<WebsiteState>()(
@@ -73,7 +79,7 @@ export const useWebsiteStore = create<WebsiteState>()(
       isDragging: false,
       draggingComponent: { type: null, defaultProps: null },
       isSheetOpen: false,
-      hasDragAttempted: false, // Initialize new state
+      hasDragAttempted: false,
 
       setCurrentPageId: (id) => set((state) => { state.currentPageId = id; }),
       addPage: (page) => set((state) => { state.pages.push(page); }),
@@ -84,6 +90,7 @@ export const useWebsiteStore = create<WebsiteState>()(
           state.currentPageId = state.pages[0].id;
         }
       }),
+
       addComponent: (component) => set((state) => {
         const newComponent: Component = {
           id: uuidv4(),
@@ -99,38 +106,34 @@ export const useWebsiteStore = create<WebsiteState>()(
         const parent = state.components.find((c) => c.id === component.parentId);
         if (parent && parent.allowChildren) {
           parent.children.push(newComponent.id);
-        } else if (component.parentId) {
-          console.warn(
-            `Attempted to add child to component ${component.parentId} which does not allow children or doesn't exist.`
-          );
         }
         state.components.push(newComponent);
         state.selectedComponentId = newComponent.id;
       }),
+
       removeComponent: (id) => set((state) => {
-        const removeComponentAndChildren = (componentId: string): string[] => {
+        const removeRecursive = (componentId: string): string[] => {
           const component = state.components.find((c) => c.id === componentId);
           if (!component) return [componentId];
-          const childIds = component.children.flatMap((childId) => removeComponentAndChildren(childId));
-          return [componentId, ...childIds];
+          return [componentId, ...component.children.flatMap(removeRecursive)];
         };
-
-        const idsToRemove = removeComponentAndChildren(id);
+        const idsToRemove = removeRecursive(id);
         state.components = state.components.filter((c) => !idsToRemove.includes(c.id));
-        const parent = state.components.find((c) => c.children.includes(id));
-        if (parent) {
-          parent.children = parent.children.filter((childId) => !idsToRemove.includes(childId));
-        }
+        state.components.forEach((c) => {
+          c.children = c.children.filter((childId) => !idsToRemove.includes(childId));
+        });
         if (state.selectedComponentId === id) {
           state.selectedComponentId = null;
         }
       }),
+
       updateComponentProps: (id, props) => set((state) => {
         const component = state.components.find((c) => c.id === id);
         if (component) {
           component.props = { ...component.props, ...props };
         }
       }),
+
       updateResponsiveProps: (id, breakpoint, props) => set((state) => {
         const component = state.components.find((c) => c.id === id);
         if (component) {
@@ -140,7 +143,9 @@ export const useWebsiteStore = create<WebsiteState>()(
           };
         }
       }),
+
       setSelectedComponentId: (id) => set((state) => { state.selectedComponentId = id; }),
+
       reorderComponents: (pageId, oldIndex, newIndex) => set((state) => {
         const pageComponents = state.components.filter((c) => c.pageId === pageId && c.parentId === null);
         const [moved] = pageComponents.splice(oldIndex, 1);
@@ -149,6 +154,7 @@ export const useWebsiteStore = create<WebsiteState>()(
           c.pageId === pageId && c.parentId === null ? pageComponents.find((pc) => pc.id === c.id) || c : c
         );
       }),
+
       moveComponent: (id, targetId, isContainer = false) => set((state) => {
         const component = state.components.find((c) => c.id === id);
         if (!component) return;
@@ -161,21 +167,12 @@ export const useWebsiteStore = create<WebsiteState>()(
         const newParent = isContainer ? state.components.find((c) => c.id === targetId) : null;
         if (newParent && newParent.allowChildren) {
           newParent.children.push(id);
-        } else if (isContainer && newParent && !newParent.allowChildren) {
-          console.warn(`Cannot move component ${id} into ${targetId} as it does not allow children.`);
-          return;
+          component.parentId = targetId;
+        } else if (!isContainer) {
+          component.parentId = null;
         }
+      }),
 
-        component.parentId = isContainer ? targetId : component.parentId || null;
-      }),
-      setIsPreviewMode: (isPreview) => set((state) => { state.isPreviewMode = isPreview; }),
-      setBreakpoint: (breakpoint) => set((state) => { state.breakpoint = breakpoint; }),
-      setAllowChildren: (id, allow) => set((state) => {
-        const component = state.components.find((c) => c.id === id);
-        if (component) {
-          component.allowChildren = allow;
-        }
-      }),
       updateComponentParent: (id, parentId) => set((state) => {
         const component = state.components.find((c) => c.id === id);
         if (!component) return;
@@ -188,52 +185,42 @@ export const useWebsiteStore = create<WebsiteState>()(
         const newParent = parentId ? state.components.find((c) => c.id === parentId) : null;
         if (newParent && newParent.allowChildren) {
           newParent.children.push(id);
-        } else if (parentId && newParent && !newParent.allowChildren) {
-          console.warn(`Cannot move component ${id} into ${parentId} as it does not allow children.`);
-          return;
         }
 
         component.parentId = parentId;
       }),
+
       reorderChildren: (parentId, newOrder) => set((state) => {
-        const parent = state.components.find((c) => c.id === parentId);
+        const parent = parentId ? state.components.find((c) => c.id === parentId) : null;
         if (parent) {
           parent.children = newOrder;
-        } else if (parentId === null) {
-          const rootComponents = state.components.filter((c) => c.parentId === null);
-          const nonRootComponents = state.components.filter((c) => c.parentId !== null);
-          const orderedRootComponents = newOrder
-            .map((id) => rootComponents.find((c) => c.id === id))
-            .filter(Boolean) as Component[];
-          state.components = [...orderedRootComponents, ...nonRootComponents];
         }
       }),
-      setComponentOrder: (order) => set((state) => ({ componentOrder: order })),
+
+      setComponentOrder: (order) => set((state) => { state.componentOrder = order; }),
+
       updateComponentOrder: (parentId, newOrder) => set((state) => {
-        if (parentId === null) {
-          const rootComponents = state.components.filter((c) => c.parentId === null);
-          const nonRootComponents = state.components.filter((c) => c.parentId !== null);
-
-          const rootComponentMap = new Map(rootComponents.map((c) => [c.id, c]));
-
-          const orderedRootComponents = newOrder
-            .map((id) => rootComponentMap.get(id))
-            .filter(Boolean) as Component[];
-
-          state.components = [...orderedRootComponents, ...nonRootComponents];
-        } else {
-          const parent = state.components.find((c) => c.id === parentId);
-          if (parent) {
-            parent.children = newOrder;
-          }
+        const parent = parentId ? state.components.find((c) => c.id === parentId) : null;
+        if (parent) {
+          parent.children = newOrder;
         }
       }),
+
+      setIsPreviewMode: (isPreview) => set((state) => { state.isPreviewMode = isPreview; }),
+      setBreakpoint: (breakpoint) => set((state) => { state.breakpoint = breakpoint; }),
+      setAllowChildren: (id, allow) => set((state) => {
+        const component = state.components.find((c) => c.id === id);
+        if (component) {
+          component.allowChildren = allow;
+        }
+      }),
+
       startDragging: () => set((state) => { state.isDragging = true; }),
       endDragging: () => set((state) => { state.isDragging = false; }),
+
       setDraggingComponent: (component) => set((state) => { state.draggingComponent = component; }),
-      setSheetOpen: (isOpen: boolean) => set((state) => { state.isSheetOpen = isOpen; }),
-      setHasDragAttempted: (hasAttempted: boolean) => set((state) => { state.hasDragAttempted = hasAttempted; }), // Implemented action
-    })),
-    { name: 'WebsiteStore' }
+      setSheetOpen: (isOpen) => set((state) => { state.isSheetOpen = isOpen; }),
+      setHasDragAttempted: (hasAttempted) => set((state) => { state.hasDragAttempted = hasAttempted; }),
+    }))
   )
 );
