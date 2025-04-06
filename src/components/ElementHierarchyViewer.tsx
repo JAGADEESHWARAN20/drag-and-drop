@@ -17,11 +17,13 @@ const SortableHierarchyItem: React.FC<SortableHierarchyItemProps> = ({ component
         listeners,
         setNodeRef,
         transform,
+        transition,
         isDragging,
     } = useSortable({ id: component.id });
 
     const style = {
-        transform: CSS.Translate.toString(transform),
+        transform: CSS.Transform.toString(transform),
+        transition,
         opacity: isDragging ? 0.5 : 1,
         paddingLeft: `${level * 20}px`,
         cursor: 'grab',
