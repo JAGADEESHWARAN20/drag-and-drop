@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, forwardRef, useMemo, useCallback, useRef } from 'react';
+import React, { useState, forwardRef, useMemo, useCallback, useRef } from 'react';
 import { ComponentLibrary } from '../data/ComponentLibrary';
 import { Search, MousePointerClick } from 'lucide-react';
 import { ComponentType, SVGProps } from 'react';
@@ -97,9 +97,9 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
 
   // Listener for drag start in ComponentPanel
   const handleDragStart = useCallback(() => {
-    setHasDragAttempted(true); 
-    startDragging(); 
-    
+    setHasDragAttempted(true);
+    startDragging();
+
   }, [setHasDragAttempted, startDragging]);
 
   return (
