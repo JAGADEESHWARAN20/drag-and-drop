@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
-import { ComponentRegistry } from '@/utils/ComponentRegistry';
 import {
      Drawer,
      DrawerTrigger,
@@ -69,13 +68,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           setDraggingComponent,
           componentOrder,
           setComponentOrder,
-          draggingComponent
+          draggingComponent,
      } = useWebsiteStore();
+
      const [isPropertyPanelOpen, setIsPropertyPanelOpen] = useState(false);
      const [isHierarchyOpen, setIsHierarchyOpen] = useState(false);
      const [isDarkMode, setIsDarkMode] = useState(false);
      const [isPageSheetOpen, setIsPageSheetOpen] = useState(false);
-     const componentPanelRef = useRef<HTMLDivElement>(null);
+     const componentPanelRef = useRef<HTMLDivElement>(null); // Only one declaration here
      const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 
      useEffect(() => {
@@ -98,7 +98,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
      const handleAddPage = () => {
           const newPageId = uuidv4();
-          onAddPage(`Page ${pages.length + 1} `);
+          onAddPage(`Page ${pages.length + 1}`);
           setIsPageSheetOpen(false);
      };
 
@@ -138,10 +138,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      const sensors = useSensors(
           useSensor(PointerSensor, {
                activationConstraint: {
-                    delay: 150, // Lower delay for better responsiveness
-                    tolerance: 8, // Slightly higher tolerance
-                    distance: 5, // Minimum distance
-               }
+                    delay: 150,
+                    tolerance: 8,
+                    distance: 5,
+               },
           })
      );
 
@@ -153,7 +153,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                const { componentType, defaultProps } = active.data.current;
                setDraggingComponent({ type: componentType, defaultProps });
 
-               // Disable pointer events on component panel during drag
                if (componentPanelRef.current) {
                     componentPanelRef.current.style.pointerEvents = 'none';
                }
@@ -164,12 +163,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           const { active, over } = event;
           setActiveId(null);
 
-          // Re-enable pointer events on component panel
           if (componentPanelRef.current) {
                componentPanelRef.current.style.pointerEvents = 'auto';
           }
 
-          // Handle dropping from component library to canvas
           if (active?.data?.current?.type === 'COMPONENT_LIB_ITEM' && over?.id === 'canvas-drop-area') {
                const newComponentId = uuidv4();
                addComponent({
@@ -188,13 +185,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                });
           }
 
-          // Handle reordering within the component panel
           if (active?.data?.current?.type === 'COMPONENT_LIB_ITEM' && over?.id && componentOrder) {
-               const activeId = active.id as string;
+               const activeIdStr = active.id as string;
                const overId = over.id as string;
 
-               if (activeId !== overId) {
-                    const oldIndex = componentOrder.indexOf(activeId);
+               if (activeIdStr !== overId) {
+                    const oldIndex = componentOrder.indexOf(activeIdStr);
                     const newIndex = componentOrder.indexOf(overId);
 
                     if (oldIndex !== -1 && newIndex !== -1) {
@@ -250,14 +246,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                                   </Button>
                                              </DrawerClose>
                                         </DrawerHeader>
-                                        <ComponentPanel
-                                             ref={componentPanelRef}
-                                             onComponentClick={(type, defaultProps) => {
-                                                  handleComponentAdd(type, defaultProps);
-                                                  setSheetOpen(false);
-                                             }}
-                                             onClosePanel={() => setSheetOpen(false)}
-                                        />
+                                        <ComponentPanel /> {/* Removed ref here, handled via forwardRef if needed */}
                                    </DrawerContent>
                               </Drawer>
                               <h1 className="text-lg font-bold text-black dark:text-white">QuickSite</h1>
