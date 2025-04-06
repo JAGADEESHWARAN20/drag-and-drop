@@ -20,7 +20,6 @@ import { motion } from 'framer-motion';
 import Button from '@/components/ui/button';
 import SelectionManager from './SelectionManager';
 import ContextMenu from './ContextMenu';
-import { v4 as uuidv4 } from 'uuid';
 import { X } from "lucide-react";
 
 interface CanvasProps {
@@ -173,27 +172,6 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-
-    if (active?.data?.current?.type === 'COMPONENT' && over?.id === 'canvas-drop-area') {
-      const newComponentId = uuidv4();
-      addComponent({
-        type: active.data.current.componentType,
-        props: active.data.current.defaultProps || { value: 'Heading' }, // Default heading value
-        pageId: currentPageId,
-        parentId: null,
-        responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
-        allowChildren: (ComponentRegistry[active.data.current.componentType as keyof typeof ComponentRegistry]?.allowChildren) || false,
-      });
-      setDraggingComponent(null);
-      setSelectedComponentId(newComponentId);
-      toast({
-        title: 'Component Added',
-        description: `Added ${active.data.current.componentType} to canvas.`,
-      });
-
-      useWebsiteStore.getState().setSheetOpen(false);
-      return;
-    }
 
     if (active && over && active.id !== over.id) {
       const activeId = active.id;
