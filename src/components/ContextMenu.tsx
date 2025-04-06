@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useWebsiteStore } from '../store/WebsiteStore';
 import Button from '@/components/ui/button';
-import type { Component } from '../types'; // ✅ Ensure this is the correct path to your Component type
+import type { Component } from '../types';
 
 interface ContextMenuProps {
      x: number;
@@ -25,37 +25,6 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 }) => {
      const menuRef = useRef<HTMLDivElement>(null);
      const { components, removeComponent } = useWebsiteStore();
-
-     // ✅ Fixed: Now typed and children accessed from single component only
-     function moveComponentInParent(
-          components: Component[],
-          componentId: string,
-          direction: 'above' | 'below'
-     ): string[] {
-          const component = components.find(c => c.id === componentId);
-          if (!component) return [];
-
-          const parent = component.parentId
-               ? components.find(c => c.id === component.parentId)
-               : null;
-
-          const siblings = parent
-               ? parent.children
-               : components
-                    .filter(c => c.pageId === component.pageId && c.parentId === null)
-                    .map(c => c.id);
-
-          const index = siblings.indexOf(componentId);
-          if (index === -1) return siblings;
-
-          const newIndex = direction === 'above' ? index - 1 : index + 1;
-          if (newIndex < 0 || newIndex >= siblings.length) return siblings;
-
-          const reordered = [...siblings];
-          const [moved] = reordered.splice(index, 1);
-          reordered.splice(newIndex, 0, moved);
-          return reordered;
-     }
 
      useEffect(() => {
           const handleClickOutside = (event: MouseEvent) => {
