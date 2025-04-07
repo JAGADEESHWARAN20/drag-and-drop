@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Page, Breakpoint } from '../store/WebsiteStore';
+import {  Breakpoint } from '../store/WebsiteStore';
 import { Smartphone, Tablet, Monitor, Play, Code, Plus, Menu } from 'lucide-react';
 import  Button  from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Card } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-
+import {Page} from "../types"
 interface NavbarProps {
   pages: Page[];
   currentPageId: string;

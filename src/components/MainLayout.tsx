@@ -173,6 +173,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                componentPanelRef.current.style.pointerEvents = 'auto';
           }
 
+          // Adding component from library to canvas
           if (active?.data?.current?.type === 'COMPONENT_LIB_ITEM' && over?.id === 'canvas-drop-area') {
                const newComponentId = uuidv4();
                addComponent({
@@ -189,20 +190,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     title: 'Component Added',
                     description: `Added ${active.data.current.componentType} to canvas.`,
                });
-          }
-
-          if (active?.data?.current?.type === 'COMPONENT_LIB_ITEM' && over?.id && componentOrder) {
-               const activeIdStr = active.id as string;
-               const overId = over.id as string;
-
-               if (activeIdStr !== overId) {
-                    const oldIndex = componentOrder.indexOf(activeIdStr);
-                    const newIndex = componentOrder.indexOf(overId);
-
-                    if (oldIndex !== -1 && newIndex !== -1) {
-                         setComponentOrder(arrayMove(componentOrder, oldIndex, newIndex));
-                    }
-               }
           }
 
           setDraggingComponent(null);
