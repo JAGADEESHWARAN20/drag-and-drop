@@ -13,6 +13,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Component } from '@/types';
+import { toast } from '@/components/ui/use-toast';
 
 interface SortableHierarchyItemProps {
     component: Component;
@@ -42,15 +43,15 @@ const SortableHierarchyItem: React.FC<SortableHierarchyItemProps> = ({
         transition,
         opacity: isDragging ? 0.5 : 1,
         paddingLeft: `${level * 16}px`,
-        cursor: 'pointer',
+        cursor: 'grab', // Indicate draggable
     };
 
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
             <div
                 className={`p-1 rounded ${component.id === selectedComponentId
-                        ? 'bg-blue-100 dark:bg-blue-800'
-                        : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                    ? 'bg-blue-100 dark:bg-blue-800'
+                    : 'hover:bg-gray-100 dark:hover:bg-gray-800'
                     }`}
                 onClick={() => setSelectedComponentId(component.id)}
             >
@@ -112,20 +113,22 @@ const ElementHierarchyViewer: React.FC = () => {
         const sameParent = activeComponent.parentId === overComponent.parentId;
 
         if (sameParent) {
-            const siblings = components.filter(
-                (c) => c.parentId === activeComponent.parentId
-            );
-            const oldIndex = siblings.findIndex((c) => c.id === activeId);
-            const newIndex = siblings.findIndex((c) => c.id === overId);
+            const parentId = activeComponent.parentId;
+            const siblings = components.filter((c) => c.parentId === parentId).map(c => c.id);
+            const oldIndex = siblings.indexOf(activeId);
+            const newIndex = siblings.indexOf(overId);
 
             if (oldIndex !== -1 && newIndex !== -1) {
-                const reordered = arrayMove(siblings, oldIndex, newIndex).map(
-                    (c) => c.id
-                );
-                updateComponentOrder(activeComponent.parentId, reordered);
+                const updatedOrder = arrayMove(siblings, oldIndex, newIndex);
+                updateComponentOrder(parentId, updatedOrder);
+                toast({ title: 'Component Reordered', description: 'Order within parent updated in Hierarchy.' });
             }
         } else {
+            // Handle reparenting in the hierarchy
             updateComponentParent(activeId, overComponent.id);
+            const newChildrenOrder = [...components.filter(c => c.parentId === overComponent.id).map(c => c.id), activeId];
+            updateComponentOrder(overComponent.id, newChildrenOrder);
+            toast({ title: 'Component Moved', description: `Moved ${activeComponent.type} under ${overComponent.type} in Hierarchy.` });
         }
     };
 
