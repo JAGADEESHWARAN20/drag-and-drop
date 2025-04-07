@@ -1,6 +1,5 @@
 import React from 'react';
 import { useWebsiteStore } from '../store/WebsiteStore';
-import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Component } from '@/types';
@@ -21,7 +20,7 @@ const SortableHierarchyItem: React.FC<SortableHierarchyItemProps> = ({ component
         isDragging,
     } = useSortable({ id: component.id });
 
-    const style = {
+    const style: React.CSSProperties = {
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.5 : 1,
@@ -32,17 +31,13 @@ const SortableHierarchyItem: React.FC<SortableHierarchyItemProps> = ({ component
     const children = components.filter(c => c.parentId === component.id);
 
     return (
-        <div ref={setNodeRef} style={style} data-id={component.id}>
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
             <div
-                {...attributes}
-                {...listeners}
                 onClick={() => setSelectedComponentId(component.id)}
-                className={`p-1 rounded hover:bg-gray-100 ${component.id === selectedComponentId ? 'bg-blue-100' : ''
-                    }`}
+                className={`p-1 hover:bg-gray-100 dark:hover:bg-gray-800 ${component.id === selectedComponentId ? 'bg-blue-100 dark:bg-blue-900' : ''}`}
             >
-                {component.type} ({component.id.slice(0, 8)}...)
+                {component.type} ({component.id.slice(0, 6)})
             </div>
-
             {children.length > 0 && (
                 <SortableHierarchy parentId={component.id} level={level + 1} />
             )}
@@ -58,10 +53,9 @@ interface SortableHierarchyProps {
 const SortableHierarchy: React.FC<SortableHierarchyProps> = ({ parentId, level = 0 }) => {
     const { components } = useWebsiteStore();
     const children = components.filter(c => c.parentId === parentId);
-    const childIds = children.map(c => c.id);
 
     return (
-        <SortableContext id={parentId || 'root'} items={childIds}>
+        <SortableContext items={children.map(c => c.id)}>
             {children.map(component => (
                 <SortableHierarchyItem key={component.id} component={component} level={level} />
             ))}
@@ -72,9 +66,8 @@ const SortableHierarchy: React.FC<SortableHierarchyProps> = ({ parentId, level =
 const ElementHierarchyViewer: React.FC = () => {
     const { components, updateComponentParent, updateComponentOrder } = useWebsiteStore();
 
-    const handleDragEnd = (event: DragEndEvent) => {
+    const handleDragEnd = (event: any) => {
         const { active, over } = event;
-
         if (!active || !over || active.id === over.id) return;
 
         const activeId = active.id as string;
@@ -83,50 +76,40 @@ const ElementHierarchyViewer: React.FC = () => {
         const activeComponent = components.find(c => c.id === activeId);
         const overComponent = components.find(c => c.id === overId);
 
-        if (!activeComponent) return;
+        if (!activeComponent || !overComponent) return;
 
-        // Reordering within same parent
-        if (activeComponent.parentId === overComponent?.parentId) {
-            const parentId = activeComponent.parentId;
-            const siblings = components.filter(c => c.parentId === parentId).map(c => c.id);
-            const oldIndex = siblings.indexOf(activeId);
-            const newIndex = siblings.indexOf(overId);
+        const sameParent = activeComponent.parentId === overComponent.parentId;
 
+        // Reorder within the same parent
+        if (sameParent) {
+            const siblings = components.filter(c => c.parentId === activeComponent.parentId);
+            const oldIndex = siblings.findIndex(c => c.id === activeId);
+            const newIndex = siblings.findIndex(c => c.id === overId);
             if (oldIndex !== -1 && newIndex !== -1) {
-                const newOrder = arrayMove(siblings, oldIndex, newIndex);
-                updateComponentOrder(parentId, newOrder);
+                const reordered = arrayMove(siblings, oldIndex, newIndex).map(c => c.id);
+                updateComponentOrder(activeComponent.parentId, reordered);
             }
         }
-
-        // Moving to new parent
-        else if (overComponent) {
+        // Move to new parent
+        else {
             updateComponentParent(activeId, overComponent.id);
-
             const newSiblings = components
                 .filter(c => c.parentId === overComponent.id)
                 .map(c => c.id)
-                .filter(id => id !== activeId);
-
-            updateComponentOrder(overComponent.id, [...newSiblings, activeId]);
-        }
-
-        // Moving to root
-        else if (overId === 'root') {
-            updateComponentParent(activeId, null);
-
-            const rootComponents = components
-                .filter(c => c.parentId === null && c.id !== activeId)
-                .map(c => c.id);
-
-            updateComponentOrder(null, [...rootComponents, activeId]);
+                .concat(activeId);
+            updateComponentOrder(overComponent.id, newSiblings);
         }
     };
 
+    const rootComponents = components.filter(c => c.parentId === null);
+
     return (
-        <div style={{ width: '300px', borderLeft: '1px solid #ccc', padding: '10px' }}>
-            <DndContext onDragEnd={handleDragEnd}>
-                <SortableHierarchy parentId={null} level={0} />
-            </DndContext>
+        <div className="space-y-1">
+            <SortableContext items={rootComponents.map(c => c.id)}>
+                {rootComponents.map(component => (
+                    <SortableHierarchyItem key={component.id} component={component} level={0} />
+                ))}
+            </SortableContext>
         </div>
     );
 };
