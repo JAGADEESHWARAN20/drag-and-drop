@@ -50,6 +50,7 @@ interface WebsiteStoreActions {
   setDraggingComponent: (component: { type: string | null; defaultProps: Record<string, any> | null }) => void;
   setSheetOpen: (isOpen: boolean) => void;
   setHasDragAttempted: (hasAttempted: boolean) => void;
+  moveComponentRelativeToTarget: (draggedId: string, targetId: string, position: 'above' | 'below' | 'inside') => void;
 }
 
 type WebsiteState = WebsiteStoreActions & {
@@ -186,6 +187,49 @@ export const useWebsiteStore = create<WebsiteState>()(
           component.parentId = null;
         }
       }),
+      moveComponentRelativeToTarget: (draggedId, targetId, position) =>
+        set((state) => {
+          const dragged = state.components.find((c) => c.id === draggedId);
+          const target = state.components.find((c) => c.id === targetId);
+          if (!dragged || !target) return;
+
+          // Remove dragged from its current parent
+          const oldParent = state.components.find((c) => c.children.includes(draggedId));
+          if (oldParent) {
+            oldParent.children = oldParent.children.filter((id) => id !== draggedId);
+          }
+
+          // INSIDE: move dragged into target (as child)
+          if (position === 'inside' && target.allowChildren) {
+            dragged.parentId = targetId;
+            target.children.push(draggedId);
+            return;
+          }
+
+          // ABOVE/BELOW: same parent as target
+          const parent = state.components.find((c) => c.children.includes(targetId)) || null;
+          const siblings = parent ? parent.children : state.componentOrder;
+
+          // Remove dragged from old location (if needed)
+          const filteredSiblings = siblings.filter((id) => id !== draggedId);
+
+          // Find insertion index
+          const targetIndex = filteredSiblings.indexOf(targetId);
+          const insertIndex = position === 'above' ? targetIndex : targetIndex + 1;
+
+          // Insert dragged at the new position
+          filteredSiblings.splice(insertIndex, 0, draggedId);
+
+          // Set parentId
+          dragged.parentId = parent ? parent.id : null;
+
+          // Update the correct structure
+          if (parent) {
+            parent.children = filteredSiblings;
+          } else {
+            state.componentOrder = filteredSiblings;
+          }
+        }),
 
       updateComponentParent: (id, parentId) => set((state) => {
         const component = state.components.find((c) => c.id === id);
@@ -221,6 +265,7 @@ export const useWebsiteStore = create<WebsiteState>()(
           state.componentOrder = newOrder;
         }
       }),
+      
 
       setIsPreviewMode: (isPreview) => set((state) => { state.isPreviewMode = isPreview; }),
       setBreakpoint: (breakpoint) => set((state) => { state.breakpoint = breakpoint; }),

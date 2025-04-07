@@ -30,7 +30,7 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
   isSelected,
   onSelect,
 }) => {
-  const { removeComponent } = useWebsiteStore();
+  const { removeComponent, components } = useWebsiteStore();
 
   const {
     attributes,
@@ -41,8 +41,11 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
     isDragging,
   } = useSortable({
     id,
-    data: { type: 'SORTABLE_ITEM', componentId: id },
+    data: { type: 'component', id },
   });
+
+  const component = components.find((c) => c.id === id);
+  if (!component) return null;
 
   if (isPreviewMode) {
     return <>{children}</>;
@@ -58,29 +61,18 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
     onSelect(e);
   };
 
-  const getComponentType = () => {
-    const component = useWebsiteStore.getState().components.find((c) => c.id === id);
-    return component?.type || '';
-  };
-
-  const getPositionStyles = () => {
-    const component = useWebsiteStore.getState().components.find((c) => c.id === id);
-    if (!component) return {};
-
-    const position = component.props.position as PositionProps | undefined;
-    if (!position) return {};
-
-    return {
+  const position = component.props.position as PositionProps | undefined;
+  const positionStyles: React.CSSProperties = position
+    ? {
       position: position.type || 'relative',
       top: position.top,
       left: position.left,
       right: position.right,
       bottom: position.bottom,
       zIndex: position.zIndex,
-    };
-  };
+    }
+    : {};
 
-  const positionStyles = getPositionStyles();
   const style: React.CSSProperties = {
     ...positionStyles,
     transform: CSS.Transform.toString(transform),
@@ -90,7 +82,15 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
   };
 
   return (
-    <>
+    <div
+      ref={setNodeRef}
+      className={`relative border ${isSelected ? 'border-blue-500' : 'border-transparent'} ${isDragging ? 'shadow-lg' : ''}`}
+      onClick={handleClick}
+      style={style}
+      data-component-id={id}
+      {...attributes}
+      {...listeners}
+    >
       {isSelected && (
         <div className="absolute -top-2 right-0 flex text-slate-700 py-2 text-xs z-50">
           <span className="px-2 py-1 flex w-full items-center">
@@ -104,18 +104,8 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
           </button>
         </div>
       )}
-      <div
-        ref={setNodeRef}
-        className={`relative ${isSelected ? ' ' : ''} ${isDragging ? 'shadow-lg' : ''}`}
-        onClick={handleClick}
-        style={style}
-        data-component-id={id}
-        {...attributes}
-        {...listeners}
-      >
-        {children}
-      </div>
-    </>
+      {children}
+    </div>
   );
 };
 
