@@ -33,7 +33,6 @@ import {
      UniqueIdentifier,
 } from '@dnd-kit/core';
 import { useSwipeable } from 'react-swipeable';
-import { arrayMove } from '@dnd-kit/sortable';
 
 interface MainLayoutProps {
      pages: Page[];
@@ -66,8 +65,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           isSheetOpen,
           setSheetOpen,
           setDraggingComponent,
-          componentOrder,
-          setComponentOrder,
           draggingComponent,
      } = useWebsiteStore();
 
@@ -75,7 +72,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      const [isHierarchyOpen, setIsHierarchyOpen] = useState(false);
      const [isDarkMode, setIsDarkMode] = useState(false);
      const [isPageSheetOpen, setIsPageSheetOpen] = useState(false);
-     const componentPanelRef = useRef<HTMLDivElement>(null); // Only one declaration here
+     const componentPanelRef = useRef<HTMLDivElement>(null);
      const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 
      useEffect(() => {
@@ -89,7 +86,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      useEffect(() => {
           if (selectedComponentId) {
                setIsPropertyPanelOpen(true);
-               setIsHierarchyOpen(false);
+               setIsHierarchyOpen(true); // Open hierarchy when a component is selected
           } else {
                setIsPropertyPanelOpen(false);
                setIsHierarchyOpen(false);
@@ -98,9 +95,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
      useEffect(() => {
           if (draggingComponent) {
-               setSheetOpen(false); // Close the drawer when dragging starts
+               setSheetOpen(false); // Close the component panel when dragging starts
           }
-     }, [draggingComponent]);
+     }, [draggingComponent, setSheetOpen]);
 
      const handleAddPage = () => {
           const newPageId = uuidv4();
@@ -122,21 +119,22 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      };
 
      const handleComponentAdd = (type: string, defaultProps: Record<string, any>) => {
+          const newId = uuidv4();
           addComponent({
+                // Assign a unique ID immediately
                type,
                props: defaultProps || {},
                pageId: currentPageId,
                parentId: null,
                responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
+               allowChildren: true, // Default to true, adjust in component if needed
           });
           toast({
                title: 'Component Added',
                description: `Added ${type} to canvas.`,
           });
           setSheetOpen(false);
-          setSelectedComponentId(
-               useWebsiteStore.getState().components.find((c) => c.type === type && c.pageId === currentPageId)?.id || null
-          );
+          setSelectedComponentId(newId); // Select the newly added component
      };
 
      const isMobile = breakpoint === 'mobile';
@@ -177,6 +175,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           if (active?.data?.current?.type === 'COMPONENT_LIB_ITEM' && over?.id === 'canvas-drop-area') {
                const newComponentId = uuidv4();
                addComponent({
+                    
                     type: active.data.current.componentType,
                     props: active.data.current.defaultProps || {},
                     pageId: currentPageId,
@@ -197,16 +196,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
      const swipeHandlers = useSwipeable({
           onSwipedLeft: (eventData) => {
-               if (eventData.initial[1] > window.innerHeight * 0.8) {
+               if (eventData.initial[1] > window.innerHeight * 0.7) {
                     setIsPropertyPanelOpen(true);
-               } else if (eventData.initial[1] < window.innerHeight * 0.2) {
+               } else if (eventData.initial[1] < window.innerHeight * 0.3) {
                     setIsHierarchyOpen(true);
                }
           },
           onSwipedRight: (eventData) => {
-               if (eventData.initial[1] > window.innerHeight * 0.8) {
+               if (eventData.initial[1] > window.innerHeight * 0.7) {
                     setIsPropertyPanelOpen(false);
-               } else if (eventData.initial[1] < window.innerHeight * 0.2) {
+               } else if (eventData.initial[1] < window.innerHeight * 0.3) {
                     setIsHierarchyOpen(false);
                }
           },
@@ -239,7 +238,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                                   </Button>
                                              </DrawerClose>
                                         </DrawerHeader>
-                                        <ComponentPanel onComponentClick={handleComponentAdd} /> {/* Removed ref here, handled via forwardRef if needed */}
+                                        <ComponentPanel onComponentClick={handleComponentAdd} ref={componentPanelRef} />
                                    </DrawerContent>
                               </Drawer>
                               <h1 className="text-lg font-bold text-black dark:text-white">QuickSite</h1>
@@ -443,17 +442,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                    </Drawer>
                               )}
 
-                              {!isPreviewMode && selectedComponentId && (
-                                   <Drawer open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen}>
+                              {!isPreviewMode && (
+                                   <Drawer open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen} >
                                         <DrawerTrigger asChild>
                                              <Button
                                                   variant="ghost"
-                                                  className="absolute bottom-12 right-5 z-50 text-gray-600 dark:text-gray-300"
+                                                  className={`absolute bottom-12 right-5 z-50 text-gray-600 dark:text-gray-300 ${isMobile ? 'left-5 right-auto' : ''}`}
                                              >
                                                   <Layers size={24} />
                                              </Button>
                                         </DrawerTrigger>
-                                        <DrawerContent className="right-0 top-0 bottom-0 w-80 p-4">
+                                        <DrawerContent className={`top-0 bottom-0 ${isMobile ? 'left-0 right-0' : 'right-0'} w-full md:w-80 p-4`}>
                                              <DrawerHeader>
                                                   <DrawerTitle className="text-lg font-semibold text-blue-900 dark:text-blue-300">
                                                        Element Hierarchy
