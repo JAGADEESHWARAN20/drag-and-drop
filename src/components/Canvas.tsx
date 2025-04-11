@@ -27,6 +27,7 @@ import DroppableContainer from './DroppableContainer';
 import { toast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
 import Button from '@/components/ui/button';
+import Switch from '@/components/ui/switch';
 import SelectionManager from './SelectionManager';
 import ContextMenu from './ContextMenu';
 import { X } from 'lucide-react';
