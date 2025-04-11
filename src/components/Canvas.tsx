@@ -160,14 +160,14 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
             )}
           </DynamicComponent>
 
-          {componentData.type === 'Container' && !isPreviewMode && (
-            <div className="mt-2">
-              <Button
-                variant={ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren ? 'default' : 'outline'}
-                onClick={() => setAllowChildren(componentData.id, !ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren)}
-              >
-                {ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren ? 'Disable Children' : 'Enable Children'}
-              </Button>
+       {componentData.type === 'Container' && !isPreviewMode && (
+            <div className="mt-2 flex justify-center">
+              <Switch
+                id={`allow-children-${componentData.id}`}
+                checked={ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren}
+                onCheckedChange={(checked) => setAllowChildren(componentData.id, checked)}
+                className="w-4 h-2"
+              />
             </div>
           )}
         </>
