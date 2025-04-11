@@ -161,16 +161,22 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
             )}
           </DynamicComponent>
 
-       {componentData.type === 'Container' && !isPreviewMode && (
-            <div className="mt-2 flex justify-center">
-              <Switch
-                id={`allow-children-${componentData.id}`}
-                checked={ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren}
-                onCheckedChange={(checked) => setAllowChildren(componentData.id, checked)}
-                className="w-4 h-2"
-              />
-            </div>
-          )}
+      {componentData.type === 'Container' && !isPreviewMode && (
+  <div className="mt-2 flex justify-center">
+    <Switch
+      id={`allow-children-${componentData.id}`}
+      checked={ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren}
+      onCheckedChange={(checked) => setAllowChildren(componentData.id, checked)}
+      className="w-10 h-6 rounded-full bg-gray-300 data-[state=checked]:bg-blue-600 relative"
+    >
+      <span
+        className={`absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+          ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren ? 'translate-x-4' : ''
+        }`}
+      ></span>
+    </Switch>
+  </div>
+)}
         </>
       );
     },
