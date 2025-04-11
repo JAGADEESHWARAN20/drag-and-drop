@@ -156,9 +156,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           if (active.data?.current?.type === 'COMPONENT_LIB_ITEM') {
                const { componentType, defaultProps } = active.data.current;
                setDraggingComponent({ type: componentType, defaultProps });
-
+               
                if (componentPanelRef.current) {
                     componentPanelRef.current.style.pointerEvents = 'none';
+                    setSheetOpen(false);
                }
           }
      };
