@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { SplitPane } from 'react-split-pane';
+import SplitPane from 'react-split-pane';
 import {
   Tabs,
   TabsList,
@@ -33,6 +33,7 @@ const ModernLayout: React.FC = () => {
       parentId: null,
       responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
       allowChildren: type === 'Container' || type === 'Section' || type === 'Grid',
+      children: [], // Added the required children property
     });
 
     toast({
