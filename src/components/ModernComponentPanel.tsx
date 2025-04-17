@@ -26,6 +26,7 @@ const ModernComponentPanel: React.FC<ComponentPanelProps> = ({ onComponentClick 
   };
 
   const handleDragStart = useCallback(() => {
+    console.log('Drag started');
     setHasDragAttempted(true);
     startDragging();
   }, [setHasDragAttempted, startDragging]);

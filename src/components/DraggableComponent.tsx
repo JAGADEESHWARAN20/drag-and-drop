@@ -19,7 +19,13 @@ interface DraggableComponentProps {
 
 const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) => {
   const dragRef = useRef<HTMLDivElement>(null);
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { delay: 300, tolerance: 5 } }));
+  const sensors = useSensors(useSensor(PointerSensor, { 
+    activationConstraint: { 
+      distance: 8, // Decrease the distance required to start dragging
+      tolerance: 5 
+    } 
+  }));
+  
   const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({
     id: component.type,
     data: {
@@ -27,6 +33,7 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) =>
       componentType: component.type,
       defaultProps: component.defaultProps,
     },
+    sensors
   });
 
   useEffect(() => {
@@ -40,7 +47,7 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) =>
       {...attributes}
       className={`p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 md:w-24 md:h-24 flex-shrink-0 ${isDragging ? 'opacity-50 cursor-grabbing' : ''}`}
       style={{
-        touchAction: 'pan-y',
+        touchAction: 'none', // Change from pan-y to none to ensure drag works on touch devices
         userSelect: 'none',
         transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
       }}

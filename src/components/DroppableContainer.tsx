@@ -80,6 +80,7 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 50 : positionStyles.zIndex || 'auto',
+    touchAction: 'none', // Add this to improve touch dragging
   };
 
   return (
@@ -94,8 +95,9 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
     >
       {isSelected && (
         <div className="absolute -top-2 right-0 flex text-slate-700 py-2 text-xs z-50">
-          <span className="px-2 py-1 flex w-full items-center">
+          <span className="px-2 py-1 flex w-full items-center cursor-grab">
             <Move size={12} className="mr-1" />
+            <span className="text-xs">Drag</span>
           </span>
           <button
             className="px-2 py-1 rounded-full bg-red-500 hover:bg-red-600"

@@ -54,7 +54,12 @@ const ModernCanvas: React.FC<CanvasProps> = ({
   const [activeId, setActiveId] = useState<string | null>(null);
   
   const { setNodeRef: setCanvasDroppableRef, isOver: isOverCanvas } = useDroppable({ id: 'canvas-drop-area' });
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { delay: 300, tolerance: 5 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      // Lower activation constraints to make dragging easier
+      activationConstraint: { distance: 5, tolerance: 5 }
+    })
+  );
 
   const currentPage = useMemo(
     () => pages.find((page) => page.id === currentPageId) || pages[0],
@@ -138,29 +143,67 @@ const ModernCanvas: React.FC<CanvasProps> = ({
   }, [currentBreakpoint]);
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
+    console.log('Drag start event:', event);
     setActiveId(event.active.id as string);
     const activeComponent = components.find(c => c.id === event.active.id);
+    
+    // Handle both direct component drags and drags from component panel
     if (activeComponent) {
       setDraggingComponent({ type: activeComponent.type, defaultProps: activeComponent.props });
+    } else if (event.active.data?.current) {
+      const { componentType, defaultProps } = event.active.data.current as any;
+      if (componentType) {
+        setDraggingComponent({ type: componentType, defaultProps });
+      }
     }
   }, [components, setDraggingComponent]);
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
+    console.log('Drag end event:', event);
     const { active, over } = event;
     setActiveId(null);
-    setDraggingComponent(null);
 
-    if (!active || !over || active.id === over.id) {
+    if (!active || !over) {
+      setDraggingComponent(null);
       return;
     }
 
+    // Check if we're dragging from the component panel
+    if (active.data?.current?.type === 'COMPONENT' && over.id === 'canvas-drop-area') {
+      const { componentType, defaultProps } = active.data.current;
+      const componentId = addComponent({
+        type: componentType,
+        props: defaultProps,
+        pageId: currentPage.id,
+        parentId: null,
+        responsiveProps: {
+          desktop: {},
+          tablet: {},
+          mobile: {},
+        },
+        allowChildren: componentType === 'Container' || componentType === 'Section' || componentType === 'Grid',
+        children: [], 
+      });
+      
+      toast({
+        title: "Component Added",
+        description: `${componentType} has been added to the canvas`,
+      });
+      setDraggingComponent(null);
+      return;
+    }
+
+    // Handle reordering or moving existing components
     const activeIdStr = active.id as string;
     const overId = over.id as string;
 
     const activeComponent = components.find((c) => c.id === activeIdStr);
     const overComponent = components.find((c) => c.id === overId);
 
-    if (!activeComponent) return;
+    if (!activeComponent) {
+      setDraggingComponent(null);
+      return;
+    }
 
     // Reordering within the same parent
     if (activeComponent.parentId === overComponent?.parentId) {
@@ -190,13 +233,21 @@ const ModernCanvas: React.FC<CanvasProps> = ({
       updateComponentOrder(null, updatedOrder);
       toast({ title: 'Component Moved', description: `${activeComponent.type} moved to canvas.` });
     }
-  }, [components, getChildComponents, setDraggingComponent, updateComponentParent, updateComponentOrder]);
+    
+    setDraggingComponent(null);
+  }, [components, getChildComponents, setDraggingComponent, updateComponentParent, updateComponentOrder, addComponent, currentPage.id]);
 
   const renderDragOverlay = useCallback(() => {
-    if (!activeId || !draggingComponent) return null;
+    if (!draggingComponent) return null;
+    
+    console.log('Rendering drag overlay for:', draggingComponent.type);
     const componentType = draggingComponent.type;
     const DynamicComponent = ComponentRegistry[componentType as keyof typeof ComponentRegistry]?.component as React.ComponentType<any>;
-    if (!DynamicComponent) return null;
+    
+    if (!DynamicComponent) {
+      console.warn('No component found for type:', componentType);
+      return null;
+    }
 
     return (
       <DragOverlay>
@@ -205,7 +256,7 @@ const ModernCanvas: React.FC<CanvasProps> = ({
         </div>
       </DragOverlay>
     );
-  }, [activeId, draggingComponent]);
+  }, [draggingComponent]);
 
   return (
     <div className="relative flex-1 overflow-auto bg-gray-100 dark:bg-gray-800 p-6">
