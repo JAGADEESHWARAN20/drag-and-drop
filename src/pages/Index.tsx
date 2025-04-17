@@ -1,83 +1,65 @@
-import React from 'react';
-import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
+
+import React, { useState, useCallback } from 'react';
 import MainLayout from '../components/MainLayout';
-import { generateCode } from '../utils/CodeGenerator';
+import { useWebsiteStore } from '../store/WebsiteStore';
 import { toast } from '@/components/ui/use-toast';
 
 const Index = () => {
-  const {
-    pages,
+  const { 
+    pages, 
     currentPageId,
     setCurrentPageId,
     addPage,
-    isPreviewMode,
-    setIsPreviewMode,
     breakpoint,
     setBreakpoint,
-    components,
   } = useWebsiteStore();
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
 
-  const handlePageChange = (pageId: string) => {
+  const handleChangePage = useCallback((pageId: string) => {
     setCurrentPageId(pageId);
-  };
+    toast({
+      title: 'Page Changed',
+      description: `Switched to ${pages.find(p => p.id === pageId)?.name || 'Unknown page'}.`,
+    });
+  }, [pages, setCurrentPageId]);
 
-  const handleAddPage = (name: string) => {
-    const newPage = { id: name, name }; // Create a Page object
-    addPage(newPage);
-    setCurrentPageId(newPage.id);
+  const handleAddPage = useCallback((name: string) => {
+    const id = addPage(name);
     toast({
       title: 'Page Added',
-      description: `Added ${newPage.name}`,
+      description: `Added new page: ${name}`,
     });
-  };
+    return id;
+  }, [addPage]);
 
-  const handlePreviewToggle = () => {
-    setIsPreviewMode(!isPreviewMode);
-  };
+  const togglePreviewMode = useCallback(() => {
+    setIsPreviewMode(prev => !prev);
+    toast({
+      title: isPreviewMode ? 'Edit Mode' : 'Preview Mode',
+      description: isPreviewMode ? 'Now editing the website.' : 'Previewing how the website will look.',
+    });
+  }, [isPreviewMode]);
 
-  const handleExportCode = async () => {
-    try {
-      if (components.length === 0) {
-        toast({
-          title: 'No Components',
-          description: 'Add some components before exporting',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      await generateCode(pages, components);
-
-      toast({
-        title: 'Export Successful',
-        description: 'Your code has been exported as a ZIP file',
-        variant: 'default',
-      });
-    } catch (error) {
-      console.error('Error exporting code:', error);
-      toast({
-        title: 'Export Failed',
-        description: 'There was an error exporting your code',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleBreakpointChange = (bp: Breakpoint) => {
-    setBreakpoint(bp);
-  };
+  const handleExportCode = useCallback(() => {
+    // In a real application, this would generate and export the code
+    // For now, we'll just show a toast notification
+    toast({
+      title: 'Code Export',
+      description: 'Exporting the code is not implemented in this demo.',
+    });
+  }, []);
 
   return (
     <MainLayout
       pages={pages}
       currentPageId={currentPageId}
-      onChangePage={handlePageChange}
+      onChangePage={handleChangePage}
       onAddPage={handleAddPage}
-      onPreviewToggle={handlePreviewToggle}
+      onPreviewToggle={togglePreviewMode}
       isPreviewMode={isPreviewMode}
       onExportCode={handleExportCode}
       breakpoint={breakpoint}
-      setBreakpoint={handleBreakpointChange}
+      setBreakpoint={setBreakpoint}
     />
   );
 };

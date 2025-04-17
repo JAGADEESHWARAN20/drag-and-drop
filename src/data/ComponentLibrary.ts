@@ -1,3 +1,4 @@
+
 import {
   Heading,
   Text,
@@ -51,7 +52,6 @@ export const ComponentLibrary: Record<'basic' | 'layout' | 'advanced', Component
         color: '#333333',
       },
     },
-  ,
     {
       type: 'Image',
       label: 'Image',
@@ -160,11 +160,11 @@ export const ComponentLibrary: Record<'basic' | 'layout' | 'advanced', Component
       label: 'Table',
       icon: Table,
       defaultProps: {
-        headers: ['Header 1', 'Header 2', 'Header 3'] , // Explicitly defining as an array of strings
+        headers: ['Header 1', 'Header 2', 'Header 3'],
         rows: [
           ['Cell 1-1', 'Cell 1-2', 'Cell 1-3'],
           ['Cell 2-1', 'Cell 2-2', 'Cell 2-3']
-        ] // Explicitly defining as an array of arrays
+        ]
       }
     },
     {

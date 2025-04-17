@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useWebsiteStore } from '../store/WebsiteStore';
@@ -148,4 +149,4 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
      );
 };
 
-export default ContextMenu
+export default ContextMenu;
