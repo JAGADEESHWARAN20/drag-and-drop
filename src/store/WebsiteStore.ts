@@ -1,9 +1,8 @@
-
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { Component, Page, Breakpoint, DraggableItemType } from '../types';
 
-export type { Breakpoint };
+export type { Breakpoint, Component, Page };
 
 interface WebsiteState {
   pages: Page[];
@@ -114,6 +113,7 @@ export const useWebsiteStore = create<WebsiteState>((set, get) => ({
       ...component,
       pageId: component.pageId || get().currentPageId,
       parentId: component.parentId || null,
+      children: component.children || [],
     };
     
     set((state) => ({

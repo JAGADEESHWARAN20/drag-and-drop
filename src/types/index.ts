@@ -15,12 +15,13 @@ export interface Component {
     [key in Breakpoint]?: ComponentProps;
   };
   allowChildren: boolean;
+  children?: string[]; // Make children optional since it's not always needed
 }
 
 export interface Page {
   id: string;
   name: string;
-  route: string;
+  route?: string; // Make route optional to match usage in WebsiteStore
   isPublished: boolean;
   createdAt: string;
   updatedAt: string;

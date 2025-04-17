@@ -25,9 +25,9 @@ const Heading: React.FC<ComponentProps & { children?: React.ReactNode; id: strin
   return (
     <HeadingTag
       style={{
-        textAlign,
+        textAlign: textAlign as any,
         color,
-        ...style,
+        ...(typeof style === 'object' ? style : {}),
       }}
       id={isPreviewMode ? undefined : id}
     >
@@ -48,9 +48,9 @@ const Paragraph: React.FC<ComponentProps & { children?: React.ReactNode; id: str
   return (
     <p
       style={{
-        textAlign,
+        textAlign: textAlign as any,
         color,
-        ...style,
+        ...(typeof style === 'object' ? style : {}),
       }}
       id={isPreviewMode ? undefined : id}
     >
@@ -78,10 +78,10 @@ const Button: React.FC<ComponentProps & { children?: React.ReactNode; id: string
   };
 
   return (
-    <div style={{ textAlign }}>
+    <div style={{ textAlign: textAlign as any }}>
       <button
         className={`inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background px-4 py-2 ${variantClasses[variant as keyof typeof variantClasses]}`}
-        style={style}
+        style={typeof style === 'object' ? style : {}}
         id={isPreviewMode ? undefined : id}
       >
         {text}
@@ -102,12 +102,12 @@ const Image: React.FC<ComponentProps & { children?: React.ReactNode; id: string;
 }) => {
   return (
     <img
-      src={src}
-      alt={alt}
+      src={String(src)}
+      alt={String(alt)}
       style={{
-        width,
-        height,
-        ...style,
+        width: String(width),
+        height: String(height),
+        ...(typeof style === 'object' ? style : {}),
       }}
       id={isPreviewMode ? undefined : id}
     />
@@ -129,12 +129,12 @@ const Container: React.FC<ComponentProps & { children?: React.ReactNode; id: str
   return (
     <div
       style={{
-        padding,
-        margin,
-        backgroundColor,
-        borderRadius,
-        maxWidth,
-        ...style,
+        padding: String(padding),
+        margin: String(margin),
+        backgroundColor: String(backgroundColor),
+        borderRadius: String(borderRadius),
+        maxWidth: String(maxWidth),
+        ...(typeof style === 'object' ? style : {}),
       }}
       className="mx-auto"
       id={isPreviewMode ? undefined : id}
@@ -156,9 +156,9 @@ const Section: React.FC<ComponentProps & { children?: React.ReactNode; id: strin
   return (
     <section
       style={{
-        backgroundColor,
-        padding,
-        ...style,
+        backgroundColor: String(backgroundColor),
+        padding: String(padding),
+        ...(typeof style === 'object' ? style : {}),
       }}
       id={isPreviewMode ? undefined : id}
     >
@@ -180,9 +180,9 @@ const Grid: React.FC<ComponentProps & { children?: React.ReactNode; id: string; 
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: `repeat(${columns}, 1fr)`,
-        gap,
-        ...style,
+        gridTemplateColumns: `repeat(${Number(columns)}, 1fr)`,
+        gap: String(gap),
+        ...(typeof style === 'object' ? style : {}),
       }}
       id={isPreviewMode ? undefined : id}
     >
@@ -270,3 +270,6 @@ export const ComponentRegistry: Record<string, ComponentRegistryItem> = {
 
 // Export all component types
 export type ComponentType = keyof typeof ComponentRegistry;
+
+// Export components for use in other files
+export { Heading, Paragraph, Button, Image, Container, Section, Grid };

@@ -1,18 +1,20 @@
-import { Heading, Paragraph, Image, Button, Link, Container, Section, Row, Column, Form, List, Table, Video, Divider } from './ComponentRegistry';
+
+import { 
+  Heading, 
+  Paragraph, 
+  Image, 
+  Button, 
+  Container, 
+  Section, 
+  Grid 
+} from './ComponentRegistry';
 
 export {
-     Heading,
-     Paragraph,
-     Image,
-     Button,
-     Link,
-     Container,
-     Section,
-     Row,
-     Column,
-     Form,
-     List,
-     Table,
-     Video,
-     Divider,
+  Heading,
+  Paragraph,
+  Image,
+  Button,
+  Container,
+  Section,
+  Grid,
 };

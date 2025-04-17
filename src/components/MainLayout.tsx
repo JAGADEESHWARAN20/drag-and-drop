@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
@@ -86,7 +85,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      useEffect(() => {
           if (selectedComponentId) {
                setIsPropertyPanelOpen(true);
-               setIsHierarchyOpen(true); // Open hierarchy when a component is selected
+               setIsHierarchyOpen(true);
           } else {
                setIsPropertyPanelOpen(false);
                setIsHierarchyOpen(false);
@@ -95,7 +94,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
      useEffect(() => {
           if (draggingComponent) {
-               setSheetOpen(false); // Close the component panel when dragging starts
+               setSheetOpen(false);
           }
      }, [draggingComponent, setSheetOpen]);
 
@@ -121,20 +120,20 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      const handleComponentAdd = (type: string, defaultProps: Record<string, any>) => {
           const newId = uuidv4();
           addComponent({
-                // Assign a unique ID immediately
                type,
                props: defaultProps || {},
                pageId: currentPageId,
                parentId: null,
                responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
-               allowChildren: true, // Default to true, adjust in component if needed
+               allowChildren: true,
+               children: [],
           });
           toast({
                title: 'Component Added',
                description: `Added ${type} to canvas.`,
           });
           setSheetOpen(false);
-          setSelectedComponentId(newId); // Select the newly added component
+          setSelectedComponentId(newId);
      };
 
      const isMobile = breakpoint === 'mobile';
@@ -172,17 +171,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                componentPanelRef.current.style.pointerEvents = 'auto';
           }
 
-          // Adding component from library to canvas
           if (active?.data?.current?.type === 'COMPONENT_LIB_ITEM' && over?.id === 'canvas-drop-area') {
                const newComponentId = uuidv4();
                addComponent({
-                    
                     type: active.data.current.componentType,
                     props: active.data.current.defaultProps || {},
                     pageId: currentPageId,
                     parentId: null,
                     responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
                     allowChildren: true,
+                    children: [],
                });
                setDraggingComponent(null);
                setSelectedComponentId(newComponentId);
