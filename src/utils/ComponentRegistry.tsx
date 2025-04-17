@@ -25,13 +25,13 @@ const Heading: React.FC<ComponentProps & { children?: React.ReactNode; id: strin
   return (
     <HeadingTag
       style={{
-        textAlign: textAlign as any,
-        color,
-        ...(typeof style === 'object' ? style : {}),
+        textAlign: textAlign as React.CSSProperties['textAlign'],
+        color: color as string,
+        ...(style as React.CSSProperties),
       }}
       id={isPreviewMode ? undefined : id}
     >
-      {text}
+      {text as React.ReactNode}
     </HeadingTag>
   );
 };
@@ -48,13 +48,13 @@ const Paragraph: React.FC<ComponentProps & { children?: React.ReactNode; id: str
   return (
     <p
       style={{
-        textAlign: textAlign as any,
-        color,
-        ...(typeof style === 'object' ? style : {}),
+        textAlign: textAlign as React.CSSProperties['textAlign'],
+        color: color as string,
+        ...(style as React.CSSProperties),
       }}
       id={isPreviewMode ? undefined : id}
     >
-      {text}
+      {text as React.ReactNode}
     </p>
   );
 };
@@ -78,13 +78,13 @@ const Button: React.FC<ComponentProps & { children?: React.ReactNode; id: string
   };
 
   return (
-    <div style={{ textAlign: textAlign as any }}>
+    <div style={{ textAlign: textAlign as React.CSSProperties['textAlign'] }}>
       <button
         className={`inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background px-4 py-2 ${variantClasses[variant as keyof typeof variantClasses]}`}
-        style={typeof style === 'object' ? style : {}}
+        style={style as React.CSSProperties}
         id={isPreviewMode ? undefined : id}
       >
-        {text}
+        {text as React.ReactNode}
       </button>
     </div>
   );
@@ -107,7 +107,7 @@ const Image: React.FC<ComponentProps & { children?: React.ReactNode; id: string;
       style={{
         width: String(width),
         height: String(height),
-        ...(typeof style === 'object' ? style : {}),
+        ...(style as React.CSSProperties),
       }}
       id={isPreviewMode ? undefined : id}
     />
@@ -134,7 +134,7 @@ const Container: React.FC<ComponentProps & { children?: React.ReactNode; id: str
         backgroundColor: String(backgroundColor),
         borderRadius: String(borderRadius),
         maxWidth: String(maxWidth),
-        ...(typeof style === 'object' ? style : {}),
+        ...(style as React.CSSProperties),
       }}
       className="mx-auto"
       id={isPreviewMode ? undefined : id}
@@ -158,7 +158,7 @@ const Section: React.FC<ComponentProps & { children?: React.ReactNode; id: strin
       style={{
         backgroundColor: String(backgroundColor),
         padding: String(padding),
-        ...(typeof style === 'object' ? style : {}),
+        ...(style as React.CSSProperties),
       }}
       id={isPreviewMode ? undefined : id}
     >
@@ -182,7 +182,7 @@ const Grid: React.FC<ComponentProps & { children?: React.ReactNode; id: string; 
         display: 'grid',
         gridTemplateColumns: `repeat(${Number(columns)}, 1fr)`,
         gap: String(gap),
-        ...(typeof style === 'object' ? style : {}),
+        ...(style as React.CSSProperties),
       }}
       id={isPreviewMode ? undefined : id}
     >

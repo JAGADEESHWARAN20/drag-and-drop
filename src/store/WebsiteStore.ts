@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Component, Page, Breakpoint, DraggableItemType } from '../types';
+import { Component, Page, Breakpoint } from '../types';
+import { DraggableItemType } from '../types';
 
 export type { Breakpoint, Component, Page };
 
@@ -47,7 +48,6 @@ export const useWebsiteStore = create<WebsiteState>((set, get) => ({
     {
       id: 'default-page',
       name: 'Home',
-      route: '/',
       isPublished: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -69,7 +69,6 @@ export const useWebsiteStore = create<WebsiteState>((set, get) => ({
     const newPage: Page = {
       id,
       name,
-      route: `/${name.toLowerCase().replace(/\s+/g, '-')}`,
       isPublished: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
