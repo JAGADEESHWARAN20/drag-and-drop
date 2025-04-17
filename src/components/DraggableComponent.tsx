@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
-import { useDraggable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { useDraggable, PointerSensor, useSensor, useSensors, DndContext } from '@dnd-kit/core';
 import { ComponentType, SVGProps } from 'react';
 import { ComponentProps } from '../types';
 
@@ -33,7 +33,7 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) =>
       componentType: component.type,
       defaultProps: component.defaultProps,
     },
-    sensors
+    // Remove the invalid sensors prop since it's not part of UseDraggableArguments
   });
 
   useEffect(() => {
