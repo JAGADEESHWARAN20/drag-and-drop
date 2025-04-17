@@ -1,6 +1,7 @@
+
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Component, Page, Breakpoint, DraggableItemType } from '../types';
+import { Component, Page, Breakpoint, DraggableItemType } from '../types/index';
 
 export type { Breakpoint, Component, Page };
 

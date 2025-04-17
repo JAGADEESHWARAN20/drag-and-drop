@@ -22,7 +22,7 @@ export interface Page {
   id: string;
   name: string;
   route?: string;
-  isPublished: boolean; // Adding isPublished property that was missing
+  isPublished: boolean; // Property needed by WebsiteStore
   createdAt: string;
   updatedAt: string;
 }
