@@ -9,7 +9,7 @@ export interface Component {
   id: string;
   type: string;
   pageId: string;
-  parentId?: string | null;
+  parentId: string | null; // Changed from optional to required, but allowing null
   props: ComponentProps;
   responsiveProps?: {
     [key in Breakpoint]?: ComponentProps;
