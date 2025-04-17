@@ -31,7 +31,11 @@ const ModernLayout: React.FC = () => {
       props: defaultProps,
       pageId: '',
       parentId: null,
-      responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
+      responsiveProps: {
+        desktop: {},
+        tablet: {},
+        mobile: {},
+      },
       allowChildren: type === 'Container' || type === 'Section' || type === 'Grid',
       children: [], // Added the required children property
     });

@@ -11,8 +11,8 @@ export interface Component {
   pageId: string;
   parentId: string | null; // Changed from optional to required, but allowing null
   props: ComponentProps;
-  responsiveProps?: {
-    [key in Breakpoint]?: ComponentProps;
+  responsiveProps: {
+    [key in Breakpoint]: ComponentProps; // Changed from optional to required
   };
   allowChildren: boolean;
   children: string[]; // This needs to be required for the component definition

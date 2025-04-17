@@ -113,6 +113,12 @@ export const useWebsiteStore = create<WebsiteState>((set, get) => ({
       pageId: component.pageId || get().currentPageId,
       parentId: component.parentId || null,
       children: component.children || [],
+      // Ensure responsiveProps has all required breakpoints
+      responsiveProps: {
+        desktop: component.responsiveProps?.desktop || {},
+        tablet: component.responsiveProps?.tablet || {},
+        mobile: component.responsiveProps?.mobile || {},
+      },
     };
     
     set((state) => ({
@@ -176,7 +182,7 @@ export const useWebsiteStore = create<WebsiteState>((set, get) => ({
               responsiveProps: {
                 ...component.responsiveProps,
                 [breakpoint]: {
-                  ...(component.responsiveProps?.[breakpoint] || {}),
+                  ...(component.responsiveProps[breakpoint] || {}),
                   ...props,
                 },
               },
