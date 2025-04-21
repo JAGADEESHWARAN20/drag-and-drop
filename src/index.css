@@ -59,7 +59,24 @@
   }
 }
 
-/* Global Scrollbar Styles */
+/* Hide scrollbars for a cleaner UI while maintaining functionality */
+.clean-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.clean-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Sticky components */
+.sticky-container {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Custom scrollbar for components that need it */
 *::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -98,4 +115,35 @@
 
 .scroll-componentcontainer::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+/* Improve drag-and-drop UI */
+.dragging {
+  opacity: 0.6;
+  cursor: grabbing !important;
+}
+
+.droppable-highlight {
+  border: 2px dashed var(--primary) !important;
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Transitions for smooth UI interactions */
+.panel-transition {
+  transition: all 0.3s ease;
+}
+
+/* Canvas styles */
+.canvas-container {
+  overflow: hidden; /* Hide scrollbars */
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.canvas-content {
+  overflow: auto; /* Allow scrolling */
+  height: 100%;
+  width: 100%;
+  padding: 1rem;
 }

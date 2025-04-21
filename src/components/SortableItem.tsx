@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -23,6 +24,7 @@ const SortableItem = ({ id, children }: SortableItemProps) => {
     opacity: isDragging ? 0.5 : 1,
     position: 'relative',
     zIndex: isDragging ? 50 : 'auto',
+    touchAction: 'none', // Improve touch device dragging
   };
 
   return (

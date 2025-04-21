@@ -15,6 +15,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Component } from '@/types';
 import { toast } from '@/components/ui/use-toast';
+import { ChevronDown, ChevronRight, Layers } from 'lucide-react';
 
 interface SortableHierarchyItemProps {
     component: Component;
@@ -27,6 +28,7 @@ const SortableHierarchyItem: React.FC<SortableHierarchyItemProps> = ({
 }) => {
     const { components, selectedComponentId, setSelectedComponentId } =
         useWebsiteStore();
+    const [isExpanded, setIsExpanded] = React.useState(true);
 
     const {
         attributes,
@@ -38,6 +40,7 @@ const SortableHierarchyItem: React.FC<SortableHierarchyItemProps> = ({
     } = useSortable({ id: component.id });
 
     const children = components.filter((c) => c.parentId === component.id);
+    const hasChildren = children.length > 0;
 
     const style: React.CSSProperties = {
         transform: CSS.Transform.toString(transform),
@@ -45,20 +48,41 @@ const SortableHierarchyItem: React.FC<SortableHierarchyItemProps> = ({
         opacity: isDragging ? 0.5 : 1,
         paddingLeft: `${level * 16}px`,
         cursor: 'grab', // Indicate draggable
+        touchAction: 'none', // Improve touch dragging
+    };
+
+    const toggleExpand = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsExpanded(!isExpanded);
     };
 
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
             <div
-                className={`p-1 rounded ${component.id === selectedComponentId
-                    ? 'bg-blue-100 dark:bg-blue-800'
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-                    }`}
+                className={`flex items-center p-1 rounded my-1 ${
+                    component.id === selectedComponentId
+                        ? 'bg-blue-100 dark:bg-blue-800'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}
                 onClick={() => setSelectedComponentId(component.id)}
             >
-                {component.type} ({component.id.slice(0, 5)})
+                {hasChildren && (
+                    <button onClick={toggleExpand} className="mr-1 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700">
+                        {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    </button>
+                )}
+                {!hasChildren && <span className="w-5" />}
+                
+                <span className="ml-1 flex items-center">
+                    <Layers size={14} className="mr-1 text-blue-500 dark:text-blue-400" />
+                    {component.type} 
+                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                        ({component.id.slice(0, 5)})
+                    </span>
+                </span>
             </div>
-            {children.length > 0 && (
+            
+            {hasChildren && isExpanded && (
                 <SortableHierarchy parentId={component.id} level={level + 1} />
             )}
         </div>
@@ -134,22 +158,36 @@ const ElementHierarchyViewer: React.FC = () => {
     };
 
     const rootComponents = components.filter((c) => c.parentId === null);
+    
+    if (rootComponents.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center h-32 text-gray-500 dark:text-gray-400">
+                <Layers size={24} className="mb-2 opacity-50" />
+                <p>No components yet</p>
+                <p className="text-xs text-center mt-1">
+                    Drag components from the panel to the canvas
+                </p>
+            </div>
+        );
+    }
 
     return (
-        <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
-            <SortableContext
-                items={rootComponents.map((c) => c.id)}
-                strategy={verticalListSortingStrategy}
-            >
-                {rootComponents.map((component) => (
-                    <SortableHierarchyItem
-                        key={component.id}
-                        component={component}
-                        level={0}
-                    />
-                ))}
-            </SortableContext>
-        </DndContext>
+        <div className="overflow-auto max-h-[calc(100vh-200px)] pr-2">
+            <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+                <SortableContext
+                    items={rootComponents.map((c) => c.id)}
+                    strategy={verticalListSortingStrategy}
+                >
+                    {rootComponents.map((component) => (
+                        <SortableHierarchyItem
+                            key={component.id}
+                            component={component}
+                            level={0}
+                        />
+                    ))}
+                </SortableContext>
+            </DndContext>
+        </div>
     );
 };
 
