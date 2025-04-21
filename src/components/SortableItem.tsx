@@ -24,7 +24,8 @@ const SortableItem = ({ id, children }: SortableItemProps) => {
     opacity: isDragging ? 0.5 : 1,
     position: 'relative',
     zIndex: isDragging ? 50 : 'auto',
-    touchAction: 'none', // Improve touch device dragging
+    touchAction: 'none', // Prevent default touch actions for better drag experience
+    cursor: 'grab',      // Indicate item is draggable
   };
 
   return (
@@ -36,7 +37,7 @@ const SortableItem = ({ id, children }: SortableItemProps) => {
       className="component-wrapper mb-2"
       layout
       layoutId={id}
-      whileDrag={{ scale: 1.02 }}
+      whileDrag={{ scale: 1.02, zIndex: 50 }}
     >
       {children}
     </motion.div>

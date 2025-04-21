@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
-import { useDraggable, PointerSensor, useSensor, useSensors, DndContext } from '@dnd-kit/core';
+import { useDraggable } from '@dnd-kit/core';
 import { ComponentType, SVGProps } from 'react';
 import { ComponentProps } from '../types';
 
@@ -19,12 +19,6 @@ interface DraggableComponentProps {
 
 const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) => {
   const dragRef = useRef<HTMLDivElement>(null);
-  const sensors = useSensors(useSensor(PointerSensor, { 
-    activationConstraint: { 
-      distance: 8, // Decrease the distance required to start dragging
-      tolerance: 5 
-    } 
-  }));
   
   const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({
     id: component.type,
@@ -33,7 +27,7 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) =>
       componentType: component.type,
       defaultProps: component.defaultProps,
     },
-    // Remove the invalid sensors prop since it's not part of UseDraggableArguments
+    // Remove sensors property as it's not part of UseDraggableArguments
   });
 
   useEffect(() => {
@@ -45,9 +39,9 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) =>
       ref={dragRef}
       {...listeners}
       {...attributes}
-      className={`p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 md:w-24 md:h-24 flex-shrink-0 ${isDragging ? 'opacity-50 cursor-grabbing' : ''}`}
+      className={`p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 md:w-24 md:h-24 flex-shrink-0 hover:border-blue-300 transition-colors ${isDragging ? 'opacity-50 cursor-grabbing shadow-lg' : ''}`}
       style={{
-        touchAction: 'none', // Change from pan-y to none to ensure drag works on touch devices
+        touchAction: 'none', // Essential for touch devices
         userSelect: 'none',
         transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
       }}

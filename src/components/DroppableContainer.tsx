@@ -3,7 +3,7 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useWebsiteStore } from '../store/WebsiteStore';
-import { X, Move } from 'lucide-react';
+import { X, MoveVertical } from 'lucide-react';
 
 export type PositionType = 'relative' | 'absolute' | 'fixed' | 'sticky';
 
@@ -80,13 +80,14 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 50 : positionStyles.zIndex || 'auto',
-    touchAction: 'none', // Add this to improve touch dragging
+    touchAction: 'none', // Essential for touch devices
+    cursor: isSelected ? 'grab' : 'pointer',
   };
 
   return (
     <div
       ref={setNodeRef}
-      className={`relative border ${isSelected ? 'border-blue-500' : 'border-transparent'} ${isDragging ? 'shadow-lg' : ''}`}
+      className={`relative border-2 ${isSelected ? 'border-blue-500' : 'border-transparent'} ${isDragging ? 'shadow-lg border-blue-400' : ''} rounded-sm`}
       onClick={handleClick}
       style={style}
       data-component-id={id}
@@ -94,13 +95,13 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
       {...listeners}
     >
       {isSelected && (
-        <div className="absolute -top-2 right-0 flex text-slate-700 py-2 text-xs z-50">
-          <span className="px-2 py-1 flex w-full items-center cursor-grab">
-            <Move size={12} className="mr-1" />
+        <div className="absolute -top-7 right-0 flex text-slate-700 py-1 text-xs z-50 bg-white dark:bg-gray-800 shadow-sm rounded-t-md">
+          <span className="px-2 py-1 flex items-center cursor-grab">
+            <MoveVertical size={12} className="mr-1" />
             <span className="text-xs">Drag</span>
           </span>
           <button
-            className="px-2 py-1 rounded-full bg-red-500 hover:bg-red-600"
+            className="px-2 py-1 rounded-full bg-red-500 hover:bg-red-600 text-white"
             onClick={handleDelete}
           >
             <X size={14} />

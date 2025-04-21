@@ -5,6 +5,9 @@ import {
     DndContext,
     DragEndEvent,
     closestCenter,
+    PointerSensor,
+    useSensor,
+    useSensors,
 } from '@dnd-kit/core';
 import {
     SortableContext,
@@ -37,7 +40,13 @@ const SortableHierarchyItem: React.FC<SortableHierarchyItemProps> = ({
         transform,
         transition,
         isDragging,
-    } = useSortable({ id: component.id });
+    } = useSortable({ 
+        id: component.id,
+        data: {
+            type: 'hierarchy-item',
+            component
+        }
+    });
 
     const children = components.filter((c) => c.parentId === component.id);
     const hasChildren = children.length > 0;
@@ -48,7 +57,7 @@ const SortableHierarchyItem: React.FC<SortableHierarchyItemProps> = ({
         opacity: isDragging ? 0.5 : 1,
         paddingLeft: `${level * 16}px`,
         cursor: 'grab', // Indicate draggable
-        touchAction: 'none', // Improve touch dragging
+        touchAction: 'none', // Better touch support
     };
 
     const toggleExpand = (e: React.MouseEvent) => {
@@ -123,6 +132,12 @@ const ElementHierarchyViewer: React.FC = () => {
         updateComponentParent,
         updateComponentOrder,
     } = useWebsiteStore();
+    
+    const sensors = useSensors(
+        useSensor(PointerSensor, { 
+            activationConstraint: { distance: 8 } // Smaller distance to activate dragging
+        })
+    );
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -172,8 +187,12 @@ const ElementHierarchyViewer: React.FC = () => {
     }
 
     return (
-        <div className="overflow-auto max-h-[calc(100vh-200px)] pr-2">
-            <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+        <div className="overflow-auto max-h-[calc(100vh-200px)] pr-2 clean-scrollbar sticky-container">
+            <DndContext 
+                onDragEnd={handleDragEnd} 
+                collisionDetection={closestCenter}
+                sensors={sensors}
+            >
                 <SortableContext
                     items={rootComponents.map((c) => c.id)}
                     strategy={verticalListSortingStrategy}

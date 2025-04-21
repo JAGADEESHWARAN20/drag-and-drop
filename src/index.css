@@ -119,13 +119,27 @@
 
 /* Improve drag-and-drop UI */
 .dragging {
-  opacity: 0.6;
+  opacity: 0.6 !important;
   cursor: grabbing !important;
+  z-index: 100 !important;
+  pointer-events: none;
 }
 
 .droppable-highlight {
   border: 2px dashed var(--primary) !important;
   background-color: rgba(59, 130, 246, 0.1);
+  transition: all 0.2s ease;
+}
+
+/* Enhance drag handle */
+[data-draggable=true] {
+  cursor: grab;
+}
+
+[data-dragging=true] {
+  cursor: grabbing !important;
+  z-index: 999;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 /* Transitions for smooth UI interactions */
