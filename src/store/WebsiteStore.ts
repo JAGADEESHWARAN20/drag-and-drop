@@ -94,7 +94,7 @@ export const useWebsiteStore = create<WebsiteState>()(
 
       addComponent: (component) => set((state) => {
         const newComponent: Component = {
-          id: uuidv4(),
+          id: uuidv4(), // Correctly generating the ID here
           pageId: state.currentPageId,
           parentId: component.parentId || null,
           type: component.type,

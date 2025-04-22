@@ -121,7 +121,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      const handleComponentAdd = (type: string, defaultProps: Record<string, any>) => {
           const newId = uuidv4();
           addComponent({
-                // Assign a unique ID immediately
+              
                type,
                props: defaultProps || {},
                pageId: currentPageId,
@@ -175,7 +175,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           if (active?.data?.current?.type === 'COMPONENT_LIB_ITEM' && over?.id === 'canvas-drop-area') {
                const newComponentId = uuidv4();
                addComponent({
-                    
+                   
                     type: active.data.current.componentType,
                     props: active.data.current.defaultProps || {},
                     pageId: currentPageId,
@@ -443,7 +443,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               )}
 
                               {!isPreviewMode && (
-                                   <Drawer open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen} >
+                                   <Drawer open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen} className="md:w-80">
                                         <DrawerTrigger asChild>
                                              <Button
                                                   variant="ghost"
