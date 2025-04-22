@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState, forwardRef, useMemo, useCallback, useRef } from 'react';
+import React, { useState, forwardRef, useMemo, useCallback } from 'react';
 import { ComponentLibrary } from '../data/ComponentLibrary';
 import { Search, MousePointerClick } from 'lucide-react';
 import { ComponentType, SVGProps } from 'react';
@@ -24,7 +25,6 @@ interface LibraryComponent {
 
 interface ComponentPanelProps {
   onComponentClick: (type: string, defaultProps: Record<string, any>) => void;
-  onClosePanel?: () => void;
 }
 
 interface SortableLibraryComponentProps {
@@ -54,7 +54,7 @@ const SortableLibraryComponent = ({ component, onComponentClick }: SortableLibra
   );
 };
 
-const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComponentClick, onClosePanel }, ref) => {
+const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComponentClick }, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { componentOrder, setComponentOrder, setDraggingComponent, setHasDragAttempted, startDragging } = useWebsiteStore();
@@ -99,7 +99,6 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
   const handleDragStart = useCallback(() => {
     setHasDragAttempted(true);
     startDragging();
-
   }, [setHasDragAttempted, startDragging]);
 
   return (
@@ -151,7 +150,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
             flex: '1 1 auto',
             touchAction: 'pan-x',
           }}
-          onDragStart={handleDragStart} // Trigger drag start listener
+          onDragStart={handleDragStart}
         >
           {filteredComponents.map((component) => (
             <SortableLibraryComponent

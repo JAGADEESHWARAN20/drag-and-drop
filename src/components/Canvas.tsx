@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useCallback, useRef } from 'react';
@@ -27,6 +28,7 @@ import DroppableContainer from './DroppableContainer';
 import { toast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
 import Button from '@/components/ui/button';
+import {Switch} from '@/components/ui/switch';
 import SelectionManager from './SelectionManager';
 import ContextMenu from './ContextMenu';
 import { X } from 'lucide-react';
@@ -161,13 +163,19 @@ const Canvas: React.FC<CanvasProps> = ({ isPreviewMode, currentBreakpoint }) => 
           </DynamicComponent>
 
           {componentData.type === 'Container' && !isPreviewMode && (
-            <div className="mt-2">
-              <Button
-                variant={ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren ? 'default' : 'outline'}
-                onClick={() => setAllowChildren(componentData.id, !ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren)}
+            <div className="mt-2 flex justify-center">
+              <Switch
+                id={`allow-children-${componentData.id}`}
+                checked={ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren}
+                onCheckedChange={(checked) => setAllowChildren(componentData.id, checked)}
+                className="w-10 h-6 rounded-full bg-gray-300 data-[state=checked]:bg-blue-600 relative"
               >
-                {ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren ? 'Disable Children' : 'Enable Children'}
-              </Button>
+                <span
+                  className={`absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                    ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren ? 'translate-x-4' : ''
+                  }`}
+                ></span>
+              </Switch>
             </div>
           )}
         </>

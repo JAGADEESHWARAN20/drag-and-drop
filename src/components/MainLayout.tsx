@@ -1,11 +1,10 @@
 'use client';
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
 import { Page } from '@/types';
 import ComponentPanel from './ComponentPanel';
 import Canvas from './Canvas';
 import PropertyPanel from './PropertyPanel';
-import ElementHierarchyViewer from './ElementHierarchyViewer';
 import { Menu, ChevronRight, ChevronLeft, X, Download, Smartphone, Tablet, Monitor, Layers, Code, Pen, Plus } from 'lucide-react';
 import Button from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -22,7 +21,6 @@ import {
 } from '@/components/ui/drawer';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Toggle } from '@/components/ui/toggle';
 import {
      DndContext,
      DragStartEvent,
@@ -33,6 +31,7 @@ import {
      UniqueIdentifier,
 } from '@dnd-kit/core';
 import { useSwipeable } from 'react-swipeable';
+import ElementHierarchyViewer from './ElementHierarchyViewer';
 
 interface MainLayoutProps {
      pages: Page[];
@@ -86,7 +85,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      useEffect(() => {
           if (selectedComponentId) {
                setIsPropertyPanelOpen(true);
-               setIsHierarchyOpen(true); // Open hierarchy when a component is selected
+               setIsHierarchyOpen(true);
           } else {
                setIsPropertyPanelOpen(false);
                setIsHierarchyOpen(false);
@@ -95,7 +94,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
      useEffect(() => {
           if (draggingComponent) {
-               setSheetOpen(false); // Close the component panel when dragging starts
+               setSheetOpen(false);
           }
      }, [draggingComponent, setSheetOpen]);
 
@@ -121,20 +120,21 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      const handleComponentAdd = (type: string, defaultProps: Record<string, any>) => {
           const newId = uuidv4();
           addComponent({
-              
+                // Assign a unique ID immediately
                type,
                props: defaultProps || {},
                pageId: currentPageId,
                parentId: null,
                responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
-               allowChildren: true, // Default to true, adjust in component if needed
+               allowChildren: true,
+               children: [],
           });
           toast({
                title: 'Component Added',
                description: `Added ${type} to canvas.`,
           });
           setSheetOpen(false);
-          setSelectedComponentId(newId); // Select the newly added component
+          setSelectedComponentId(newId);
      };
 
      const isMobile = breakpoint === 'mobile';
@@ -156,9 +156,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           if (active.data?.current?.type === 'COMPONENT_LIB_ITEM') {
                const { componentType, defaultProps } = active.data.current;
                setDraggingComponent({ type: componentType, defaultProps });
-
+               
                if (componentPanelRef.current) {
                     componentPanelRef.current.style.pointerEvents = 'none';
+                    setSheetOpen(false);
                }
           }
      };
@@ -171,17 +172,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                componentPanelRef.current.style.pointerEvents = 'auto';
           }
 
-          // Adding component from library to canvas
           if (active?.data?.current?.type === 'COMPONENT_LIB_ITEM' && over?.id === 'canvas-drop-area') {
                const newComponentId = uuidv4();
                addComponent({
-                   
+                    
                     type: active.data.current.componentType,
                     props: active.data.current.defaultProps || {},
                     pageId: currentPageId,
                     parentId: null,
                     responsiveProps: { desktop: {}, tablet: {}, mobile: {} },
                     allowChildren: true,
+                    children: [],
                });
                setDraggingComponent(null);
                setSelectedComponentId(newComponentId);
@@ -353,14 +354,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                    </ToggleGroupItem>
                               </ToggleGroup>
 
-                              <Toggle
+                              <Button
                                    aria-label="Toggle Preview Mode"
-                                   pressed={isPreviewMode}
-                                   onPressedChange={onPreviewToggle}
-                                   className="flex items-center space-x-2 data-[state=pressed]:bg-blue-600 text-gray-600 dark:text-gray-300 rounded-md px-3 py-1"
+                                   variant={isPreviewMode ? "default" : "outline"}
+                                   onClick={onPreviewToggle}
+                                   className="flex items-center space-x-2"
+                                   size="sm"
                               >
-                                   {isPreviewMode ? <Pen size={16} /> : <Code size={16} />}
-                              </Toggle>
+                                   {isPreviewMode ? <Pen size={16} className="mr-1" /> : <Code size={16} className="mr-1" />}
+                                   {isPreviewMode ? "Edit" : "Preview"}
+                              </Button>
 
                               <div className="block md:hidden">
                                    <Button variant="outline" size="icon" className="rounded-full p-2" onClick={onExportCode}>
@@ -472,7 +475,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                          </div>
                     </div>
                </div>
-          </DndContext >
+          </DndContext>
      );
 };
 
