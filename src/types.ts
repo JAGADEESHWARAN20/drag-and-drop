@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { UniqueIdentifier, DragEndEvent } from '@dnd-kit/core';
-import { SortingStrategy } from '@dnd-kit/sortable'; 
+import { SortingStrategy } from '@dnd-kit/sortable';
 
 export type Breakpoint = 'desktop' | 'tablet' | 'mobile';
 
@@ -82,7 +82,7 @@ export type PublicContextDescriptor = {
      // ... other properties
 };
 
-export type ValidProp = string | number | boolean | string[] | string[][] | { [key: string]: string | number };
+export type ValidProp = string | number | boolean | string[] | string[][] | { [key: string]: string | number } | ReactNode;
 export type ComponentProps = Record<string, ValidProp>;
 
 export interface SortableContextProps {

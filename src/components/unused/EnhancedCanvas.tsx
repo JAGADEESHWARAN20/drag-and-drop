@@ -1,19 +1,18 @@
 
 import React, { useRef, useState, useCallback } from 'react';
-import { useEnhancedWebsiteStore } from '../store/EnhancedWebsiteStore';
-import { ProjectElement, LibraryComponent } from '../types/ProjectStructure';
-import { 
-  Smartphone, 
-  Tablet, 
-  Monitor, 
+import { useEnhancedWebsiteStore } from '../../store/EnhancedWebsiteStore';
+import { ProjectElement, LibraryComponent } from '../../types/ProjectStructure';
+import {
+  Smartphone,
+  Tablet,
+  Monitor,
   Save,
-  Undo,
-  Redo,
+
   Eye,
   EyeOff
 } from 'lucide-react';
-import { Button } from './ui/button';
-import { toast } from './ui/use-toast';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/use-toast';
 
 interface DroppableElementProps {
   element: ProjectElement;
@@ -36,7 +35,7 @@ const DroppableElement: React.FC<DroppableElementProps> = ({
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!dragOver) {
       setDragOver(true);
       setDropZoneValid(element.elementId, 'inside');
@@ -47,7 +46,7 @@ const DroppableElement: React.FC<DroppableElementProps> = ({
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX;
     const y = e.clientY;
-    
+
     if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
       setDragOver(false);
     }
@@ -72,7 +71,7 @@ const DroppableElement: React.FC<DroppableElementProps> = ({
     const { breakpoint } = useEnhancedWebsiteStore.getState();
     const baseStyles = element.styles.inline || {};
     const responsiveStyles = element.styles.responsive[breakpoint] || {};
-    
+
     return {
       ...baseStyles,
       ...responsiveStyles,
@@ -104,7 +103,7 @@ const DroppableElement: React.FC<DroppableElementProps> = ({
         <span dangerouslySetInnerHTML={{ __html: element.properties.textContent }} />
       )}
       {children}
-      
+
       {dragOver && (
         <div className="absolute inset-0 flex items-center justify-center bg-blue-100/50 dark:bg-blue-900/50 pointer-events-none">
           <div className="bg-blue-500 text-white px-2 py-1 rounded text-sm">
@@ -112,7 +111,7 @@ const DroppableElement: React.FC<DroppableElementProps> = ({
           </div>
         </div>
       )}
-      
+
       {isSelected && (
         <div className="absolute -top-8 right-0 flex items-center space-x-1 bg-blue-500 text-white px-2 py-1 rounded text-xs">
           <span>{element.type}</span>
@@ -153,7 +152,7 @@ const EnhancedCanvas: React.FC = () => {
 
   const renderElement = useCallback((element: ProjectElement): React.ReactNode => {
     const childElements = getChildElements(element.elementId);
-    
+
     return (
       <DroppableElement
         key={element.elementId}
@@ -171,7 +170,7 @@ const EnhancedCanvas: React.FC = () => {
 
   const handleCanvasDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    
+
     try {
       const componentData = JSON.parse(e.dataTransfer.getData('application/json'));
       if (componentData && componentData.id) {
@@ -180,7 +179,7 @@ const EnhancedCanvas: React.FC = () => {
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;
           addElement(componentData.name, null, { x, y });
-          
+
           // Close sidebar on mobile after drop
           if (window.innerWidth < 768) {
             setSidebarOpen(false);
@@ -215,7 +214,7 @@ const EnhancedCanvas: React.FC = () => {
   const getCanvasStyles = (): React.CSSProperties => {
     const { canvas } = currentProject;
     let width = '100%';
-    
+
     switch (breakpoint) {
       case 'mobile':
         width = '375px';

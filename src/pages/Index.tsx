@@ -1,14 +1,15 @@
 
 import React from 'react';
-import EnhancedLayout from '../components/EnhancedLayout';
+
 import { Toaster } from "@/components/ui/toaster";
+import ModernLayout from '@/components/ModernLayout';
 
 const Index: React.FC = () => {
   return (
-    <>
-      <EnhancedLayout />
+    <div className="modern-layout">
+      <ModernLayout />
       <Toaster />
-    </>
+    </div>
   );
 };
 

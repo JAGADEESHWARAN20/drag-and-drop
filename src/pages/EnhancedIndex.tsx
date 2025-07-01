@@ -1,9 +1,12 @@
-
 import React from 'react';
-import EnhancedLayout from '../components/EnhancedLayout';
-
+import ModernLayout from '../components/ModernLayout';
+import "../index.css";
 const EnhancedIndex: React.FC = () => {
-  return <EnhancedLayout />;
+  return (
+    <div className="modern-layout">
+      <ModernLayout />
+    </div>
+  );
 };
 
 export default EnhancedIndex;

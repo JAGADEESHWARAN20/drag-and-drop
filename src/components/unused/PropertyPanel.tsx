@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
-import { PropertyEditors } from '../utils/PropertyEditors';
+import { useWebsiteStore, Breakpoint } from '../../store/WebsiteStore';
+import { PropertyEditors } from '../../utils/PropertyEditors';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';

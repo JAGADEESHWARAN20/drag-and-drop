@@ -10,7 +10,7 @@ import { useWebsiteStore, Breakpoint } from '../../store/WebsiteStore';
 import ModernCanvas from '../ModernCanvas';
 import ModernComponentPanel from './ModernComponentPanel';
 import ModernPropertyPanel from './ModernPropertyPanel';
-import WorkflowPanel from '../WorkflowPanel';
+import WorkflowPanel from './WorkflowPanel';
 import { Layers, Settings, Box, Workflow, MoveRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
@@ -58,7 +58,7 @@ const ModernLayout: React.FC = () => {
             <Box className="h-5 w-5 text-blue-500" />
             BuildPro
           </div>
-          
+
           <nav className="hidden md:flex space-x-1">
             <Button variant="ghost" size="sm">Editor</Button>
             <Button variant="ghost" size="sm">Pages</Button>
@@ -66,7 +66,7 @@ const ModernLayout: React.FC = () => {
             <Button variant="ghost" size="sm">Settings</Button>
           </nav>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <Button
             variant="outline"
@@ -75,7 +75,7 @@ const ModernLayout: React.FC = () => {
           >
             {isPreviewMode ? 'Edit' : 'Preview'}
           </Button>
-          
+
           <Button size="sm">
             Publish
           </Button>
@@ -87,7 +87,7 @@ const ModernLayout: React.FC = () => {
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       {renderHeader()}
-      
+
       <div className="flex-1 flex overflow-hidden">
         {!isPreviewMode && (
           <div className="w-72 border-r border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden">
@@ -110,11 +110,11 @@ const ModernLayout: React.FC = () => {
                   </TabsTrigger>
                 </TabsList>
               </div>
-              
+
               <TabsContent value="components" className="flex-1 overflow-hidden m-0 border-0">
                 <ModernComponentPanel onComponentClick={handleAddComponent} />
               </TabsContent>
-              
+
               <TabsContent value="layers" className="flex-1 overflow-auto m-0 p-4 border-0">
                 <div className="text-sm">
                   <h3 className="font-medium mb-2">Element Hierarchy</h3>
@@ -127,15 +127,15 @@ const ModernLayout: React.FC = () => {
             </Tabs>
           </div>
         )}
-        
+
         <div className="flex-1 flex overflow-hidden">
-          <ModernCanvas 
-            isPreviewMode={isPreviewMode} 
-            currentBreakpoint={breakpoint} 
+          <ModernCanvas
+            isPreviewMode={isPreviewMode}
+            currentBreakpoint={breakpoint}
             onBreakpointChange={handleBreakpointChange}
           />
         </div>
-        
+
         {!isPreviewMode && (
           <div className="w-80 border-l border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden">
             <Tabs value={rightPanelTab} onValueChange={(v) => setRightPanelTab(v as 'properties' | 'workflow')}>
@@ -157,14 +157,14 @@ const ModernLayout: React.FC = () => {
                   </TabsTrigger>
                 </TabsList>
               </div>
-              
+
               <TabsContent value="properties" className="flex-1 m-0 border-0 overflow-hidden">
-                <ModernPropertyPanel 
+                <ModernPropertyPanel
                   onResponsiveChange={handleBreakpointChange}
                   currentBreakpoint={breakpoint}
                 />
               </TabsContent>
-              
+
               <TabsContent value="workflow" className="flex-1 m-0 border-0 overflow-hidden">
                 <WorkflowPanel />
               </TabsContent>

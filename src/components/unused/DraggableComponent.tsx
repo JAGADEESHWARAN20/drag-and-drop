@@ -4,7 +4,7 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { ComponentType, SVGProps } from 'react';
-import { ComponentProps } from '../types';
+import { ComponentProps } from '../../types';
 
 interface LibraryComponent {
   type: string;
@@ -37,9 +37,8 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) =>
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`p-3 border rounded-lg cursor-grab bg-white dark:bg-gray-800 flex flex-col items-center justify-center text-sm transition-all hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-sm ${
-        isDragging ? 'opacity-50 cursor-grabbing shadow-lg scale-105' : ''
-      }`}
+      className={`p-3 border rounded-lg cursor-grab bg-white dark:bg-gray-800 flex flex-col items-center justify-center text-sm transition-all hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-sm ${isDragging ? 'opacity-50 cursor-grabbing shadow-lg scale-105' : ''
+        }`}
       style={{
         touchAction: 'none',
         userSelect: 'none',

@@ -2,7 +2,7 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useWebsiteStore } from '../store/WebsiteStore';
+import { useWebsiteStore } from '../../store/WebsiteStore';
 import { X, MoveVertical } from 'lucide-react';
 
 export type PositionType = 'relative' | 'absolute' | 'fixed' | 'sticky';

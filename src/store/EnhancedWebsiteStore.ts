@@ -1,59 +1,58 @@
-
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { 
-  ProjectStructure, 
-  ProjectElement, 
-  LibraryComponent, 
+import {
+  ProjectStructure,
+  ProjectElement,
+  LibraryComponent,
   Communication,
   DragDropState,
-  ProjectFunction 
+  ProjectFunction
 } from '../types/ProjectStructure';
 
 interface EnhancedWebsiteState {
   // Current project data
   currentProject: ProjectStructure;
-  
+
   // UI State
   selectedElementId: string | null;
   sidebarOpen: boolean;
   breakpoint: 'mobile' | 'tablet' | 'desktop';
-  
+
   // Actions
   createProject: (name: string, description?: string) => void;
   saveProject: () => Promise<void>;
   loadProject: (projectId: string) => Promise<void>;
-  
+
   // Element management
   addElement: (componentType: string, parentId?: string | null, position?: { x: number; y: number }) => string;
   removeElement: (elementId: string) => void;
   updateElement: (elementId: string, updates: Partial<ProjectElement>) => void;
   moveElement: (elementId: string, newParentId: string | null, position?: number) => void;
   reorderElements: (parentId: string | null, elementIds: string[]) => void;
-  
+
   // Style management
   updateElementStyles: (elementId: string, styles: Record<string, any>, breakpoint?: string) => void;
   addCustomClass: (elementId: string, className: string) => void;
   removeCustomClass: (elementId: string, className: string) => void;
-  
+
   // Function management
   addFunction: (func: Omit<ProjectFunction, 'id'>) => string;
   updateFunction: (functionId: string, updates: Partial<ProjectFunction>) => void;
   removeFunction: (functionId: string) => void;
   attachFunctionToElement: (elementId: string, functionId: string, event: string) => void;
-  
+
   // Communication system
   addCommunication: (communication: Omit<Communication, 'id'>) => string;
   removeCommunication: (communicationId: string) => void;
   updateCommunication: (communicationId: string, updates: Partial<Communication>) => void;
-  
+
   // Drag and drop
   startDrag: (component: LibraryComponent | ProjectElement, source: string) => void;
   endDrag: () => void;
   updateDragPosition: (x: number, y: number) => void;
   setDropZoneValid: (elementId: string, position: 'before' | 'after' | 'inside') => void;
   setDropZoneInvalid: (reason: string) => void;
-  
+
   // UI actions
   setSelectedElement: (elementId: string | null) => void;
   setSidebarOpen: (open: boolean) => void;
@@ -280,11 +279,11 @@ export const useEnhancedWebsiteStore = create<EnhancedWebsiteState>((set, get) =
       ...currentProject,
       updatedAt: new Date().toISOString()
     };
-    
+
     // Save to localStorage for now
     localStorage.setItem(`project_${currentProject.projectId}`, JSON.stringify(updatedProject));
     set({ currentProject: updatedProject });
-    
+
     console.log('Project saved:', updatedProject);
   },
 
@@ -299,7 +298,7 @@ export const useEnhancedWebsiteStore = create<EnhancedWebsiteState>((set, get) =
   addElement: (componentType, parentId = null, position) => {
     const { currentProject } = get();
     const elementId = `elem_${componentType}_${uuidv4().slice(0, 8)}`;
-    
+
     // Find component definition
     let componentDef: LibraryComponent | null = null;
     Object.values(currentProject.componentLibrary).forEach(category => {
@@ -387,7 +386,7 @@ export const useEnhancedWebsiteStore = create<EnhancedWebsiteState>((set, get) =
     set(state => {
       const updatedElements = { ...state.currentProject.elements };
       const element = updatedElements[elementId];
-      
+
       if (!element) return state;
 
       // Remove from parent's children array
@@ -442,7 +441,7 @@ export const useEnhancedWebsiteStore = create<EnhancedWebsiteState>((set, get) =
     set(state => {
       const updatedElements = { ...state.currentProject.elements };
       const element = updatedElements[elementId];
-      
+
       if (!element) return state;
 
       // Remove from old parent
@@ -483,7 +482,7 @@ export const useEnhancedWebsiteStore = create<EnhancedWebsiteState>((set, get) =
   reorderElements: (parentId, elementIds) => {
     set(state => {
       const updatedElements = { ...state.currentProject.elements };
-      
+
       if (parentId && updatedElements[parentId]) {
         updatedElements[parentId] = {
           ...updatedElements[parentId],
@@ -507,7 +506,7 @@ export const useEnhancedWebsiteStore = create<EnhancedWebsiteState>((set, get) =
       if (!element) return state;
 
       const updatedStyles = { ...element.styles };
-      
+
       if (breakpoint && ['mobile', 'tablet', 'desktop'].includes(breakpoint)) {
         updatedStyles.responsive = {
           ...updatedStyles.responsive,

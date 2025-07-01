@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { ComponentLibrary } from '../../data/ComponentLibrary';
 import { Search, PlusCircle, Layout, Type, Image as ImageIcon, Layers, Grid3X3, MousePointerClick } from 'lucide-react';
 import { useWebsiteStore } from '../../store/WebsiteStore';
-import DraggableComponent from '../DraggableComponent';
+import DraggableComponent from './DraggableComponent';
 import { Input } from '../ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { ComponentProps } from '../../types';
@@ -33,16 +33,16 @@ const ModernComponentPanel: React.FC<ComponentPanelProps> = ({ onComponentClick 
 
   const renderCategory = (category: string, icon: JSX.Element) => {
     const components = filteredComponents(category);
-    
+
     if (components.length === 0 && searchTerm) return null;
-    
+
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400">
           {icon}
           <span>{category}</span>
         </div>
-        
+
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {components.map((component) => (
             <div
@@ -94,17 +94,17 @@ const ModernComponentPanel: React.FC<ComponentPanelProps> = ({ onComponentClick 
           <TabsTrigger value="content">Content</TabsTrigger>
           <TabsTrigger value="media">Media</TabsTrigger>
         </TabsList>
-        
+
         <div className="overflow-y-auto h-[calc(100%-2.5rem)] space-y-6 pr-2">
           <TabsContent value="layout" className="mt-0 space-y-6">
             {renderCategory('layout', <Layout size={16} />)}
           </TabsContent>
-          
+
           <TabsContent value="content" className="mt-0 space-y-6">
             {renderCategory('Typography', <Type size={16} />)}
             {renderCategory('Interactive', <MousePointerClick size={16} />)}
           </TabsContent>
-          
+
           <TabsContent value="media" className="mt-0 space-y-6">
             {renderCategory('Media', <ImageIcon size={16} />)}
             {renderCategory('Data Display', <Layers size={16} />)}

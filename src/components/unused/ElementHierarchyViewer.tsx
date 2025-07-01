@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useWebsiteStore } from '../store/WebsiteStore';
+import { useWebsiteStore } from '../../store/WebsiteStore';
 import {
     DndContext,
     DragEndEvent,
@@ -40,7 +40,7 @@ const SortableHierarchyItem: React.FC<SortableHierarchyItemProps> = ({
         transform,
         transition,
         isDragging,
-    } = useSortable({ 
+    } = useSortable({
         id: component.id,
         data: {
             type: 'hierarchy-item',
@@ -68,11 +68,10 @@ const SortableHierarchyItem: React.FC<SortableHierarchyItemProps> = ({
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
             <div
-                className={`flex items-center p-1 rounded my-1 ${
-                    component.id === selectedComponentId
+                className={`flex items-center p-1 rounded my-1 ${component.id === selectedComponentId
                         ? 'bg-blue-100 dark:bg-blue-800'
                         : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-                }`}
+                    }`}
                 onClick={() => setSelectedComponentId(component.id)}
             >
                 {hasChildren && (
@@ -81,16 +80,16 @@ const SortableHierarchyItem: React.FC<SortableHierarchyItemProps> = ({
                     </button>
                 )}
                 {!hasChildren && <span className="w-5" />}
-                
+
                 <span className="ml-1 flex items-center">
                     <Layers size={14} className="mr-1 text-blue-500 dark:text-blue-400" />
-                    {component.type} 
+                    {component.type}
                     <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
                         ({component.id.slice(0, 5)})
                     </span>
                 </span>
             </div>
-            
+
             {hasChildren && isExpanded && (
                 <SortableHierarchy parentId={component.id} level={level + 1} />
             )}
@@ -132,9 +131,9 @@ const ElementHierarchyViewer: React.FC = () => {
         updateComponentParent,
         updateComponentOrder,
     } = useWebsiteStore();
-    
+
     const sensors = useSensors(
-        useSensor(PointerSensor, { 
+        useSensor(PointerSensor, {
             activationConstraint: { distance: 8 } // Smaller distance to activate dragging
         })
     );
@@ -173,7 +172,7 @@ const ElementHierarchyViewer: React.FC = () => {
     };
 
     const rootComponents = components.filter((c) => c.parentId === null);
-    
+
     if (rootComponents.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center h-32 text-gray-500 dark:text-gray-400">
@@ -188,8 +187,8 @@ const ElementHierarchyViewer: React.FC = () => {
 
     return (
         <div className="overflow-auto max-h-[calc(100vh-200px)] pr-2 clean-scrollbar sticky-container">
-            <DndContext 
-                onDragEnd={handleDragEnd} 
+            <DndContext
+                onDragEnd={handleDragEnd}
                 collisionDetection={closestCenter}
                 sensors={sensors}
             >

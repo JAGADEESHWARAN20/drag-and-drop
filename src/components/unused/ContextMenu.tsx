@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { useWebsiteStore } from '../store/WebsiteStore';
+import { useWebsiteStore } from '../../store/WebsiteStore';
 import Button from '@/components/ui/button';
 
 interface ContextMenuProps {

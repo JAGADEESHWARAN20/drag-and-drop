@@ -1,20 +1,14 @@
 'use client';
 
 import React, { useState, forwardRef, useMemo, useCallback } from 'react';
-import { ComponentLibrary } from '../data/ComponentLibrary';
+import { ComponentLibrary } from '../../data/ComponentLibrary';
 import { Search, MousePointerClick } from 'lucide-react';
 import { ComponentType, SVGProps } from 'react';
 import Button from '@/components/ui/button';
-import {
-  SortableContext,
-  horizontalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { useWebsiteStore } from '../store/WebsiteStore';
+import { useWebsiteStore } from '../../store/WebsiteStore';
 import DraggableComponent from './DraggableComponent';
 import { UniqueIdentifier } from '@dnd-kit/core';
-import { ComponentProps } from '../types';
+import { ComponentProps } from '../../types';
 
 interface LibraryComponent {
   type: string;
@@ -26,35 +20,6 @@ interface LibraryComponent {
 interface ComponentPanelProps {
   onComponentClick: (type: string, defaultProps: ComponentProps) => void;
 }
-
-interface SortableLibraryComponentProps {
-  component: LibraryComponent;
-  onComponentClick: (type: string, defaultProps: ComponentProps) => void;
-}
-
-const SortableLibraryComponent = ({ component, onComponentClick }: SortableLibraryComponentProps) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: component.type });
-  // Only set style if transform or transition is present
-  const dynamicStyle: React.CSSProperties = {};
-  if (transform) dynamicStyle.transform = CSS.Transform.toString(transform);
-  if (transition) dynamicStyle.transition = transition;
-  const dynamicClass = transform ? ' will-change-transform' : '';
-
-  return (
-    <div
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      style={Object.keys(dynamicStyle).length ? dynamicStyle : undefined}
-      className={
-        `p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 flex-shrink-0 hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700${dynamicClass}`
-      }
-      onClick={() => onComponentClick(component.type, component.defaultProps)}
-    >
-      <DraggableComponent component={component} />
-    </div>
-  );
-};
 
 const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComponentClick }, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -140,23 +105,16 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
         </div>
       )}
 
-      <SortableContext
-        items={filteredComponents.map((component) => component.type as UniqueIdentifier)}
-        strategy={horizontalListSortingStrategy}
+      <div
+        className="flex space-x-2 overflow-x-auto overflow-y-hidden min-h-0 flex-1 touch-pan-x"
+        onDragStart={handleDragStart}
       >
-        <div
-          className="flex space-x-2 overflow-x-auto overflow-y-hidden min-h-0 flex-1 touch-pan-x"
-          onDragStart={handleDragStart}
-        >
-          {filteredComponents.map((component) => (
-            <SortableLibraryComponent
-              key={component.type}
-              component={component}
-              onComponentClick={onComponentClick}
-            />
-          ))}
-        </div>
-      </SortableContext>
+        {filteredComponents.map((component) => (
+          <div key={component.type}>
+            <DraggableComponent component={component} />
+          </div>
+        ))}
+      </div>
 
       {filteredComponents.length === 0 && searchTerm && (
         <div className="text-center text-gray-500 dark:text-gray-400">

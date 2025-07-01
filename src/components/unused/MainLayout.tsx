@@ -1,9 +1,9 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
+import { useWebsiteStore, Breakpoint } from '../../store/WebsiteStore';
 import { Page, ComponentProps } from '@/types';
 import ComponentPanel from './ComponentPanel';
-import Canvas from './unused/Canvas';
+import ModernCanvas from '../ModernCanvas';
 import PropertyPanel from './PropertyPanel';
 import { Menu, ChevronRight, ChevronLeft, X, Download, Smartphone, Tablet, Monitor, Layers, Code, Pen, Plus } from 'lucide-react';
 import Button from '@/components/ui/button';
@@ -120,7 +120,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
      const handleComponentAdd = (type: string, defaultProps: ComponentProps) => {
           const newId = uuidv4();
           addComponent({
-                // Assign a unique ID immediately
+               // Assign a unique ID immediately
                type,
                props: defaultProps || {},
                pageId: currentPageId,
@@ -156,7 +156,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           if (active.data?.current?.type === 'COMPONENT_LIB_ITEM') {
                const { componentType, defaultProps } = active.data.current;
                setDraggingComponent({ type: componentType, defaultProps });
-               
+
                if (componentPanelRef.current) {
                     componentPanelRef.current.style.pointerEvents = 'none';
                     setSheetOpen(false);
@@ -175,7 +175,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           if (active?.data?.current?.type === 'COMPONENT_LIB_ITEM' && over?.id === 'canvas-drop-area') {
                const newComponentId = uuidv4();
                addComponent({
-                    
+
                     type: active.data.current.componentType,
                     props: active.data.current.defaultProps || {},
                     pageId: currentPageId,
@@ -471,7 +471,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                    </Drawer>
                               )}
 
-                              <Canvas isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
+                              <ModernCanvas onBreakpointChange={setBreakpoint} isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
                          </div>
                     </div>
                </div>

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useWebsiteStore } from '../store/WebsiteStore';
+import { useWebsiteStore } from '../../store/WebsiteStore';
 
 const SelectionManager = () => {
      const { setSelectedComponentId } = useWebsiteStore();
