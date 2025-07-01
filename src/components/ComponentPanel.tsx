@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, forwardRef, useMemo, useCallback } from 'react';
@@ -15,38 +14,41 @@ import { CSS } from '@dnd-kit/utilities';
 import { useWebsiteStore } from '../store/WebsiteStore';
 import DraggableComponent from './DraggableComponent';
 import { UniqueIdentifier } from '@dnd-kit/core';
+import { ComponentProps } from '../types';
 
 interface LibraryComponent {
   type: string;
   label: string;
   icon: ComponentType<SVGProps<SVGSVGElement> & { size?: string | number }>;
-  defaultProps: Record<string, any>;
+  defaultProps: ComponentProps;
 }
 
 interface ComponentPanelProps {
-  onComponentClick: (type: string, defaultProps: Record<string, any>) => void;
+  onComponentClick: (type: string, defaultProps: ComponentProps) => void;
 }
 
 interface SortableLibraryComponentProps {
   component: LibraryComponent;
-  onComponentClick: (type: string, defaultProps: Record<string, any>) => void;
+  onComponentClick: (type: string, defaultProps: ComponentProps) => void;
 }
 
 const SortableLibraryComponent = ({ component, onComponentClick }: SortableLibraryComponentProps) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: component.type });
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    cursor: 'grab',
-  };
+  // Only set style if transform or transition is present
+  const dynamicStyle: React.CSSProperties = {};
+  if (transform) dynamicStyle.transform = CSS.Transform.toString(transform);
+  if (transition) dynamicStyle.transition = transition;
+  const dynamicClass = transform ? ' will-change-transform' : '';
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
       {...attributes}
       {...listeners}
-      className="p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 flex-shrink-0 hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700"
+      style={Object.keys(dynamicStyle).length ? dynamicStyle : undefined}
+      className={
+        `p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 flex-shrink-0 hover:bg-gray-50 hover:border-blue-300 transition-colors dark:bg-slate-700${dynamicClass}`
+      }
       onClick={() => onComponentClick(component.type, component.defaultProps)}
     >
       <DraggableComponent component={component} />
@@ -143,13 +145,7 @@ const ComponentPanel = forwardRef<HTMLDivElement, ComponentPanelProps>(({ onComp
         strategy={horizontalListSortingStrategy}
       >
         <div
-          className="flex space-x-2 overflow-x-auto"
-          style={{
-            overflowY: 'hidden',
-            minHeight: '0',
-            flex: '1 1 auto',
-            touchAction: 'pan-x',
-          }}
+          className="flex space-x-2 overflow-x-auto overflow-y-hidden min-h-0 flex-1 touch-pan-x"
           onDragStart={handleDragStart}
         >
           {filteredComponents.map((component) => (

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { ComponentLibrary } from '../data/ComponentLibrary';
 import { Search, PlusCircle, Layout, Type, Image as ImageIcon, Layers, Grid3X3, MousePointerClick } from 'lucide-react';
@@ -6,9 +5,10 @@ import { useWebsiteStore } from '../store/WebsiteStore';
 import DraggableComponent from './DraggableComponent';
 import { Input } from './ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
+import { ComponentProps } from '../types';
 
 interface ComponentPanelProps {
-  onComponentClick: (type: string, defaultProps: Record<string, any>) => void;
+  onComponentClick: (type: string, defaultProps: ComponentProps) => void;
 }
 
 const ModernComponentPanel: React.FC<ComponentPanelProps> = ({ onComponentClick }) => {
@@ -97,7 +97,7 @@ const ModernComponentPanel: React.FC<ComponentPanelProps> = ({ onComponentClick 
         
         <div className="overflow-y-auto h-[calc(100%-2.5rem)] space-y-6 pr-2">
           <TabsContent value="layout" className="mt-0 space-y-6">
-            {renderCategory('Layout', <Layout size={16} />)}
+            {renderCategory('layout', <Layout size={16} />)}
           </TabsContent>
           
           <TabsContent value="content" className="mt-0 space-y-6">

@@ -1,4 +1,3 @@
-
 import {
   Heading,
   Text,
@@ -17,6 +16,7 @@ import {
   LayoutGrid,
   SeparatorHorizontal,
 } from 'lucide-react';
+import { ComponentProps } from '../types';
 
 interface ComponentDefaultProps {
   [key: string]: string | number | string[] | { [key: string]: string | number } | string[][];
@@ -26,7 +26,7 @@ interface ComponentType {
   type: string;
   label: string;
   icon: React.ComponentType;
-  defaultProps: ComponentDefaultProps;
+  defaultProps: ComponentProps;
 }
 
 export const ComponentLibrary: Record<'basic' | 'layout' | 'advanced', ComponentType[]> = {
