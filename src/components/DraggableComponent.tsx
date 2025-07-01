@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { ComponentType, SVGProps } from 'react';
 import { ComponentProps } from '../types';
@@ -18,8 +18,6 @@ interface DraggableComponentProps {
 }
 
 const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) => {
-  const dragRef = useRef<HTMLDivElement>(null);
-  
   const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({
     id: `draggable-${component.type}`,
     data: {
@@ -29,30 +27,29 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) =>
     },
   });
 
-  useEffect(() => {
-    setNodeRef(dragRef.current);
-  }, [setNodeRef]);
-
   const style = transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+    zIndex: isDragging ? 1000 : 'auto',
   } : undefined;
 
   return (
     <div
-      ref={dragRef}
+      ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 md:w-24 md:h-24 flex-shrink-0 hover:border-blue-300 transition-colors ${isDragging ? 'opacity-50 cursor-grabbing shadow-lg' : ''}`}
+      className={`p-3 border rounded-lg cursor-grab bg-white dark:bg-gray-800 flex flex-col items-center justify-center text-sm transition-all hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-sm ${
+        isDragging ? 'opacity-50 cursor-grabbing shadow-lg scale-105' : ''
+      }`}
       style={{
         touchAction: 'none',
         userSelect: 'none',
         ...style,
       }}
     >
-      <div className="text-blue-500 mb-1 dark:text-white">
-        <component.icon size={20} aria-hidden="true" />
+      <div className="text-blue-500 dark:text-blue-400 mb-2">
+        <component.icon size={24} aria-hidden="true" />
       </div>
-      <span className="text-black dark:text-white text-center">
+      <span className="text-gray-700 dark:text-gray-300 text-center font-medium">
         {component.label}
       </span>
     </div>

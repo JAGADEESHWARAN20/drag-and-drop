@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useCallback } from 'react';
 import {
   DndContext,
@@ -95,7 +96,10 @@ const ModernCanvas: React.FC<CanvasProps> = ({
   const renderComponent = useCallback(
     (componentData: Component): React.ReactNode => {
       const DynamicComponent = ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.component as React.ComponentType<any>;
-      if (!DynamicComponent) return null;
+      if (!DynamicComponent) {
+        console.warn(`Component ${componentData.type} not found in registry`);
+        return null;
+      }
 
       const responsiveProps = componentData.responsiveProps?.[currentBreakpoint] || {};
       const mergedProps = { ...componentData.props, ...responsiveProps };
@@ -123,7 +127,7 @@ const ModernCanvas: React.FC<CanvasProps> = ({
                 ))}
               </SortableContext>
             )}
-            {ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.allowChildren && !isPreviewMode && childComponents.length === 0 && (
+            {componentData.allowChildren && !isPreviewMode && childComponents.length === 0 && (
               <div
                 className="border-dashed border-2 border-gray-300 rounded-md p-4 text-gray-500 text-center dark:border-gray-700 dark:text-gray-400"
                 style={{ minHeight: '40px' }}
@@ -176,41 +180,50 @@ const ModernCanvas: React.FC<CanvasProps> = ({
     const { active, over } = event;
     setActiveId(null);
 
-    if (!active || !over) {
-      console.log('No active or over element, ending drag');
+    if (!active) {
+      console.log('No active element, ending drag');
       setDraggingComponent(null);
       return;
     }
 
     // Handle dropping from component panel to canvas
-    if (active.data?.current?.type === 'COMPONENT' && over.id === 'canvas-drop-area') {
-      const { componentType, defaultProps } = active.data.current;
-      console.log('Adding component to canvas:', componentType);
+    if (active.data?.current?.type === 'COMPONENT') {
+      console.log('Component drop detected, over element:', over?.id);
       
-      const componentId = addComponent({
-        type: componentType,
-        props: defaultProps,
-        pageId: currentPage.id,
-        parentId: null,
-        responsiveProps: {
-          desktop: {},
-          tablet: {},
-          mobile: {},
-        },
-        allowChildren: componentType === 'Container' || componentType === 'Section' || componentType === 'Grid',
-        children: [], 
-      });
-      
-      toast({
-        title: "Component Added",
-        description: `${componentType} has been added to the canvas`,
-      });
+      if (over?.id === 'canvas-drop-area' || !over) {
+        const { componentType, defaultProps } = active.data.current;
+        console.log('Adding component to canvas:', componentType);
+        
+        const componentId = addComponent({
+          type: componentType,
+          props: defaultProps,
+          pageId: currentPage.id,
+          parentId: null,
+          responsiveProps: {
+            desktop: {},
+            tablet: {},
+            mobile: {},
+          },
+          allowChildren: componentType === 'Container' || componentType === 'Section' || componentType === 'Grid',
+          children: [], 
+        });
+        
+        toast({
+          title: "Component Added",
+          description: `${componentType} has been added to the canvas`,
+        });
+        setSelectedComponentId(componentId);
+      }
       setDraggingComponent(null);
-      setSelectedComponentId(componentId);
       return;
     }
 
     // Handle reordering or moving existing components
+    if (!over) {
+      setDraggingComponent(null);
+      return;
+    }
+
     const activeIdStr = active.id as string;
     const overId = over.id as string;
 
@@ -368,7 +381,7 @@ const ModernCanvas: React.FC<CanvasProps> = ({
                   </DroppableContainer>
                 ))}
               </SortableContext>
-              {rootComponents.length === 0 && !isPreviewMode && isOverCanvas && draggingComponent && (
+              {isOverCanvas && !isPreviewMode && draggingComponent && (
                 <div className="absolute top-0 left-0 w-full h-full bg-blue-100/30 dark:bg-blue-900/20 flex items-center justify-center pointer-events-none">
                   <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-lg border border-blue-300 dark:border-blue-700">
                     <p className="text-blue-600 dark:text-blue-400 flex items-center gap-2">
