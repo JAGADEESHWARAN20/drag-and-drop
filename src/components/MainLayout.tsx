@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
@@ -446,7 +447,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                               )}
 
                               {!isPreviewMode && (
-                                   <Drawer open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen} className="md:w-80">
+                                   <Drawer open={isHierarchyOpen} onOpenChange={setIsHierarchyOpen}>
                                         <DrawerTrigger asChild>
                                              <Button
                                                   variant="ghost"
