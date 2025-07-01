@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useCallback } from 'react';
 import {
   DndContext,
@@ -17,7 +16,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
-import { Component } from '../types';
+import { Component, ComponentProps } from '../types';
 import { ComponentRegistry } from '../utils/ComponentRegistry';
 import DroppableContainer from './DroppableContainer';
 import { toast } from '@/components/ui/use-toast';
@@ -260,7 +259,7 @@ const ModernCanvas: React.FC<CanvasProps> = ({
     
     console.log('Rendering drag overlay for:', draggingComponent.type);
     const componentType = draggingComponent.type;
-    const DynamicComponent = ComponentRegistry[componentType as keyof typeof ComponentRegistry]?.component as React.ComponentType<any>;
+    const DynamicComponent = ComponentRegistry[componentType as keyof typeof ComponentRegistry]?.component as React.ComponentType<ComponentProps>;
     
     if (!DynamicComponent) {
       console.warn('No component found for type:', componentType);

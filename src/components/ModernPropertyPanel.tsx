@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Settings, Layout, Type, PaintBucket, Box, Layers, ArrowRight } from 'lucide-react';
 import { useWebsiteStore } from '../store/WebsiteStore';
@@ -47,7 +46,7 @@ const ModernPropertyPanel: React.FC<PropertyPanelProps> = ({ onResponsiveChange,
   // Find PropertyEditor component for the selected component's type
   const PropertyEditor = PropertyEditors[selectedComponent.type];
   
-  const handleUpdateProps = (key: string, value: any) => {
+  const handleUpdateProps = (key: string, value: unknown) => {
     if (currentBreakpoint === 'desktop') {
       updateComponentProps(selectedComponent.id, { [key]: value });
     } else {

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
 import { Page, ComponentProps } from '@/types';
 import ComponentPanel from './ComponentPanel';
-import Canvas from './Canvas';
+import Canvas from './unused/Canvas';
 import PropertyPanel from './PropertyPanel';
 import { Menu, ChevronRight, ChevronLeft, X, Download, Smartphone, Tablet, Monitor, Layers, Code, Pen, Plus } from 'lucide-react';
 import Button from '@/components/ui/button';

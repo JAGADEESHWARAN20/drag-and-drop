@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import SplitPane from 'react-split-pane';
 import {
@@ -15,6 +14,7 @@ import WorkflowPanel from './WorkflowPanel';
 import { Layers, Settings, Box, Workflow, MoveRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
+import { ComponentProps } from '../types';
 
 const ModernLayout: React.FC = () => {
   const { addComponent, breakpoint, setBreakpoint } = useWebsiteStore();
@@ -25,7 +25,7 @@ const ModernLayout: React.FC = () => {
     setBreakpoint(newBreakpoint);
   };
 
-  const handleAddComponent = (type: string, defaultProps: Record<string, any>) => {
+  const handleAddComponent = (type: string, defaultProps: ComponentProps) => {
     const componentId = addComponent({
       type,
       props: defaultProps,
