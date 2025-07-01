@@ -1,8 +1,7 @@
-
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
-import { Page } from '@/types';
+import { Page, ComponentProps } from '@/types';
 import ComponentPanel from './ComponentPanel';
 import Canvas from './Canvas';
 import PropertyPanel from './PropertyPanel';
@@ -118,7 +117,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           setIsPageSheetOpen(false);
      };
 
-     const handleComponentAdd = (type: string, defaultProps: Record<string, any>) => {
+     const handleComponentAdd = (type: string, defaultProps: ComponentProps) => {
           const newId = uuidv4();
           addComponent({
                 // Assign a unique ID immediately
