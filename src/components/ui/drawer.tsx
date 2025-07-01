@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 import { X } from "lucide-react";
@@ -60,7 +61,7 @@ const DrawerContent = React.forwardRef<
     >
       {children}
     </DrawerPrimitive.Content>
-  </DrawerPortal>
+  </DrawerPrimitive.Portal>
 ));
 DrawerContent.displayName = "DrawerContent";
 
