@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useCallback } from 'react';
 import {
   DndContext,
@@ -25,6 +24,7 @@ import { motion } from 'framer-motion';
 import SelectionManager from './SelectionManager';
 import { MessageSquare, Smartphone, Tablet, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import styles from './ModernCanvas.module.css';
 
 interface CanvasProps {
   isPreviewMode: boolean;
@@ -95,7 +95,7 @@ const ModernCanvas: React.FC<CanvasProps> = ({
 
   const renderComponent = useCallback(
     (componentData: Component): React.ReactNode => {
-      const DynamicComponent = ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.component as React.ComponentType<any>;
+      const DynamicComponent = ComponentRegistry[componentData.type as keyof typeof ComponentRegistry]?.component as React.ComponentType<ComponentProps>;
       if (!DynamicComponent) {
         console.warn(`Component ${componentData.type} not found in registry`);
         return null;
@@ -129,8 +129,7 @@ const ModernCanvas: React.FC<CanvasProps> = ({
             )}
             {componentData.allowChildren && !isPreviewMode && childComponents.length === 0 && (
               <div
-                className="border-dashed border-2 border-gray-300 rounded-md p-4 text-gray-500 text-center dark:border-gray-700 dark:text-gray-400"
-                style={{ minHeight: '40px' }}
+                className={`border-dashed border-2 border-gray-300 rounded-md p-4 text-gray-500 text-center dark:border-gray-700 dark:text-gray-400 ${styles.emptyContainer}`}
               >
                 Drop components here
               </div>
@@ -160,7 +159,6 @@ const ModernCanvas: React.FC<CanvasProps> = ({
     const { active } = event;
     setActiveId(active.id as string);
     
-    // Check if we're dragging from the component panel
     if (active.data?.current?.type === 'COMPONENT') {
       const { componentType, defaultProps } = active.data.current;
       console.log('Dragging component from panel:', componentType);
@@ -168,12 +166,11 @@ const ModernCanvas: React.FC<CanvasProps> = ({
       return;
     }
     
-    // Handle existing component drag
     const activeComponent = components.find(c => c.id === active.id);
     if (activeComponent) {
       setDraggingComponent({ type: activeComponent.type, defaultProps: activeComponent.props });
     }
-  }, [components, setDraggingComponent]);
+  }, [setDraggingComponent]);
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     console.log('Canvas Drag end event:', event);
@@ -186,7 +183,6 @@ const ModernCanvas: React.FC<CanvasProps> = ({
       return;
     }
 
-    // Handle dropping from component panel to canvas
     if (active.data?.current?.type === 'COMPONENT') {
       console.log('Component drop detected, over element:', over?.id);
       
@@ -218,7 +214,6 @@ const ModernCanvas: React.FC<CanvasProps> = ({
       return;
     }
 
-    // Handle reordering or moving existing components
     if (!over) {
       setDraggingComponent(null);
       return;
@@ -235,7 +230,6 @@ const ModernCanvas: React.FC<CanvasProps> = ({
       return;
     }
 
-    // Reordering within the same parent
     if (activeComponent.parentId === overComponent?.parentId) {
       const parentId = activeComponent.parentId;
       const siblings = getChildComponents(parentId).map(c => c.id);
@@ -248,14 +242,12 @@ const ModernCanvas: React.FC<CanvasProps> = ({
         toast({ title: 'Component Reordered', description: 'Components have been reordered.' });
       }
     }
-    // Moving to a new parent
     else if (overComponent && overComponent.allowChildren) {
       updateComponentParent(activeIdStr, overComponent.id);
       const newChildrenOrder = [...getChildComponents(overComponent.id).map(c => c.id), activeIdStr];
       updateComponentOrder(overComponent.id, newChildrenOrder);
       toast({ title: 'Component Moved', description: `Moved ${activeComponent.type} into ${overComponent.type}.` });
     }
-    // Moving to the root level
     else if (overId === 'canvas-drop-area') {
       updateComponentParent(activeIdStr, null);
       const rootSiblings = getChildComponents(null).map(c => c.id);
@@ -290,7 +282,6 @@ const ModernCanvas: React.FC<CanvasProps> = ({
 
   return (
     <div className="relative flex-1 overflow-auto bg-gray-100 dark:bg-gray-800 p-6">
-      {/* Breakpoint selector */}
       <div className="absolute top-4 right-4 flex space-x-2 z-20">
         <Button
           variant={currentBreakpoint === 'mobile' ? 'default' : 'outline'}
@@ -321,7 +312,6 @@ const ModernCanvas: React.FC<CanvasProps> = ({
         </Button>
       </div>
 
-      {/* Comments toggle button */}
       <div className="absolute top-4 left-4 z-20">
         <Button variant="outline" size="sm" className="h-9 gap-1">
           <MessageSquare className="h-4 w-4" />
@@ -337,10 +327,7 @@ const ModernCanvas: React.FC<CanvasProps> = ({
       >
         <div className="flex justify-center pt-16">
           <div
-            className={`transition-all duration-300 mx-auto ${getCanvasWidth()}`}
-            style={{ 
-              minHeight: 'calc(100vh - 10rem)',
-            }}
+            className={`transition-all duration-300 mx-auto ${getCanvasWidth()} ${styles.canvasContainer}`}
           >
             <div
               ref={setCanvasDroppableRef}
