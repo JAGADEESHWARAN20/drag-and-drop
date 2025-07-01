@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import SplitPane from 'react-split-pane';
+
 import {
   Tabs,
   TabsList,
@@ -132,8 +132,7 @@ const ModernLayout: React.FC = () => {
           <ModernCanvas
             isPreviewMode={isPreviewMode}
             currentBreakpoint={breakpoint}
-            onBreakpointChange={handleBreakpointChange}
-          />
+            onBreakpointChange={handleBreakpointChange} isLeftPanelOpen={false}          />
         </div>
 
         {!isPreviewMode && (

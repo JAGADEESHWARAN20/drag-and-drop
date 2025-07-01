@@ -471,7 +471,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                    </Drawer>
                               )}
 
-                              <ModernCanvas onBreakpointChange={setBreakpoint} isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} />
+                              <ModernCanvas onBreakpointChange={setBreakpoint} isPreviewMode={isPreviewMode} currentBreakpoint={breakpoint} isLeftPanelOpen={false} />
                          </div>
                     </div>
                </div>

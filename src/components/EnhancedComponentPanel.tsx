@@ -660,7 +660,7 @@ const EnhancedComponentPanel: React.FC<EnhancedComponentPanelProps> = ({ classNa
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
           w-80 md:w-72 flex flex-col ${className}
         `}
-        onDragStart={(e) => e.stopPropagation()}
+       
         role="region"
         aria-label="Component panel"
       >
@@ -725,7 +725,7 @@ const EnhancedComponentPanel: React.FC<EnhancedComponentPanelProps> = ({ classNa
 
         <div className="flex-1 overflow-y-auto p-4">
           {filteredComponents.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div onDragStart={(e) => e.stopPropagation()} className="grid grid-cols-2 gap-3">
               {filteredComponents.map((component) => (
                 <DraggableComponent key={component.id} component={component} />
               ))}
