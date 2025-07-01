@@ -1,12 +1,11 @@
-
 import React, { useState } from 'react';
 import { Settings, Layout, Type, PaintBucket, Box, Layers, ArrowRight } from 'lucide-react';
-import { useWebsiteStore } from '../store/WebsiteStore';
+import { useWebsiteStore } from '../../store/WebsiteStore';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { PropertyEditors } from '../utils/PropertyEditors';
+import { PropertyEditors } from '../../utils/PropertyEditors';
 import { Button } from '@/components/ui/button';
-import { Component, Breakpoint } from '../types';
+import { Component, Breakpoint } from '../../types';
 
 interface PropertyPanelProps {
   onResponsiveChange: (breakpoint: Breakpoint) => void;

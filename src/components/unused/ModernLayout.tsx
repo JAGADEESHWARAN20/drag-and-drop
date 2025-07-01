@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import SplitPane from 'react-split-pane';
 import {
@@ -7,15 +6,15 @@ import {
   TabsTrigger,
   TabsContent
 } from '@/components/ui/tabs';
-import { useWebsiteStore, Breakpoint } from '../store/WebsiteStore';
-import ModernCanvas from './ModernCanvas';
+import { useWebsiteStore, Breakpoint } from '../../store/WebsiteStore';
+import ModernCanvas from '../ModernCanvas';
 import ModernComponentPanel from './ModernComponentPanel';
 import ModernPropertyPanel from './ModernPropertyPanel';
-import WorkflowPanel from './WorkflowPanel';
+import WorkflowPanel from '../WorkflowPanel';
 import { Layers, Settings, Box, Workflow, MoveRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { ComponentProps } from '../types';
+import { ComponentProps } from '../../types';
 
 const ModernLayout: React.FC = () => {
   const { addComponent, breakpoint, setBreakpoint } = useWebsiteStore();

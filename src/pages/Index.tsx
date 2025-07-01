@@ -1,12 +1,12 @@
 
 import React from 'react';
-import ModernLayout from '../components/ModernLayout';
+import EnhancedLayout from '../components/EnhancedLayout';
 import { Toaster } from "@/components/ui/toaster";
 
 const Index: React.FC = () => {
   return (
     <>
-      <ModernLayout />
+      <EnhancedLayout />
       <Toaster />
     </>
   );
