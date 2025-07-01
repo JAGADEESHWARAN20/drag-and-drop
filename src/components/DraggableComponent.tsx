@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useRef, useEffect } from 'react';
@@ -20,18 +21,21 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) =>
   const dragRef = useRef<HTMLDivElement>(null);
   
   const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({
-    id: component.type,
+    id: `draggable-${component.type}`,
     data: {
       type: 'COMPONENT',
       componentType: component.type,
       defaultProps: component.defaultProps,
     },
-    // Remove sensors property as it's not part of UseDraggableArguments
   });
 
   useEffect(() => {
     setNodeRef(dragRef.current);
   }, [setNodeRef]);
+
+  const style = transform ? {
+    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+  } : undefined;
 
   return (
     <div
@@ -40,9 +44,9 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) =>
       {...attributes}
       className={`p-2 border rounded cursor-grab bg-white flex flex-col items-center justify-center text-sm w-20 h-20 md:w-24 md:h-24 flex-shrink-0 hover:border-blue-300 transition-colors ${isDragging ? 'opacity-50 cursor-grabbing shadow-lg' : ''}`}
       style={{
-        touchAction: 'none', // Essential for touch devices
+        touchAction: 'none',
         userSelect: 'none',
-        transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+        ...style,
       }}
     >
       <div className="text-blue-500 mb-1 dark:text-white">
