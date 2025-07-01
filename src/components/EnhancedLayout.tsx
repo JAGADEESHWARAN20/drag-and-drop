@@ -1,11 +1,17 @@
+
 import React, { useState } from 'react';
 import { useEnhancedWebsiteStore } from '../store/EnhancedWebsiteStore';
 import { LibraryComponent } from '../types/ProjectStructure';
-import { Search, Menu, X, Box, Layout, Type, MousePointerClick, Image, Heading, Grid3X3 } from 'lucide-react';
+import { Search, Menu, X, Box, Layout, Type, MousePointerClick, Image, Heading, Grid3X3, Layers, MoveRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/components/ui/use-toast';
 import { useDraggable } from '@dnd-kit/core';
+import ModernCanvas from './ModernCanvas';
+import ElementHierarchy from './ElementHierarchy';
+import MainNavigation from './MainNavigation';
+import { useUndoRedo } from '../hooks/useUndoRedo';
 
 type LucideIcon = React.ComponentType<{ size?: number | string; className?: string }>;
 
@@ -48,11 +54,7 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) =>
   );
 };
 
-interface EnhancedComponentPanelProps {
-  className?: string;
-}
-
-const EnhancedComponentPanel: React.FC<EnhancedComponentPanelProps> = ({ className = '' }) => {
+const EnhancedLayout: React.FC = () => {
   const {
     currentProject,
     sidebarOpen,
@@ -62,6 +64,11 @@ const EnhancedComponentPanel: React.FC<EnhancedComponentPanelProps> = ({ classNa
 
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('layout');
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [currentBreakpoint, setCurrentBreakpoint] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
+  
+  // Undo/Redo functionality
+  const { undo, redo, canUndo, canRedo } = useUndoRedo(currentProject);
 
   const categories = Object.keys(currentProject.componentLibrary);
 
@@ -83,101 +90,110 @@ const EnhancedComponentPanel: React.FC<EnhancedComponentPanelProps> = ({ classNa
   };
 
   return (
-    <>
-      <Button
-        variant="outline"
-        size="sm"
-        className="fixed top-4 left-4 z-50 md:hidden"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-      >
-        {sidebarOpen ? <X size={16} /> : <Menu size={16} />}
-      </Button>
-      <div
-        className={`sidebar dark:sidebar ${sidebarOpen ? 'open' : ''} ${className}`}
-        onDragStart={(e) => e.stopPropagation()}
-      >
-        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Components</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="md:hidden"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X size={16} />
-            </Button>
-          </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search components..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-        </div>
-        <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-800">
-          <div className="flex gap-1 overflow-x-auto">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
-                className={`
-                  px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap
-                  ${activeCategory === category
-                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                  }
-                `}
-              >
-                {currentProject.componentLibrary[category]?.category || category}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border-b border-gray-200 dark:border-gray-800">
-          <div className="flex items-center text-blue-700 dark:text-blue-300">
-            <MousePointerClick size={16} className="mr-2" />
-            <span className="text-sm font-medium">Drag to Canvas</span>
-          </div>
-          <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-            Drag components to the canvas or click to add instantly
-          </p>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4">
-          {filteredComponents.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3">
-              {filteredComponents.map((component) => (
-                <div
-                  key={component.id}
-                  onClick={() => handleComponentClick(component)}
-                >
-                  <DraggableComponent component={component} />
+    <div className="flex flex-col h-screen overflow-hidden">
+      <MainNavigation 
+        onUndo={undo}
+        onRedo={redo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+      />
+      
+      <div className="flex-1 flex overflow-hidden">
+        {!isPreviewMode && (
+          <div className="w-18em border-r border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden">
+            <Tabs defaultValue="components" className="flex flex-col h-full">
+              <div className="border-b border-gray-200 dark:border-gray-800">
+                <TabsList className="p-0 justify-start border-0 bg-transparent h-auto">
+                  <TabsTrigger
+                    value="components"
+                    className="flex-1 rounded-none border-b-0.125em border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  >
+                    <Layers className="h-1em w-1em mr-0.5em" />
+                    Components
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="layers"
+                    className="flex-1 rounded-none border-b-0.125em border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  >
+                    <MoveRight className="h-1em w-1em mr-0.5em" />
+                    Layers
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent value="components" className="flex-1 overflow-hidden m-0 border-0">
+                <div className="p-1em border-b border-gray-200 dark:border-gray-800">
+                  <div className="relative">
+                    <Search className="absolute left-0.75em top-0.625em h-1em w-1em text-gray-400" />
+                    <Input
+                      placeholder="Search components..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-2.25em"
+                    />
+                  </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-              <Box size={32} className="mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No components found</p>
-              {searchTerm && (
-                <p className="text-xs mt-1">Try a different search term</p>
-              )}
-            </div>
-          )}
+                <div className="px-1em py-0.5em border-b border-gray-200 dark:border-gray-800">
+                  <div className="flex gap-0.25em overflow-x-auto">
+                    {categories.map((category) => (
+                      <button
+                        key={category}
+                        onClick={() => setActiveCategory(category)}
+                        className={`
+                          px-0.75em py-0.375em text-0.875rem font-medium rounded-0.375em whitespace-nowrap
+                          ${activeCategory === category
+                            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                          }
+                        `}
+                      >
+                        {currentProject.componentLibrary[category]?.category || category}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-1em">
+                  {filteredComponents.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-0.75em">
+                      {filteredComponents.map((component) => (
+                        <div
+                          key={component.id}
+                          onClick={() => handleComponentClick(component)}
+                        >
+                          <DraggableComponent component={component} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-500 dark:text-gray-400 py-2em">
+                      <Box size={32} className="mx-auto mb-0.5em opacity-50" />
+                      <p className="text-0.875rem">No components found</p>
+                      {searchTerm && (
+                        <p className="text-0.75rem mt-0.25em">Try a different search term</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="layers" className="flex-1 overflow-auto m-0 border-0">
+                <ElementHierarchy />
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
+
+        <div className="flex-1 flex overflow-hidden">
+          <ModernCanvas
+            isPreviewMode={isPreviewMode}
+            currentBreakpoint={currentBreakpoint}
+            onBreakpointChange={setCurrentBreakpoint}
+            isLeftPanelOpen={!isPreviewMode}
+          />
         </div>
       </div>
-      {sidebarOpen && (
-        <div
-          className="sheet-overlay md:hidden"
-          onClick={() => setSidebarOpen(false)}
-          onDragStart={(e) => e.stopPropagation()}
-        />
-      )}
-    </>
+    </div>
   );
 };
 
-export default EnhancedComponentPanel;
+export default EnhancedLayout;
