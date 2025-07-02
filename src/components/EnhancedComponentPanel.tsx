@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { useEnhancedWebsiteStore } from '../store/EnhancedWebsiteStore';
-import { LibraryComponent, ProjectElement } from '../types/ProjectStructure';
+import { useWebsiteStore } from './WebsiteStore';
+import { LibraryComponent, Component } from '../types/index';
 import {
   Search,
   Menu,
@@ -73,8 +73,8 @@ const iconMap: Record<string, React.ElementType> = {
   'dollar-sign': DollarSign,
   share: Share2,
   twitter: Twitter,
-  form: Box, // Fallback for form icon
-  textarea: Type, // Fallback for textarea icon
+  form: Box,
+  textarea: Type,
 };
 
 interface DraggableComponentProps {
@@ -82,7 +82,7 @@ interface DraggableComponentProps {
 }
 
 const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) => {
-  const { addElement, startDrag } = useEnhancedWebsiteStore();
+  const { addComponent, setDraggingComponent, startDragging } = useWebsiteStore();
   const IconComponent = iconMap[component.icon] || Box;
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `draggable-${component.id}`,
@@ -98,55 +98,32 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) =>
 
   const handleClick = useCallback(() => {
     if (!isDragging) {
-      const newElement: Omit<ProjectElement, 'elementId'> = {
+      const spans = ['image', 'icon', 'input', 'textarea', 'checkbox', 'radio', 'submit'];
+      const newComponent: Omit<Component, 'id'> = {
         type: component.name,
-        tagName: component.defaultProps.tagName || 'div',
-        className: component.defaultProps.className || '',
-        customClasses: [],
-        position: { x: 0, y: 0, z: 1 },
-        dimensions: {
-          width: component.defaultProps.width || 'auto',
-          height: component.defaultProps.height || 'auto',
+        props: {
+          ...component.defaultProps,
+          className: component.defaultProps.className || '',
+        },
+        responsiveProps: {
+          mobile: {},
+          tablet: {},
+          desktop: {},
         },
         parentId: null,
         children: [],
-        properties: {
-          innerHTML: component.defaultProps.innerHTML || '',
-          textContent: component.defaultProps.textContent || '',
-          attributes: { ...component.defaultProps },
-        },
-        styles: {
-          inline: { ...component.defaultProps.styles },
-          responsive: {
-            mobile: {},
-            tablet: {},
-            desktop: {},
-          },
-        },
-        events: component.events || [],
-        functions: [],
-        visibility: {
-          visible: true,
-          conditional: {
-            showOn: ['desktop', 'tablet', 'mobile'],
-            hideOn: [],
-          },
-        },
-        animation: {
-          entrance: 'none',
-          exit: 'none',
-          duration: 300,
-        },
+        pageId: useWebsiteStore.getState().currentPageId,
+        allowChildren: component.childrenAllowed ?? false,
       };
 
-      const elementId = addElement(newElement);
+      const componentId = addComponent(newComponent);
       toast({
         title: 'Component Added',
         description: `${component.name} added to canvas.`,
         variant: 'default',
       });
     }
-  }, [addElement, component, isDragging]);
+  }, [addComponent, component, isDragging]);
 
   return (
     <div
@@ -174,6 +151,14 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) =>
         touchAction: 'none',
         userSelect: 'none',
         transform: isDragging ? 'scale(1.05)' : 'scale(1)',
+      }}
+      onDragStart={() => {
+        setDraggingComponent({
+          type: 'COMPONENT',
+          componentType: component.name,
+          defaultProps: component.defaultProps,
+        });
+        startDragging();
       }}
     >
       <IconComponent size={24} className="text-blue-500 dark:text-blue-400 mb-2" />
@@ -248,7 +233,7 @@ const defaultComponentLibrary = {
         name: 'Spacer',
         icon: 'star',
         description: 'An empty div for adding spacing',
-        defaultProps: { tagName: 'div', className: 'spacer', styles: { height: '20px' } },
+        defaultProps: { tagName: 'div', className: 'spacer', styles: { display: 'block', height: '20px' } },
         draggable: true,
         dropZones: ['canvas', 'container'],
         childrenAllowed: false,
@@ -688,7 +673,7 @@ const defaultComponentLibrary = {
 };
 
 const EnhancedComponentPanel: React.FC<EnhancedComponentPanelProps> = ({ className = '' }) => {
-  const { currentProject, sidebarOpen, setSidebarOpen, startDrag, breakpoint, setBreakpoint } = useEnhancedWebsiteStore();
+  const { currentPageId, setSidebarOpen, breakpoint, setBreakpoint } = useWebsiteStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('layout');
 
@@ -759,17 +744,17 @@ const EnhancedComponentPanel: React.FC<EnhancedComponentPanelProps> = ({ classNa
         variant="outline"
         size="sm"
         className="md:hidden fixed top-4 left-4 z-50"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        aria-label={sidebarOpen ? 'Close component panel' : 'Open component panel'}
+        onClick={() => setSidebarOpen((prev) => !prev)}
+        aria-label={useWebsiteStore.getState().isSheetOpen ? 'Close component panel' : 'Open component panel'}
       >
-        {sidebarOpen ? <X size={16} /> : <Menu size={16} />}
+        {useWebsiteStore.getState().isSheetOpen ? <X size={16} /> : <Menu size={16} />}
       </Button>
 
       <div
         className={`
           fixed md:relative top-0 left-0 h-full bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 
           transition-transform duration-300 ease-in-out z-40
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          ${useWebsiteStore.getState().isSheetOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
           w-80 md:w-72 flex flex-col ${className}
         `}
         role="region"
@@ -855,7 +840,7 @@ const EnhancedComponentPanel: React.FC<EnhancedComponentPanelProps> = ({ classNa
         </div>
       </div>
 
-      {sidebarOpen && (
+      {useWebsiteStore.getState().isSheetOpen && (
         <div
           className="md:hidden fixed inset-0 bg-black/50 z-30"
           onClick={() => setSidebarOpen(false)}
