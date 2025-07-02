@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useEnhancedWebsiteStore } from '../store/EnhancedWebsiteStore';
-import { LibraryComponent } from '../types/ProjectStructure';
+import { LibraryComponent, ProjectElement } from '../types/ProjectStructure';
 import {
   Search,
   Menu,
@@ -31,7 +31,10 @@ import {
   ShoppingCart,
   DollarSign,
   Share2,
-  Twitter
+  Twitter,
+  Phone,
+  Tablet,
+  Monitor,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -70,6 +73,8 @@ const iconMap: Record<string, React.ElementType> = {
   'dollar-sign': DollarSign,
   share: Share2,
   twitter: Twitter,
+  form: Box, // Fallback for form icon
+  textarea: Type, // Fallback for textarea icon
 };
 
 interface DraggableComponentProps {
@@ -81,15 +86,67 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) =>
   const IconComponent = iconMap[component.icon] || Box;
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `draggable-${component.id}`,
-    data: { type: 'COMPONENT', componentType: component.name, defaultProps: component.defaultProps },
+    data: {
+      type: 'COMPONENT',
+      componentType: component.name,
+      defaultProps: component.defaultProps,
+      dropZones: component.dropZones,
+      childrenAllowed: component.childrenAllowed,
+      maxChildren: component.maxChildren,
+    },
   });
 
   const handleClick = useCallback(() => {
     if (!isDragging) {
-      const elementId = addElement(component.name, null);
-      toast({ title: 'Component Added', description: `${component.name} added to canvas.` });
+      const newElement: Omit<ProjectElement, 'elementId'> = {
+        type: component.name,
+        tagName: component.defaultProps.tagName || 'div',
+        className: component.defaultProps.className || '',
+        customClasses: [],
+        position: { x: 0, y: 0, z: 1 },
+        dimensions: {
+          width: component.defaultProps.width || 'auto',
+          height: component.defaultProps.height || 'auto',
+        },
+        parentId: null,
+        children: [],
+        properties: {
+          innerHTML: component.defaultProps.innerHTML || '',
+          textContent: component.defaultProps.textContent || '',
+          attributes: { ...component.defaultProps },
+        },
+        styles: {
+          inline: { ...component.defaultProps.styles },
+          responsive: {
+            mobile: {},
+            tablet: {},
+            desktop: {},
+          },
+        },
+        events: component.events || [],
+        functions: [],
+        visibility: {
+          visible: true,
+          conditional: {
+            showOn: ['desktop', 'tablet', 'mobile'],
+            hideOn: [],
+          },
+        },
+        animation: {
+          entrance: 'none',
+          exit: 'none',
+          duration: 300,
+        },
+      };
+
+      const elementId = addElement(newElement);
+      toast({
+        title: 'Component Added',
+        description: `${component.name} added to canvas.`,
+        variant: 'default',
+      });
     }
-  }, [addElement, component.name, isDragging]);
+  }, [addElement, component, isDragging]);
 
   return (
     <div
@@ -98,17 +155,36 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ component }) =>
       {...attributes}
       onClick={handleClick}
       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleClick()}
-      className={`group flex flex-col items-center p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-grab hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-sm transition-all ${isDragging ? 'opacity-50' : ''}`}
+      className={`
+        group flex flex-col items-center p-3 
+        bg-white dark:bg-gray-800 
+        border border-gray-200 dark:border-gray-700 
+        rounded-lg cursor-grab 
+        hover:border-blue-500 dark:hover:border-blue-400
+        ${isDragging ? 'opacity-50' : 'opacity-100'}
+        transition-all duration-200
+      `}
       role="button"
       tabIndex={0}
       aria-label={`Drag or add ${component.name} component`}
-      title={('description' in component && typeof component.description === 'string') ? component.description : component.name}
-      style={{ touchAction: 'none', userSelect: 'none' }}
+      title={component.description || component.name}
+      data-component-id={component.id}
+      data-component-type={component.name}
+      style={{
+        touchAction: 'none',
+        userSelect: 'none',
+        transform: isDragging ? 'scale(1.05)' : 'scale(1)',
+      }}
     >
       <IconComponent size={24} className="text-blue-500 dark:text-blue-400 mb-2" />
       <span className="text-xs text-center text-gray-700 dark:text-gray-300 font-medium">
         {component.name}
       </span>
+      {component.description && (
+        <span className="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 p-2 bg-gray-900 text-white text-xs rounded whitespace-nowrap">
+          {component.description}
+        </span>
+      )}
       <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 rounded-lg transition-opacity" />
     </div>
   );
@@ -612,7 +688,7 @@ const defaultComponentLibrary = {
 };
 
 const EnhancedComponentPanel: React.FC<EnhancedComponentPanelProps> = ({ className = '' }) => {
-  const { currentProject, sidebarOpen, setSidebarOpen, startDrag } = useEnhancedWebsiteStore();
+  const { currentProject, sidebarOpen, setSidebarOpen, startDrag, breakpoint, setBreakpoint } = useEnhancedWebsiteStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('layout');
 
@@ -641,6 +717,42 @@ const EnhancedComponentPanel: React.FC<EnhancedComponentPanelProps> = ({ classNa
     setSearchTerm(e.target.value);
   }, []);
 
+  const handleBreakpointChange = useCallback(
+    (newBreakpoint: 'mobile' | 'tablet' | 'desktop') => {
+      setBreakpoint(newBreakpoint);
+    },
+    [setBreakpoint]
+  );
+
+  const breakpointControls = (
+    <div className="flex items-center justify-center space-x-2 py-2 border-b border-gray-200 dark:border-gray-800">
+      <Button
+        size="sm"
+        variant={breakpoint === 'mobile' ? 'default' : 'ghost'}
+        onClick={() => handleBreakpointChange('mobile')}
+        aria-label="Mobile view"
+      >
+        <Phone className="h-4 w-4" />
+      </Button>
+      <Button
+        size="sm"
+        variant={breakpoint === 'tablet' ? 'default' : 'ghost'}
+        onClick={() => handleBreakpointChange('tablet')}
+        aria-label="Tablet view"
+      >
+        <Tablet className="h-4 w-4" />
+      </Button>
+      <Button
+        size="sm"
+        variant={breakpoint === 'desktop' ? 'default' : 'ghost'}
+        onClick={() => handleBreakpointChange('desktop')}
+        aria-label="Desktop view"
+      >
+        <Monitor className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+
   return (
     <>
       <Button
@@ -660,7 +772,6 @@ const EnhancedComponentPanel: React.FC<EnhancedComponentPanelProps> = ({ classNa
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
           w-80 md:w-72 flex flex-col ${className}
         `}
-       
         role="region"
         aria-label="Component panel"
       >
@@ -690,6 +801,8 @@ const EnhancedComponentPanel: React.FC<EnhancedComponentPanelProps> = ({ classNa
             />
           </div>
         </div>
+
+        {breakpointControls}
 
         <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-800">
           <div className="flex space-x-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
