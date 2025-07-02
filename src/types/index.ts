@@ -8,14 +8,16 @@ export type ComponentProps = Record<string, any>;
 export interface Component {
   id: string;
   type: string;
-  pageId: string;
-  parentId: string | null; // Changed from optional to required, but allowing null
-  props: ComponentProps;
+  props: Record<string, any>;
   responsiveProps: {
-    [key in Breakpoint]: ComponentProps; // Changed from optional to required
+    mobile: Record<string, any>;
+    tablet: Record<string, any>;
+    desktop: Record<string, any>;
   };
+  parentId: string | null;
+  children: string[];
+  pageId: string;
   allowChildren: boolean;
-  children: string[]; // This needs to be required for the component definition
 }
 
 export interface Page {
